@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Lumis • Conhecendo seu amigo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pagina5.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path fill="currentColor" d="M12 0c.7 6.6 4.9 10.8 12 12-7.1 1.2-11.3 5.4-12 12-.7-6.6-4.9-10.8-12-12C7.100 10.800 11.300 6.600 12 0z"/></symbol>
+    <symbol id="i-paw" viewBox="0 0 24 24"><g fill="currentColor"><ellipse cx="12" cy="16.500" rx="5" ry="4"/><ellipse cx="5" cy="10.500" rx="2.200" ry="3"/><ellipse cx="9.500" cy="5.500" rx="2.200" ry="3"/><ellipse cx="14.500" cy="5.500" rx="2.200" ry="3"/><ellipse cx="19" cy="10.500" rx="2.200" ry="3"/></g></symbol>
+  </defs>
+</svg>
+
+<div class="screen" id="screen">
+
+  <header class="topbar">
+    <div class="pill brand"><span class="dot"></span>LUMIS • CONHECENDO SEU AMIGO</div>
+    <div class="pill step">✦&nbsp;Etapa <span id="stepNow">5</span> de Onboarding:&nbsp;<b id="stepName">Olá, amiguinho!</b></div>
+    <div class="status">
+      <div class="pill ok" id="vibPill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4 8v8M20 8v8"/></svg>
+        VIBROTÁTIL ATIVO
+      </div>
+      <div class="pill icon-pill" style="color:var(--blue-deep-2)" title="Wi-Fi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.500 12.500a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.500" r=".8" fill="currentColor"/></svg>
+      </div>
+      <div class="pill ok"><span class="battery" id="bat"><i></i></span><span id="batTxt">98%</span></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="stage" aria-label="Lumis, seu companheiro 3D">
+      <span class="spark s1"><svg><use href="#i-spark"/></svg></span>
+      <span class="spark s2"><svg><use href="#i-spark"/></svg></span>
+      <span class="spark s3"><svg><use href="#i-spark"/></svg></span>
+      <span class="paw p1"><svg viewBox="0 0 24 24"><use href="#i-paw"/></svg></span>
+      <span class="paw p2"><svg viewBox="0 0 24 24"><use href="#i-paw"/></svg></span>
+      <img class="cat" src="assets/gato.jpeg" alt="Lumis, um gatinho branco de olhos azuis e coleira azul" draggable="false">
+      <div class="tag"><span class="heart">❤</span>SEU COMPANHEIRO 3D<span class="live"></span></div>
+    </section>
+
+    <section class="copy">
+      <span class="badge">🌤 Bem-vindo ao nosso mundo</span>
+      <h1>Eu sou o <em>Lumis!</em></h1>
+      <p class="lead">Seu novo amigo interativo e protetor</p>
+      <p class="body" id="speech">Vou acompanhar você em cada nova descoberta. Juntos, vamos aprender com segurança, superar desafios divertidos e viver momentos inesquecíveis!</p>
+
+      <div class="features">
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24"><path fill="#2f63ee" d="M12 21s-8-5.300-8-11a4.600 4.600 0 0 1 8-3 4.600 4.600 0 0 1 8 3c0 5.700-8 11-8 11z"/></svg></div>
+          <h3>Sempre com você</h3><p>Para ouvir, guiar e incentivar com carinho</p>
+        </div>
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24"><path fill="#2a3350" d="M7 7h10a5 5 0 0 1 4.900 6l-.8 4a2.500 2.500 0 0 1-4.400 1.100L15 16H9l-1.700 2.100A2.500 2.500 0 0 1 2.900 17l-.8-4A5 5 0 0 1 7 7z"/><path stroke="#fff" stroke-width="1.600" stroke-linecap="round" d="M7.500 10v3M6 11.500h3"/><circle cx="15.500" cy="10.500" r="1" fill="#fff"/><circle cx="17.500" cy="12.500" r="1" fill="#fff"/></svg></div>
+          <h3>Desafios &amp; Jogos</h3><p>Conquistas e medalhas a cada fase completada</p>
+        </div>
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24"><rect x="3.500" y="3.500" width="17" height="17" rx="4.500" fill="#f5a623"/><rect x="7.500" y="7.500" width="9" height="9" rx="2.500" fill="#ffd27a"/></svg></div>
+          <h3>Toque Amigo</h3><p>Vibrações suaves na sua pulseira em tempo real</p>
+        </div>
+      </div>
+
+      <div class="cta-wrap">
+        <button class="cta" id="startBtn" type="button">
+          Vamos juntos!
+          <span class="hand" aria-hidden="true"><i></i></span>
+          <svg class="sp" viewBox="0 0 24 24"><use href="#i-spark"/></svg>
+        </button>
+        <span class="hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.500l5 5L20 6.500"/></svg>
+          Toque para começar nossa aventura agora
+        </span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <button class="listen" id="listenBtn" type="button" aria-label="Ouvir Lumis falando">
+      <span class="pl"><svg viewBox="0 0 24 24" fill="currentColor" id="listenIcon"><path d="M7 4.500v15l13-7.500z"/></svg></span>
+      <span><b>Ouvir Lumis falando</b> <small>(15 s)</small></span>
+    </button>
+    <p class="caption">Compatível com leitores de tela e retorno tátil</p>
+    <div class="pager">
+      <span>PÁGINA <span id="pgNow">5</span> DE <span id="pgTotal">8</span></span>
+      <span class="dots" id="dots"></span>
+    </div>
+  </footer>
+</div>
+
+<script src="pagina5.js"></script>
+</body>
+</html>
