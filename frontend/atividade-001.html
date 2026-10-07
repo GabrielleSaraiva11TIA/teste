@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lumis • Exercício 1 — Descoberta do Som</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="atividade-001.css" />
+</head>
+<body>
+
+  <!-- ============ TOPO / NAVEGAÇÃO ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand__paw">🐾</span>
+      <strong>Lumis</strong>
+    </div>
+
+    <div class="mission-chip">
+      <span class="dot-icon">◎</span>
+      <span>Missão do Dia • <b>Fase 1: Bosque dos Ecos</b></span>
+    </div>
+
+    <nav class="tabs" aria-label="Seções">
+      <button class="tab tab--active">🧭 Jornada</button>
+      <button class="tab">🎮 Atividades</button>
+      <button class="tab">🍃 Calmaria</button>
+      <button class="tab">🏆 Conquistas</button>
+    </nav>
+
+    <div class="band-chip band-chip--top">
+      <span class="live-dot"></span> Pulseira Conectada
+    </div>
+  </header>
+
+  <main class="page">
+
+    <!-- ============ BARRA SECUNDÁRIA ============ -->
+    <div class="subbar">
+      <button class="btn-back">‹ Voltar para a Missão</button>
+
+      <div class="band-status" id="bandStatus">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v12h6V6H9ZM3 9h2v6H3V9Zm16 0h2v6h-2V9Z"/></svg>
+        <span>Pulseira Ativa</span>
+        <span class="band-status__tag" id="bandTag">Vibração pronto <i>📳</i></span>
+      </div>
+
+      <div class="stars">⭐ <b id="starCount">124</b> estrelas</div>
+    </div>
+
+    <!-- ============ PROGRESSO ============ -->
+    <section class="progress card-soft" aria-label="Progresso da jornada">
+      <div class="progress__head">
+        <span><span class="dot-icon">◎</span> Etapa 1 de 8: <b>Descoberta do Som</b> • <small>Bosque dos Ecos</small></span>
+        <a href="#" class="progress__start">Início da Jornada!</a>
+      </div>
+      <div class="progress__bars">
+        <span class="bar bar--on"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </div>
+      <div class="progress__labels">
+        <span class="on">1. Som</span><span>2. Soprinho</span><span>3. Eco</span><span>4. Ritmo</span>
+        <span>5. Amigos</span><span>6. Frases</span><span>7. Desafio</span><span>8. Tesouro</span>
+      </div>
+    </section>
+
+    <!-- ============ CARTÃO PRINCIPAL DO EXERCÍCIO ============ -->
+    <section class="exercise card-soft" id="exercise">
+
+      <!-- Lado esquerdo: mascote -->
+      <div class="stage" id="stage">
+        <div class="stage__glow" id="glow"></div>
+        <img class="mascot" id="mascot" src="assets/gato.falando.jpeg" 
+             alt="Mascote Lumis, gatinho branco com tela no peito e olhos azuis expressivos" />
+
+        <!-- balão "Vento!" (aparece ao sentir/tocar) -->
+        <div class="wind-bubble" id="windBubble" aria-live="polite">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>
+          <span id="bubbleText">Vento! 🍃</span>
+        </div>
+
+        <span class="bubble-dot bubble-dot--1"></span>
+        <span class="bubble-dot bubble-dot--2"></span>
+      </div>
+
+      <!-- Lado direito: instrução + botão -->
+      <div class="panel">
+        <div class="prompt card-soft">
+          <div class="prompt__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5C6.5 5 2.7 9 1.5 12c1.2 3 5 7 10.5 7s9.3-4 10.5-7C21.3 9 17.5 5 12 5Zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9Zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/></svg>
+          </div>
+          <div class="prompt__text">
+            <span class="eyebrow">☝ VEJA E SINTA</span>
+            <h1>Onde está o vento? <span class="leaf">🍃</span> <span class="swirl">🫧</span></h1>
+            <p><svg class="ico ico--sm" viewBox="0 0 24 24"><path d="M8 4h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v12h6V6H9Z"/></svg>
+              Sinta a brisa suave na sua pulseira!</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-feel" id="btnFeel" type="button" aria-pressed="false">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v12h6V6H9ZM3 9h2v6H3V9Zm16 0h2v6h-2V9Z"/></svg>
+            <span id="btnFeelText">Sentir na pulseira</span>
+            <svg class="ico ico--wind" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>
+          </button>
+
+          <div class="state-chip" id="stateChip">
+            <svg class="ico ico--sm" viewBox="0 0 24 24"><path d="M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-5 2a5 5 0 0 1 1.5-3.5l-1.4-1.4a7 7 0 0 0 0 9.8l1.4-1.4A5 5 0 0 1 7 12Zm10 0c0 1.4-.6 2.6-1.5 3.5l1.4 1.4a7 7 0 0 0 0-9.8l-1.4 1.4c.9.9 1.5 2.1 1.5 3.5Z"/></svg>
+            <span id="stateText">Pronto para ouvir!</span>
+            <i id="stateEmoji" class="state-chip__emoji" hidden>📳</i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TOQUE NO VENTO ============ -->
+    <section class="touch">
+      <div class="touch__head">
+        <h2>☝ Toque no vento:</h2>
+        <span class="counter" id="touchCounter">👆 1 toque</span>
+      </div>
+
+      <div class="cards">
+        <button class="sound-card" data-sound="tambor" data-label="Tambor! 🥁">
+          <span class="sound-card__icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 8c5 2 9 8 14 8M19 8c-5 2-9 8-14 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          </span>
+          <span class="sound-card__name">Tambor 🥁</span>
+          <span class="sound-card__cta">☝ Toque para ouvir</span>
+        </button>
+
+        <button class="sound-card" data-sound="vento" data-label="Vento! 🍃">
+          <span class="sound-card__icon">
+            <svg viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span>
+          <span class="sound-card__name">Vento 🍃 🫧</span>
+          <span class="sound-card__cta">☝ Toque para ouvir</span>
+        </button>
+
+        <button class="sound-card" data-sound="sino" data-label="Sino! 🔔">
+          <span class="sound-card__icon">
+            <svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6Zm-2 15a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="sound-card__name">Sino 🔔</span>
+          <span class="sound-card__cta">☝ Toque para ouvir</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <script src="atividade-001.js"></script>
+</body>
+</html>
