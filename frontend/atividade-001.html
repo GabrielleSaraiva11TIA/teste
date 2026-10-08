@@ -7,41 +7,377 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="atividade-001.css" />
+  <style>
+/* ================== VARIÁVEIS ================== */
+:root {
+  --blue-900: #0a2a8a;
+  --blue-700: #0b4fd1;
+  --blue-600: #1f5fe0;
+  --blue-500: #2f78ff;
+  --blue-300: #8ec3ff;
+  --blue-100: #e3edff;
+  --blue-50:  #f1f6ff;
+  --ink: #0b1f4d;
+  --muted: #5b6b92;
+  --bg: #eef3fb;
+  --card: #ffffff;
+  --radius: 22px;
+  --shadow: 0 6px 18px rgba(20, 60, 160, .10);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { max-width: 100%; overflow-x: hidden; }
+body {
+  font-family: "Baloo 2", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+button { font-family: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+
+.ico { width: 22px; height: 22px; fill: currentColor; flex: none; }
+.ico--sm { width: 16px; height: 16px; }
+.ico--wind { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+/* ================== TOPO ================== */
+.topbar {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 10px 18px;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid #dbe5fa;
+  position: sticky; top: 0; z-index: 10;
+}
+.brand { display: flex; align-items: center; gap: 6px; font-size: 1.2rem; color: var(--blue-700); }
+.mission-chip {
+  font-size: .78rem; color: var(--muted);
+  display: flex; gap: 6px; align-items: center;
+  background: var(--blue-50); padding: 4px 10px; border-radius: 99px;
+}
+.dot-icon { color: var(--blue-600); }
+.tabs { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.tab {
+  padding: 5px 12px; border-radius: 10px; font-weight: 600; font-size: .82rem; color: var(--muted);
+  transition: background .2s, color .2s;
+}
+.tab:hover { background: var(--blue-50); }
+.tab--active { background: var(--blue-700); color: #fff; }
+.band-chip {
+  display: flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 600;
+  background: var(--blue-50); color: var(--blue-700); padding: 5px 12px; border-radius: 99px;
+}
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34,197,94,.6); animation: ping 1.8s infinite;
+}
+@keyframes ping { 70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+
+/* ================== LAYOUT ================== */
+.page { max-width: 760px; margin: 0 auto; padding: 14px 14px 40px; display: grid; gap: 14px; }
+.card-soft { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+/* ================== SUBBARRA ================== */
+.subbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.btn-back {
+  background: #fff; color: var(--blue-700); font-weight: 700; font-size: .8rem;
+  padding: 6px 12px; border-radius: 99px; box-shadow: var(--shadow);
+}
+.band-status {
+  display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .8rem;
+  background: #fff; color: var(--blue-700); padding: 6px 14px; border-radius: 99px; box-shadow: var(--shadow);
+}
+.band-status__tag { font-weight: 500; color: var(--muted); }
+.band-status__tag i { font-style: normal; }
+.band-status.is-active { background: var(--blue-700); color: #fff; }
+.band-status.is-active .band-status__tag { color: #cfe0ff; }
+.stars {
+  background: #fff; padding: 6px 14px; border-radius: 99px; box-shadow: var(--shadow);
+  font-size: .85rem; font-weight: 700; color: var(--blue-700);
+}
+
+/* ================== PROGRESSO ================== */
+.progress { padding: 12px 16px 10px; }
+.progress__head { display: flex; justify-content: space-between; font-size: .78rem; color: var(--blue-700); }
+.progress__head small { color: var(--muted); font-size: .72rem; }
+.progress__start { color: var(--blue-600); font-weight: 700; text-decoration: none; font-size: .72rem; }
+.progress__bars { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 8px 0 4px; }
+.bar { height: 8px; border-radius: 99px; background: #dce6fb; }
+.bar--on { background: linear-gradient(90deg, var(--blue-700), var(--blue-500)); }
+.progress__labels { display: grid; grid-template-columns: repeat(8, 1fr); font-size: .62rem; color: var(--muted); text-align: center; }
+.progress__labels .on { color: var(--blue-700); font-weight: 700; }
+
+/* ================== CARTÃO DO EXERCÍCIO ================== */
+.exercise {
+  display: grid; grid-template-columns: 1fr 1.7fr; gap: 10px; padding: 14px; align-items: center;
+}
+@media (max-width: 620px) { .exercise { grid-template-columns: 1fr; } }
+
+/* ---- palco do mascote ---- */
+.stage {
+  position: relative; min-height: 210px; display: grid; place-items: center; overflow: visible;
+}
+.mascot {
+  height: 175px; width: auto; max-width: 100%; object-fit: contain;
+  position: relative; z-index: 2; transition: transform .3s;
+  filter: drop-shadow(0 6px 8px rgba(20, 60, 160, .18));
+  user-select: none; -webkit-user-drag: none;
+}
+
+.stage__glow {
+  position: absolute; inset: 0; margin: auto; width: 210px; height: 210px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(60,150,255,0) 30%, rgba(60,150,255,0) 70%);
+  filter: blur(14px); transition: background .4s, transform .4s; z-index: 1; pointer-events: none;
+}
+
+/* balão "Vento!" */
+.wind-bubble {
+  position: absolute; right: -22px; top: 55%; z-index: 3;
+  display: flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, #2f9bff, #1fb6ff); color: #fff;
+  font-weight: 800; font-size: .85rem; padding: 5px 14px; border-radius: 99px;
+  box-shadow: 0 6px 14px rgba(30, 130, 255, .35);
+  opacity: 0; transform: translateX(-14px) scale(.8); pointer-events: none;
+  transition: opacity .3s, transform .3s;
+}
+.wind-bubble .ico { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+
+.bubble-dot { position: absolute; border-radius: 50%; background: #8fd0ff; opacity: 0; transition: opacity .3s; }
+.bubble-dot--1 { width: 10px; height: 10px; right: 14px; bottom: 28px; }
+.bubble-dot--2 { width: 7px; height: 7px; right: 0; bottom: 18px; background: #44b0ff; }
+
+/* ---- ESTADO "SENTINDO" (igual à imagem 1) ---- */
+.stage.is-feeling .stage__glow {
+  background: radial-gradient(circle, rgba(40,150,255,.95) 0%, rgba(60,170,255,.55) 45%, rgba(100,190,255,0) 72%);
+  animation: glow-pulse 1.1s ease-in-out infinite;
+}
+.stage.is-feeling .mascot { animation: breeze .5s ease-in-out infinite alternate; }
+.stage.is-feeling .wind-bubble,
+.stage.is-bubble .wind-bubble { opacity: 1; transform: translateX(0) scale(1); }
+.stage.is-feeling .bubble-dot { opacity: 1; }
+
+@keyframes glow-pulse { 50% { transform: scale(1.12); } }
+@keyframes breeze { from { transform: translateX(-2px) rotate(-1.5deg); } to { transform: translateX(2px) rotate(1.5deg); } }
+
+/* ---- painel direito ---- */
+.panel { display: grid; gap: 10px; }
+.prompt {
+  display: flex; gap: 12px; align-items: center; padding: 14px 16px;
+  background: #eaf1ff; border: 1px solid #d4e1fb; box-shadow: none;
+}
+.prompt__icon {
+  width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, #1fa0ff, #2f78ff);
+  display: grid; place-items: center; flex: none; box-shadow: 0 4px 0 #1b5cc4;
+}
+.prompt__icon svg { width: 28px; height: 28px; fill: #0b2a73; }
+.eyebrow { font-size: .62rem; font-weight: 800; color: var(--blue-600); letter-spacing: .04em; }
+.prompt h1 { font-size: 1.35rem; line-height: 1.15; }
+.prompt p { font-size: .8rem; color: var(--muted); display: flex; gap: 4px; align-items: center; }
+
+.actions { display: grid; grid-template-columns: 1.6fr 1fr; gap: 10px; }
+@media (max-width: 460px) { .actions { grid-template-columns: 1fr; } }
+
+/* ---- botão "Sentir na pulseira" ---- */
+.btn-feel {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px 16px; border-radius: 16px; color: #fff; font-weight: 800; font-size: 1rem;
+  background: linear-gradient(180deg, #1559e8, #0a45c4);
+  box-shadow: 0 5px 0 #062e8f, 0 10px 18px rgba(10, 69, 196, .3);
+  transition: transform .12s, box-shadow .12s, filter .2s;
+}
+.btn-feel:hover { filter: brightness(1.08); }
+.btn-feel:active, .btn-feel.is-pressed {
+  transform: translateY(4px); box-shadow: 0 1px 0 #062e8f, 0 4px 8px rgba(10,69,196,.3);
+}
+.btn-feel.is-pressed { animation: buzz .09s linear infinite; }
+@keyframes buzz { 0% { translate: -1px 0; } 50% { translate: 1px 1px; } 100% { translate: -1px -1px; } }
+
+/* ---- chip de estado ---- */
+.state-chip {
+  display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center;
+  background: #eaf1ff; border: 1.5px solid #cfe0ff; color: var(--blue-700);
+  font-weight: 700; font-size: .78rem; padding: 8px 10px; border-radius: 14px;
+  transition: background .25s, border-color .25s;
+}
+.state-chip__emoji { font-style: normal; background: #ffb347; border-radius: 5px; padding: 0 3px; }
+.state-chip.is-vibrating { background: #fff; border-color: var(--blue-300); }
+.state-chip.is-vibrating .ico { animation: buzz .1s linear infinite; }
+
+/* ================== TOQUE NO VENTO ================== */
+.touch__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.touch h2 { font-size: 1.05rem; color: var(--ink); }
+.counter { background: #dbe8ff; color: var(--blue-700); font-weight: 700; font-size: .75rem; padding: 4px 12px; border-radius: 99px; }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 460px) { .cards { grid-template-columns: 1fr; } }
+
+.sound-card {
+  background: #fff; border-radius: 18px; padding: 16px 10px 10px; box-shadow: var(--shadow);
+  display: grid; justify-items: center; gap: 8px; transition: transform .15s, box-shadow .15s;
+}
+.sound-card:hover { transform: translateY(-3px); }
+.sound-card:active, .sound-card.is-playing { transform: scale(.96); box-shadow: 0 0 0 3px var(--blue-300); }
+.sound-card__icon {
+  width: 62px; height: 62px; border-radius: 18px; background: #dfeaff; color: var(--blue-700);
+  display: grid; place-items: center;
+}
+.sound-card__icon svg { width: 34px; height: 34px; }
+.sound-card__name { font-weight: 800; font-size: 1.05rem; padding: 2px 10px; border-radius: 10px; transition: background .15s, color .15s; }
+.sound-card__name:hover, .sound-card__name:focus-visible { background: #e5eeff; color: var(--blue-700); }
+.sound-card__cta {
+  width: 100%; background: #e5eeff; color: var(--blue-700); font-weight: 700; font-size: .72rem;
+  padding: 5px 8px; border-radius: 99px;
+}
+.sound-card__icon, .sound-card__cta { transition: filter .15s; }
+.sound-card__icon:hover, .sound-card__cta:hover { filter: brightness(.96); }
+.sound-card button:focus-visible { outline: 3px solid var(--blue-500); outline-offset: 2px; }
+
+/* ---- estados da escolha ---- */
+.sound-card { position: relative; }
+.sound-card.is-correct {
+  background: #eef3ff; transform: none;
+  box-shadow: 0 0 0 2px var(--blue-600), var(--shadow);
+}
+.sound-card.is-correct::after {
+  content: "⭐ Certo!";
+  position: absolute; top: -12px; right: 10px;
+  background: var(--blue-600); color: #fff; font-weight: 800; font-size: .7rem;
+  padding: 2px 10px; border-radius: 99px; box-shadow: 0 3px 8px rgba(11, 79, 209, .3);
+}
+.sound-card.is-correct .sound-card__name { color: var(--blue-700); }
+.sound-card.is-correct .sound-card__icon { background: #cfe6ff; }
+.sound-card.is-correct .sound-card__cta {
+  background: var(--blue-600); color: #fff; display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.sound-card__cta svg { width: 14px; height: 14px; }
+.sound-card.is-wrong { animation: wobble .5s ease; box-shadow: 0 0 0 3px #ffc58a, var(--shadow); }
+@keyframes wobble { 20% { translate: -6px 0; } 40% { translate: 6px 0; } 60% { translate: -4px 0; } 80% { translate: 3px 0; } }
+.cards.is-locked .sound-card:not(.is-correct) { opacity: .6; }
+.cards.is-locked .sound-card__name { pointer-events: none; }
+
+/* ================== RESULTADO (acertou / tentar de novo) ================== */
+[hidden] { display: none !important; }
+.result {
+  margin-top: 14px; padding: 14px 18px; border-radius: 22px;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
+  animation: pop .45s cubic-bezier(.2, 1.4, .4, 1);
+}
+@keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (max-width: 560px) { .result { grid-template-columns: auto 1fr; } .result__btn { grid-column: 1 / -1; } }
+
+.result__icon {
+  width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; font-size: 1.7rem;
+}
+.result__icon svg { width: 28px; height: 28px; }
+.result__tag {
+  display: inline-block; font-size: .65rem; font-weight: 700; padding: 2px 10px; border-radius: 99px; margin-bottom: 2px;
+}
+.result h3 { font-size: 1.5rem; line-height: 1.15; }
+.result p { font-size: .8rem; line-height: 1.3; }
+.result__btn {
+  font-weight: 800; font-size: .9rem; padding: 12px 18px; border-radius: 14px;
+  transition: transform .12s, filter .2s;
+}
+.result__btn:hover { filter: brightness(1.05); }
+.result__btn:active { transform: translateY(2px); }
+.result__btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+.result--success {
+  background: linear-gradient(135deg, #0b4fd1, #2f78ff); color: #fff;
+  box-shadow: 0 10px 24px rgba(11, 79, 209, .35);
+}
+.result--success .result__icon { background: #3cc4ff; color: #0b2a73; }
+.result--success .result__tag { background: rgba(255, 255, 255, .2); }
+.result--success .result__btn { background: #fff; color: var(--blue-700); box-shadow: 0 4px 0 rgba(6, 46, 143, .35); }
+
+.result--retry {
+  background: #fff4df; color: #4a2b00; border: 2px solid #ffd39a; box-shadow: var(--shadow);
+}
+.result--retry .result__icon { background: #ffe1ad; }
+.result--retry .result__tag { background: #ffd9a0; }
+.result--retry .result__btn { background: #ffb347; color: #3b2200; box-shadow: 0 4px 0 #d98a1f; }
+.result--retry .result__btn:focus-visible { outline-color: #3b2200; }
+
+/* ================== PERGUNTA "QUER ESCOLHER?" ================== */
+.confirm {
+  position: fixed; inset: 0; z-index: 50; padding: 16px;
+  display: grid; place-items: center;
+  background: rgba(11, 31, 77, .45); backdrop-filter: blur(2px);
+}
+.confirm__box {
+  width: min(100%, 360px); background: #fff; border-radius: 26px; padding: 22px 20px 18px; text-align: center;
+  box-shadow: 0 20px 50px rgba(11, 31, 77, .35); animation: pop .35s cubic-bezier(.2, 1.4, .4, 1);
+}
+.confirm__icon {
+  width: 76px; height: 76px; margin: 0 auto 10px; border-radius: 22px; background: #dfeaff; color: var(--blue-700);
+  display: grid; place-items: center;
+}
+.confirm__icon svg { width: 44px; height: 44px; }
+.confirm h3 { font-size: 1.25rem; line-height: 1.2; margin-bottom: 14px; }
+.confirm h3 b { color: var(--blue-600); }
+.confirm__actions { display: grid; gap: 8px; }
+.confirm__yes, .confirm__no { font-weight: 800; font-size: 1rem; padding: 12px 16px; border-radius: 16px; }
+.confirm__yes { background: linear-gradient(180deg, #1559e8, #0a45c4); color: #fff; box-shadow: 0 4px 0 #062e8f; }
+.confirm__yes:active { transform: translateY(3px); box-shadow: 0 1px 0 #062e8f; }
+.confirm__no { background: #e5eeff; color: var(--blue-700); }
+.confirm button:focus-visible { outline: 3px solid var(--blue-300); outline-offset: 2px; }
+
+/* ================== CONFETE ================== */
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 60; }
+.confetti span {
+  position: absolute; top: -14px; width: 9px; height: 14px; border-radius: 2px;
+  animation: confetti-fall 1.9s ease-in forwards;
+}
+@keyframes confetti-fall { to { transform: translate(var(--dx), 105vh) rotate(540deg); } }
+
+/* ================== RESPONSIVO ================== */
+.touch__head { flex-wrap: wrap; gap: 8px; }
+.mascot { max-width: 100%; }
+@media (max-width: 620px) {
+  .stage { min-height: 190px; }
+  .wind-bubble { right: 8px; }
+}
+@media (max-width: 520px) {
+  .page { padding: 10px 10px 32px; gap: 10px; }
+  .progress { padding: 10px 12px; }
+  .progress__head { flex-direction: column; gap: 2px; }
+  .progress__labels { font-size: .5rem; }
+  .exercise { padding: 10px; }
+  .stage { min-height: 170px; }
+  .mascot { height: 150px; }
+  .stage__glow { width: 180px; height: 180px; }
+  .prompt { padding: 12px; }
+  .prompt h1 { font-size: 1.2rem; }
+  .touch h2 { font-size: .95rem; }
+  /* cartões de som em linha (ícone + nome + botão) para caberem sem rolar */
+  .sound-card { grid-template-columns: auto 1fr; grid-template-areas: "icon name" "icon cta"; justify-items: start; align-items: center; padding: 12px; column-gap: 12px; }
+  .sound-card__icon { grid-area: icon; width: 56px; height: 56px; }
+  .sound-card__name { grid-area: name; font-size: 1.1rem; }
+  .sound-card__cta { grid-area: cta; width: auto; padding: 6px 14px; }
+  .sound-card.is-correct::after { top: -10px; right: 12px; }
+  .result { padding: 12px; gap: 10px; }
+  .result h3 { font-size: 1.25rem; }
+  .result__btn { width: 100%; }
+  .confirm__box { padding: 18px 16px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
 </head>
 <body>
 
-  <!-- ============ TOPO / NAVEGAÇÃO ============ -->
-  <header class="topbar">
-    <div class="brand">
-      <span class="brand__paw">🐾</span>
-      <strong>Lumis</strong>
-    </div>
-
-    <div class="mission-chip">
-      <span class="dot-icon">◎</span>
-      <span>Missão do Dia • <b>Fase 1: Bosque dos Ecos</b></span>
-    </div>
-
-
-    <div class="band-chip band-chip--top">
-      <span class="live-dot"></span> Pulseira Conectada
-    </div>
-  </header>
-
+  
   <main class="page">
 
     <!-- ============ BARRA SECUNDÁRIA ============ -->
     <div class="subbar">
-      <button class="btn-back">‹ Voltar para a Missão</button>
+      <button class="btn-back">← Voltar para a Missão</button>
 
-      <div class="band-status" id="bandStatus">
-        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v12h6V6H9ZM3 9h2v6H3V9Zm16 0h2v6h-2V9Z"/></svg>
-        <span>Pulseira Ativa</span>
-        <span class="band-status__tag" id="bandTag">Vibração pronto <i>📳</i></span>
-      </div>
+      
 
-      <div class="stars">⭐ <b id="starCount">124</b> estrelas</div>
+      <div class="stars">☆ <b id="starCount">124</b> estrelas</div>
     </div>
 
     <!-- ============ PROGRESSO ============ -->
@@ -185,6 +521,410 @@
     </div>
   </div>
 
-  <script src="atividade-001.js"></script>
+  <script>
+/* =====================================================
+   Lumis • Exercício 1 — Descoberta do Som
+   Interações: botão "Sentir na pulseira" + cartões de som
+   ===================================================== */
+
+(() => {
+  "use strict";
+
+  // ---------- Elementos ----------
+  const stage       = document.getElementById("stage");
+  const btnFeel     = document.getElementById("btnFeel");
+  const btnFeelText = document.getElementById("btnFeelText");
+  const stateChip   = document.getElementById("stateChip");
+  const stateText   = document.getElementById("stateText");
+  const stateEmoji  = document.getElementById("stateEmoji");
+  // "Pulseira Ativa" é opcional no HTML: se não existir, usa elementos vazios para não dar erro
+  const bandStatus  = document.getElementById("bandStatus") || document.createElement("div");
+  const bandTag     = document.getElementById("bandTag") || Object.assign(document.createElement("span"), { textContent: " " });
+  const bubbleText  = document.getElementById("bubbleText");
+  const counterEl   = document.getElementById("touchCounter");
+  const starCountEl = document.getElementById("starCount");
+  const soundCards  = document.querySelectorAll(".sound-card");
+
+  // ---------- Configurações ----------
+  const VIBRATION_MS = 3500;                        // duração do estado "vibrando"
+  const VIBRATION_PATTERN = [180, 90, 180, 90, 180, 90, 180, 90, 180]; // padrão "brisa"
+
+  let touches = 1;            // começa em 1, como na imagem
+  let feeling = false;
+  let feelTimer = null;
+  let bubbleTimer = null;
+  let firstFeelRewarded = false;
+
+  // =====================================================
+  //  1) SENTIR NA PULSEIRA
+  // =====================================================
+  function startFeeling() {
+    if (feeling) return;
+    feeling = true;
+
+    // visual do botão
+    btnFeel.classList.add("is-pressed");
+    btnFeel.setAttribute("aria-pressed", "true");
+    btnFeelText.textContent = "Sentindo...";
+
+    // chip de estado -> "Vibrando pulseira: Sssss... 📳"
+    stateChip.classList.add("is-vibrating");
+    stateText.textContent = "Vibrando pulseira: Sssss...";
+    stateEmoji.hidden = false;
+
+    // faixa superior "Pulseira Ativa"
+    bandStatus.classList.add("is-active");
+    bandTag.firstChild.textContent = "Vibrando ";
+
+    // palco: brilho azul + balão "Vento! 🍃"
+    bubbleText.textContent = "Vento! 🍃";
+    stage.classList.add("is-feeling");
+
+    // vibração real (celulares Android / navegadores compatíveis)
+    if ("vibrate" in navigator) navigator.vibrate(VIBRATION_PATTERN);
+
+    // som suave de vento
+    playSound("vento", VIBRATION_MS / 1000);
+
+    // recompensa na primeira vez
+    if (!firstFeelRewarded) {
+      firstFeelRewarded = true;
+      starCountEl.textContent = String(Number(starCountEl.textContent) + 1);
+    }
+
+    feelTimer = setTimeout(stopFeeling, VIBRATION_MS);
+  }
+
+  function stopFeeling() {
+    clearTimeout(feelTimer);
+    feeling = false;
+
+    btnFeel.classList.remove("is-pressed");
+    btnFeel.setAttribute("aria-pressed", "false");
+    btnFeelText.textContent = "Sentir na pulseira";
+
+    stateChip.classList.remove("is-vibrating");
+    stateText.textContent = "Pronto para ouvir!";
+    stateEmoji.hidden = true;
+
+    bandStatus.classList.remove("is-active");
+    bandTag.firstChild.textContent = "Vibração pronto ";
+
+    stage.classList.remove("is-feeling");
+    if ("vibrate" in navigator) navigator.vibrate(0);
+  }
+
+  btnFeel.addEventListener("click", () => (feeling ? stopFeeling() : startFeeling()));
+
+  // =====================================================
+  //  2) CARTÕES — tocar para ouvir / tocar no nome para escolher
+  // =====================================================
+  const CORRECT_SOUND = "vento";   // resposta certa desta atividade (data-sound do cartão)
+  const WIND_ICON =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+  // mensagens de incentivo (uma por tentativa errada, em ciclo)
+  const RETRY_MESSAGES = [
+    {
+      tag: "Quase lá!",
+      title: "Ops, esse não foi dessa vez! 🌈",
+      text: "Tudo bem errar, é assim que a gente aprende! Toque em “Toque para ouvir” e sinta a vibração com atenção.",
+    },
+    {
+      tag: "Você consegue!",
+      title: "Vamos tentar mais uma vez? 💪",
+      text: "Cada tentativa deixa você mais craque! Ouça cada opção de novo e compare as vibrações.",
+    },
+    {
+      tag: "Continue assim!",
+      title: "Falta pouquinho! 🌟",
+      text: "Você está indo muito bem! Sinta a pulseira de novo, bem devagarinho, e escolha com carinho.",
+    },
+  ];
+
+  const cardsEl       = document.getElementById("cards");
+  const confirmEl     = document.getElementById("confirm");
+  const confirmName   = document.getElementById("confirmName");
+  const confirmIcon   = document.getElementById("confirmIcon");
+  const confirmYes    = document.getElementById("confirmYes");
+  const confirmNo     = document.getElementById("confirmNo");
+  const resultSuccess = document.getElementById("resultSuccess");
+  const resultRetry   = document.getElementById("resultRetry");
+  const retryTag      = document.getElementById("retryTag");
+  const retryTitle    = document.getElementById("retryTitle");
+  const retryText     = document.getElementById("retryText");
+  const btnNext       = document.getElementById("btnNext");
+  const btnRetry      = document.getElementById("btnRetry");
+
+  let answered = false;      // já acertou?
+  let attempts = 0;          // quantas vezes errou
+  let pendingCard = null;    // cartão aguardando confirmação
+  let lastFocus = null;
+
+  // balão de fala do mascote
+  function showBubble(text) {
+    bubbleText.textContent = text;
+    stage.classList.add("is-bubble");
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(() => stage.classList.remove("is-bubble"), 1600);
+  }
+
+  // ouvir / sentir a vibração de uma opção
+  function playCard(card) {
+    const kind = card.dataset.sound;
+
+    // contador
+    touches += 1;
+    counterEl.textContent = `👆 ${touches} ${touches === 1 ? "toque" : "toques"}`;
+
+    // feedback visual no cartão
+    card.classList.add("is-playing");
+    setTimeout(() => card.classList.remove("is-playing"), 350);
+
+    // balão no mascote
+    showBubble(card.dataset.label);
+
+    // vibração curta + som
+    if ("vibrate" in navigator) {
+      navigator.vibrate(kind === "tambor" ? [90] : kind === "sino" ? [40, 40, 40] : [120, 60, 120]);
+    }
+    playSound(kind, 1.4);
+  }
+
+  // clique nos cartões: ícone / "Toque para ouvir" -> ouvir | nome -> escolher
+  cardsEl.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("[data-action]");
+    if (!btn) return;
+    const card = btn.closest(".sound-card");
+    if (!card) return;
+
+    if (btn.dataset.action === "play") {
+      playCard(card);
+    } else if (btn.dataset.action === "choose" && !answered) {
+      openConfirm(card);
+    }
+  });
+
+  // ---------- pergunta "Quer escolher essa opção?" ----------
+  function openConfirm(card) {
+    pendingCard = card;
+    lastFocus = document.activeElement;
+    confirmName.textContent = card.querySelector(".sound-card__name").textContent.trim();
+    confirmIcon.innerHTML = card.querySelector(".sound-card__icon").innerHTML;
+    confirmEl.hidden = false;
+    confirmYes.focus();
+  }
+
+  function closeConfirm() {
+    confirmEl.hidden = true;
+    pendingCard = null;
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+
+  confirmYes.addEventListener("click", () => {
+    const card = pendingCard;
+    closeConfirm();
+    if (!card) return;
+    if (card.dataset.sound === CORRECT_SOUND) onCorrect(card);
+    else onWrong(card);
+  });
+  confirmNo.addEventListener("click", closeConfirm);
+  confirmEl.addEventListener("click", (e) => { if (e.target === confirmEl) closeConfirm(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !confirmEl.hidden) closeConfirm();
+  });
+
+  // ---------- acertou ----------
+  function onCorrect(card) {
+    answered = true;
+    resultRetry.hidden = true;
+
+    cardsEl.classList.add("is-locked");
+    card.classList.add("is-correct");
+    card.querySelector(".sound-card__cta").innerHTML = WIND_ICON + " Isso mesmo!";
+
+    // +1 estrela
+    starCountEl.textContent = String(Number(starCountEl.textContent) + 1);
+
+    resultSuccess.hidden = false;
+    showBubble("Isso mesmo! ⭐");
+    if ("vibrate" in navigator) navigator.vibrate([100, 50, 100, 50, 220]);
+    playSound("sucesso");
+    confetti();
+
+    resultSuccess.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    btnNext.focus({ preventScroll: true });
+  }
+
+  // ---------- errou: incentivo para tentar de novo ----------
+  function onWrong(card) {
+    const msg = RETRY_MESSAGES[attempts % RETRY_MESSAGES.length];
+    attempts += 1;
+
+    card.classList.add("is-wrong");
+    setTimeout(() => card.classList.remove("is-wrong"), 900);
+
+    retryTag.textContent = msg.tag;
+    retryTitle.textContent = msg.title;
+    retryText.textContent = msg.text;
+    resultRetry.hidden = false;
+
+    showBubble("Tenta de novo! 💪");
+    if ("vibrate" in navigator) navigator.vibrate([60]);
+    playSound("tentar");
+
+    resultRetry.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    btnRetry.focus({ preventScroll: true });
+  }
+
+  btnRetry.addEventListener("click", () => {
+    resultRetry.hidden = true;
+    cardsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  // ---------- avançar ----------
+  // Defina data-next="proxima-atividade.html" no botão para navegar.
+  // Também dispara o evento "atividade001:avancar" para quem quiser escutar.
+  btnNext.addEventListener("click", () => {
+    window.dispatchEvent(new CustomEvent("atividade001:avancar"));
+    const dest = btnNext.dataset.next;
+    if (dest) window.location.href = dest;
+  });
+
+  // ---------- confete ----------
+  function confetti() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const colors = ["#ffd54a", "#2f78ff", "#36c6ff", "#ff8fb1", "#7be495"];
+    const wrap = document.createElement("div");
+    wrap.className = "confetti";
+    wrap.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 28; i++) {
+      const s = document.createElement("span");
+      s.style.left = Math.random() * 100 + "%";
+      s.style.background = colors[i % colors.length];
+      s.style.animationDelay = Math.random() * 0.4 + "s";
+      s.style.setProperty("--dx", Math.random() * 160 - 80 + "px");
+      wrap.appendChild(s);
+    }
+    document.body.appendChild(wrap);
+    setTimeout(() => wrap.remove(), 2600);
+  }
+
+  // =====================================================
+  //  3) SONS (Web Audio API — sem arquivos externos)
+  // =====================================================
+  let audioCtx = null;
+
+  function ctx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playSound(kind, seconds = 1) {
+    try {
+      const ac = ctx();
+      if (kind === "tambor") return drum(ac);
+      if (kind === "sino")   return bell(ac);
+      if (kind === "sucesso") return cheer(ac);
+      if (kind === "tentar")  return softTry(ac);
+      return wind(ac, seconds);
+    } catch (e) {
+      /* áudio não suportado: segue sem som */
+    }
+  }
+
+  function drum(ac) {
+    const t = ac.currentTime;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(160, t);
+    osc.frequency.exponentialRampToValueAtTime(45, t + 0.25);
+    gain.gain.setValueAtTime(0.9, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    osc.connect(gain).connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 0.4);
+  }
+
+  function bell(ac) {
+    const t = ac.currentTime;
+    [880, 1320, 1760].forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.35 / (i + 1), t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 1.6);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(t);
+      osc.stop(t + 1.7);
+    });
+  }
+
+  // notinhas alegres de acerto (dó-mi-sol-dó agudo)
+  function cheer(ac) {
+    const t = ac.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+      const start = t + i * 0.12;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.3, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(start);
+      osc.stop(start + 0.5);
+    });
+  }
+
+  // duas notinhas suaves e gentis para "tente de novo"
+  function softTry(ac) {
+    const t = ac.currentTime;
+    [392, 329.63].forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const start = t + i * 0.16;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.15, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(start);
+      osc.stop(start + 0.45);
+    });
+  }
+
+  function wind(ac, seconds) {
+    const t = ac.currentTime;
+    const length = Math.floor(ac.sampleRate * seconds);
+    const buffer = ac.createBuffer(1, length, ac.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+
+    const src = ac.createBufferSource();
+    src.buffer = buffer;
+
+    const filter = ac.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.Q.value = 0.8;
+    filter.frequency.setValueAtTime(400, t);
+    filter.frequency.linearRampToValueAtTime(1100, t + seconds * 0.5);
+    filter.frequency.linearRampToValueAtTime(500, t + seconds);
+
+    const gain = ac.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.25, t + seconds * 0.35);
+    gain.gain.linearRampToValueAtTime(0.0001, t + seconds);
+
+    src.connect(filter).connect(gain).connect(ac.destination);
+    src.start(t);
+  }
+})();
+</script>
 </body>
 </html>

@@ -6,8 +6,374 @@
   <title>Lumis • Atividade 4 — Espelho do Lumis</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="atividade-004.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+/* ================== VARIÁVEIS ================== */
+:root {
+  --blue-900: #0a2a8a;
+  --blue-700: #0b4fd1;
+  --blue-600: #1f5fe0;
+  --blue-500: #2f78ff;
+  --blue-300: #8ec3ff;
+  --blue-100: #e3edff;
+  --blue-50:  #f1f6ff;
+  --ink: #0b1f4d;
+  --muted: #5b6b92;
+  --bg: #eef3fb;
+  --card: #ffffff;
+  --radius: 22px;
+  --shadow: 0 6px 18px rgba(20, 60, 160, .10);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+body {
+  font-family: "Baloo 2", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+button { font-family: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--blue-500); outline-offset: 2px; }
+button:disabled { cursor: not-allowed; }
+
+.ico { width: 22px; height: 22px; fill: currentColor; flex: none; }
+.ico--wind { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+/* ================== TOPO ================== */
+.topbar {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 10px 18px;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid #dbe5fa;
+  position: sticky; top: 0; z-index: 10;
+}
+.brand { display: flex; align-items: center; gap: 6px; font-size: 1.2rem; color: var(--blue-700); }
+.mission-chip {
+  font-size: .78rem; color: var(--muted);
+  display: flex; gap: 6px; align-items: center;
+  background: var(--blue-50); padding: 4px 10px; border-radius: 99px;
+}
+.dot-icon { color: var(--blue-600); }
+.band-chip {
+  display: flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 600; margin-left: auto;
+  background: var(--blue-50); color: var(--blue-700); padding: 5px 12px; border-radius: 99px;
+}
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34,197,94,.6); animation: ping 1.8s infinite;
+}
+@keyframes ping { 70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+
+/* ================== LAYOUT ================== */
+.page { max-width: 1000px; margin: 0 auto; padding: 14px 14px 40px; display: grid; gap: 14px; }
+.card-soft { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+.layout { display: grid; grid-template-columns: 1.85fr 1fr; gap: 14px; align-items: start; }
+@media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
+
+/* ================== SUBBARRA ================== */
+.subbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.btn-back, .stars {
+  font-family: "Quicksand", system-ui, sans-serif;
+  background: #fff; color: #003D9B; font-weight: 700; font-size: 13px;
+  padding: 8px 16px; border-radius: 999px; box-shadow: 0 2px 8px rgba(0, 61, 155, .08);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.band-status {
+  display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .8rem;
+  background: #fff; color: var(--blue-700); padding: 6px 14px; border-radius: 99px; box-shadow: var(--shadow);
+  transition: background .2s, color .2s;
+}
+.band-status__tag { font-weight: 500; color: var(--muted); }
+.band-status__tag i { font-style: normal; }
+.band-status.is-active { background: var(--blue-700); color: #fff; }
+.band-status.is-active .band-status__tag { color: #cfe0ff; }
+
+/* ================== PROGRESSO ================== */
+.progress { padding: 12px 16px 12px; }
+.progress__head { display: flex; justify-content: space-between; gap: 8px; font-size: .78rem; color: var(--blue-700); }
+.progress__head small { color: #b45309; font-size: .74rem; font-weight: 600; margin-left: 4px; }
+.progress__start { color: var(--blue-600); font-weight: 800; text-decoration: none; font-size: .74rem; }
+.progress__bars { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 8px 0 4px; }
+.bar { height: 8px; border-radius: 99px; background: #dce6fb; }
+.bar--done { background: var(--blue-900); }
+.bar--current { background: linear-gradient(90deg, var(--blue-700), #9db9f0); }
+.progress__labels { display: grid; grid-template-columns: repeat(8, 1fr); font-size: .62rem; color: var(--muted); text-align: center; }
+.progress__labels .cur { color: var(--blue-700); font-weight: 800; background: #e3ecff; border-radius: 8px; }
+.hints { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.hint { font-size: .72rem; font-weight: 600; padding: 5px 12px; border-radius: 99px; }
+.hint--visual { background: #eef3ff; color: var(--blue-700); }
+.hint--tactile { background: #dde2fb; color: #1f3fa8; }
+
+/* ================== ABAS DA ATIVIDADE ================== */
+.steps { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.steps__tab {
+  padding: 7px 16px; border-radius: 99px; font-weight: 700; font-size: .85rem;
+  color: var(--muted); background: rgba(255,255,255,.7); transition: background .2s, color .2s;
+}
+.steps__tab:hover:not(:disabled) { background: #fff; }
+.steps__tab.is-active { background: var(--blue-700); color: #fff; box-shadow: 0 4px 10px rgba(11, 79, 209, .3); }
+.steps__tab:disabled { opacity: .5; }
+
+/* ================== ETAPA 1 ================== */
+.lesson { padding: 16px; display: grid; gap: 12px; }
+.lesson__who { font-size: .8rem; font-weight: 700; color: var(--blue-700); }
+
+.coach-bubble {
+  position: relative; background: #dde2fb; border-radius: 18px; padding: 12px 16px;
+  font-size: 1.15rem; font-weight: 600; line-height: 1.3;
+}
+.coach-bubble::after {
+  content: ""; position: absolute; left: 34px; bottom: -8px; width: 18px; height: 18px;
+  background: #dde2fb; border-radius: 3px; transform: rotate(45deg);
+}
+.ssss-link {
+  font: inherit; font-weight: 800; color: var(--blue-700);
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 2px;
+}
+.ssss-link:hover { color: var(--blue-500); }
+
+/* espaço do vídeo */
+.demo {
+  position: relative; aspect-ratio: var(--demo-ratio, 16 / 9); border-radius: 20px; overflow: hidden; margin-top: 6px;
+  background: radial-gradient(circle at 50% 48%, #d6eaff 0%, #eef6ff 45%, #fff 75%);
+}
+.demo__video { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; cursor: pointer; background: #000; }
+.demo__placeholder { position: absolute; inset: 0; }
+.wind { position: absolute; width: 38px; height: 38px; fill: none; stroke: #2a7fb8; stroke-width: 2; stroke-linecap: round; animation: floaty 3.2s ease-in-out infinite; }
+.wind--1 { left: 56%; top: 52%; }
+.wind--2 { left: 58%; top: 70%; width: 30px; height: 30px; animation-delay: .8s; }
+.wind--3 { left: 63%; top: 80%; width: 34px; height: 34px; animation-delay: 1.6s; }
+@keyframes floaty { 50% { transform: translate(8px, -6px); opacity: .7; } }
+.demo__sound {
+  position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); white-space: nowrap;
+  background: #fff; border-radius: 99px; box-shadow: var(--shadow); font-size: .7rem; font-weight: 600;
+  padding: 4px 12px; color: var(--ink);
+}
+.demo.has-video .demo__sound { display: none; }
+
+/* pista tátil */
+.tactile {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+  background: #eef3ff; border-radius: 18px; padding: 12px 14px;
+}
+.tactile__icon {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  background: linear-gradient(135deg, #1fc0ff, #2f78ff); color: #0b2a73;
+}
+.tactile__text b { display: block; font-size: .9rem; }
+.tactile__text small { font-size: .72rem; color: var(--muted); }
+.eq { display: flex; align-items: flex-end; gap: 4px; height: 26px; }
+.eq i { width: 6px; border-radius: 3px; background: var(--blue-600); }
+.eq i:nth-child(1) { height: 40%; } .eq i:nth-child(2) { height: 100%; }
+.eq i:nth-child(3) { height: 65%; } .eq i:nth-child(4) { height: 85%; }
+.tactile.is-active .tactile__icon { animation: buzz .09s linear infinite; }
+.tactile.is-active .eq i { animation: eq .5s ease-in-out infinite alternate; }
+.tactile.is-active .eq i:nth-child(2) { animation-delay: .1s; }
+.tactile.is-active .eq i:nth-child(3) { animation-delay: .2s; }
+.tactile.is-active .eq i:nth-child(4) { animation-delay: .3s; }
+@keyframes eq { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
+.eq i { transform-origin: bottom; }
+@keyframes buzz { 0% { translate: -1px 0; } 50% { translate: 1px 1px; } 100% { translate: -1px -1px; } }
+
+/* o que observar */
+.observe { padding: 16px; display: grid; gap: 12px; }
+.observe h2 { font-size: 1.05rem; color: var(--blue-700); }
+.obs-list { list-style: none; display: grid; gap: 8px; }
+.obs-item {
+  display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center;
+  background: #eef2ff; border-radius: 14px; padding: 9px 12px;
+}
+.obs-item b { display: block; font-size: .85rem; }
+.obs-item small { display: block; font-size: .7rem; color: var(--muted); line-height: 1.25; }
+.obs-item__icon { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: .95rem; }
+.obs-item__icon--1 { background: #e6e0ff; }
+.obs-item__icon--2 { background: #d7e8ff; }
+.obs-item__icon--3 { background: #ffdff0; }
+.observe__actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.observe__actions > * { flex: 1 1 auto; }
+
+/* botões */
+.btn-soft {
+  background: #e3ecff; color: var(--blue-700); font-weight: 700; font-size: .78rem;
+  padding: 9px 14px; border-radius: 12px; transition: filter .15s, transform .12s;
+}
+.btn-soft:hover { filter: brightness(.97); }
+.btn-primary {
+  background: linear-gradient(180deg, #1559e8, #0a45c4); color: #fff; font-weight: 800; font-size: .82rem;
+  padding: 10px 14px; border-radius: 12px; box-shadow: 0 4px 0 #062e8f; transition: transform .12s, box-shadow .12s, filter .2s;
+}
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:active { transform: translateY(3px); box-shadow: 0 1px 0 #062e8f; }
+.btn-primary--lg { font-size: 1.05rem; padding: 12px 22px; border-radius: 14px; }
+
+/* ================== ETAPA 2 ================== */
+.mirror { padding: 14px; }
+.mirror__chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; font-size: .7rem; font-weight: 700; color: var(--blue-700);
+  background: #fff; border: 1px solid #dfe8fb; border-radius: 99px; padding: 4px 10px;
+}
+.chip--right { margin-left: auto; background: #eaf1ff; border-color: #d4e1fb; }
+.chip.is-off { color: #a14b00; background: #fff4df; border-color: #ffd39a; }
+.level { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.level i { width: 3px; height: 30%; border-radius: 2px; background: var(--blue-500); transition: height .08s; }
+
+.camera {
+  position: relative; border-radius: 22px; overflow: hidden; margin: 10px 0;
+  aspect-ratio: 4 / 3; max-height: 440px; width: 100%;
+  background: linear-gradient(160deg, #d9e3f5, #b9c8e6);
+}
+.camera video { width: 100%; height: 100%; object-fit: cover; display: block; transform: scaleX(-1); } /* espelho */
+.camera.is-off video { visibility: hidden; }
+.camera__off {
+  position: absolute; inset: 0; display: none; place-content: center; justify-items: center; gap: 8px;
+  text-align: center; padding: 20px; color: #33446e; font-weight: 600; font-size: .9rem;
+}
+.camera.is-off .camera__off { display: grid; }
+.camera__off-ico { font-size: 2.4rem; }
+.camera__guide {
+  position: absolute; left: 50%; top: 60%; transform: translate(-50%, -50%);
+  width: 34%; aspect-ratio: 1.5; border: 3px dashed #36c6ff; border-radius: 20px;
+  display: grid; justify-items: center; align-items: start; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(11, 31, 77, .06);
+}
+.camera__guide span {
+  transform: translateY(-55%); background: #e6f7ff; color: #0a4a8a; border-radius: 8px;
+  font-size: .62rem; font-weight: 800; padding: 2px 8px; white-space: nowrap;
+}
+.camera.is-framed .camera__guide { border-color: #1fd1a1; }
+.camera.is-framed .camera__guide span { background: #d9fbef; color: #0b6b4d; }
+.camera.is-misframed .camera__guide { border-color: #ff9d3d; }
+.camera.is-misframed .camera__guide span { background: #fff0d9; color: #8a4300; }
+.camera.is-listening .camera__guide { animation: guide-pulse 1s ease-in-out infinite; }
+@keyframes guide-pulse { 50% { transform: translate(-50%, -50%) scale(1.04); } }
+.camera.nudge .camera__guide { animation: nudge .5s ease; }
+@keyframes nudge {
+  0%, 100% { transform: translate(-50%, -50%); }
+  25% { transform: translate(calc(-50% - 8px), -50%); }
+  75% { transform: translate(calc(-50% + 8px), -50%); }
+}
+
+.meter {
+  position: absolute; left: 12px; bottom: 12px; width: min(310px, calc(100% - 24px));
+  display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center;
+  background: rgba(255, 255, 255, .96); border-radius: 14px; padding: 8px 12px; box-shadow: 0 6px 16px rgba(11, 31, 77, .18);
+}
+.meter__icon { color: var(--blue-600); display: grid; place-items: center; }
+.meter__row { display: flex; justify-content: space-between; gap: 10px; font-size: .68rem; font-weight: 700; margin-bottom: 4px; }
+.meter__row b { color: var(--blue-600); }
+.meter__bar { height: 7px; border-radius: 99px; background: #dbe6fb; overflow: hidden; }
+.meter__bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #36c6ff, #0b4fd1); transition: width .12s linear; }
+
+.mirror__hint { text-align: center; font-weight: 600; margin: 4px 0 12px; }
+
+.btn-record {
+  display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 auto;
+  padding: 14px 30px; border-radius: 99px; color: #fff; font-weight: 800; font-size: 1.1rem;
+  background: linear-gradient(180deg, #1559e8, #0a45c4);
+  box-shadow: 0 5px 0 #062e8f, 0 10px 18px rgba(10, 69, 196, .3);
+  transition: transform .12s, box-shadow .12s, filter .2s, opacity .2s;
+}
+.btn-record:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-record:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #062e8f; }
+.btn-record:disabled { opacity: .55; filter: saturate(.7) brightness(1.25); box-shadow: none; cursor: progress; }
+.btn-record__wave { font-size: 1.2rem; }
+
+.rec-status { min-height: 22px; margin-top: 10px; }
+.rec-bar { height: 6px; border-radius: 99px; background: #dbe6fb; overflow: hidden; width: min(420px, 100%); margin: 0 auto 4px; }
+.rec-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--blue-700), var(--blue-500)); transition: width .1s linear; }
+.rec-text { text-align: center; font-size: .75rem; font-weight: 700; color: var(--blue-700); }
+.rec-text.is-warn { color: #a14b00; }
+
+/* coluna lateral */
+.side { display: grid; gap: 12px; }
+.coach { padding: 18px 16px; text-align: center; }
+.coach__avatar {
+  width: 84px; height: 84px; margin: 0 auto 8px; border-radius: 50%; overflow: hidden;
+  background: #dfeaff; border: 3px solid #fff; box-shadow: var(--shadow); display: grid; place-items: center; font-size: 2.2rem;
+}
+.coach__avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center 18%; }
+.coach__quote { font-size: 1.1rem; font-weight: 800; }
+.coach__text { font-size: .8rem; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+.comfort {
+  display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start;
+  background: #eaf1ff; border: 1px solid #d4e1fb; border-radius: 16px; padding: 12px 14px;
+}
+.comfort__ico { color: var(--blue-600); font-size: 1.1rem; }
+.comfort b { font-size: .85rem; }
+.comfort p { font-size: .72rem; color: var(--muted); line-height: 1.3; }
+.link-btn {
+  font-size: .78rem; font-weight: 700; color: var(--blue-700); padding: 10px;
+  text-align: center; background: rgba(255, 255, 255, .7); border-radius: 14px;
+}
+.link-btn:hover { background: #fff; }
+.link-btn--inline { display: block; margin: 12px auto 0; padding: 8px 18px; }
+
+/* ================== ETAPA 3 — FEEDBACK ================== */
+.feedback { max-width: 700px; margin: 0 auto; padding: 18px 18px 24px; text-align: center; }
+.seg { display: inline-flex; gap: 6px; background: #eef3ff; padding: 4px; border-radius: 99px; margin-bottom: 14px; }
+.seg__btn { padding: 5px 12px; font-size: .72rem; font-weight: 700; border-radius: 99px; color: var(--muted); }
+.seg__btn.is-active { background: var(--blue-700); color: #fff; }
+
+.fb { animation: pop .45s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+.fb__badge { position: relative; width: 104px; height: 104px; margin: 0 auto 8px; }
+.fb__circle {
+  width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; font-size: 2.8rem;
+  background: #cfe6ff; box-shadow: 0 0 0 8px #e6f1ff;
+}
+.fb__circle--warm { background: #ffe9c4; box-shadow: 0 0 0 8px #fff3dc; }
+.fb__star {
+  position: absolute; top: -4px; right: -8px; width: 34px; height: 34px; border-radius: 12px;
+  display: grid; place-items: center; color: #fff; font-size: 1.1rem; background: #d6368f;
+  transform: rotate(12deg); box-shadow: 0 4px 10px rgba(214, 54, 143, .35);
+}
+.fb__star--warm { background: #fff; font-size: 1.2rem; box-shadow: var(--shadow); }
+.fb h2 { font-size: 2rem; line-height: 1.15; color: var(--blue-700); }
+.fb--retry h2 { color: #b45309; }
+.fb p { font-size: 1.1rem; font-weight: 600; line-height: 1.3; max-width: 480px; margin: 8px auto 14px; }
+.fb__pill {
+  display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: .85rem;
+  background: #ffdcec; color: #6b123c; border: 1px solid #ffb9d8; padding: 8px 18px; border-radius: 99px;
+}
+.fb__pill-ico { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #d6368f; color: #fff; font-size: .7rem; }
+.fb__pill--warm { background: #fff0cf; color: #5a3a00; border-color: #ffd98a; }
+.fb__actions { display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 18px; }
+
+/* ================== CONFETE ================== */
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 60; }
+.confetti span { position: absolute; top: -14px; width: 9px; height: 14px; border-radius: 2px; animation: confetti-fall 1.9s ease-in forwards; }
+@keyframes confetti-fall { to { transform: translate(var(--dx), 105vh) rotate(540deg); } }
+
+/* ================== CELULAR (telas pequenas) ================== */
+@media (max-width: 520px) {
+  .page { padding: 10px 10px 32px; gap: 10px; }
+  .progress { padding: 10px 12px; }
+  .progress__head { flex-direction: column; gap: 2px; }
+  .progress__labels { font-size: .5rem; }
+  .coach-bubble { font-size: 1rem; }
+  .lesson, .observe, .mirror { padding: 12px; }
+  .steps__tab { font-size: .78rem; padding: 6px 12px; }
+  .observe__actions > * { flex: 1 1 100%; }
+  .chip--right { margin-left: 0; }
+  .camera { aspect-ratio: 3 / 4; max-height: 62vh; }
+  .camera__guide { width: 52%; }
+  .meter { left: 8px; bottom: 8px; width: calc(100% - 16px); }
+  .btn-record { padding: 12px 22px; font-size: 1rem; }
+  .fb h2 { font-size: 1.6rem; }
+  .fb p { font-size: 1rem; }
+  .fb__actions > * { flex: 1 1 100%; }
+  .demo__sound { font-size: .62rem; white-space: normal; text-align: center; width: max-content; max-width: 90%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
 </head>
 <body>
 
@@ -21,7 +387,7 @@
 
       
 
-      <div class="stars">☆  <b id="starCount">125</b> estrelas</div>
+      <div class="stars">☆ <b id="starCount">125</b> estrelas</div>
     </div>
 
     <!-- ============ PROGRESSO ============ -->
@@ -69,9 +435,13 @@
              Dica: use  poster="assets/capa-video.jpg"  para a imagem de capa. -->
         <div class="demo" id="demo">
           <video class="demo__video" id="demoVideo" playsinline preload="auto" aria-label="Boca fazendo o som Sssss">
+            <!-- o navegador tenta cada arquivo na ordem até achar um que exista -->
             <source src="assets/video.boca.mp4" type="video/mp4" />
             <source src="assets/video.boca.webm" type="video/webm" />
-            <source src="assets/video.boca.mov" type="video/quicktime" />
+            <source src="assets/video.boca.mov" />
+            <source src="assets/video.boca" />
+            <source src="../assets/video.boca.mp4" type="video/mp4" />
+            <source src="../assets/video.boca" />
           </video>
 
           <div class="demo__placeholder" id="demoPlaceholder" aria-hidden="true">
@@ -236,6 +606,760 @@
 
   </main>
 
-  <script src="atividade-004.js"></script>
+  <script>
+/* =====================================================
+   Lumis • Atividade 4 — Espelho do Lumis
+   Etapa 1: Primeiro o Lumis (vídeo + pista tátil)
+   Etapa 2: Agora Você! (câmera + microfone + "Gravar Minha Tentativa")
+   Etapa 3: Feedback Carinhoso (acertou / tentar de novo)
+
+   PRIVACIDADE: a câmera serve só de "espelho" e o microfone só é
+   analisado ao vivo no próprio aparelho. Nada é gravado, salvo
+   ou enviado para a internet. Ao sair da etapa 2, os dois desligam.
+
+   TESTES RÁPIDOS (sem precisar fazer o som):
+     atividade-004.html?demo=ok      -> simula uma tentativa que acerta
+     atividade-004.html?demo=erro    -> simula uma tentativa que erra (som não detectado)
+     atividade-004.html?demo=fora    -> simula o "sssss" certo, mas com a boca fora do quadrado
+     atividade-004.html?preview=1    -> libera a etapa 3 e mostra o alternador
+   ===================================================== */
+
+(() => {
+  "use strict";
+
+  // ---------- Configurações ----------
+  const CONFIG = {
+    LISTEN_MS: 4500,              // tempo máximo ouvindo a tentativa
+    SUCCESS_HIT_MS: 1200,         // quanto tempo de "sssss" é preciso detectar
+    HIGH_RATIO: 0.75,             // % da energia do som que precisa estar nos agudos (4–12 kHz)
+    MIN_DB_ABOVE_AMBIENT: 8,      // quão mais alto que o barulho do ambiente (em dB)
+    STARS_REWARD: 3,              // estrelas pelo acerto (só na 1ª vez)
+    MAX_TRIES_BEFORE_SKIP: 3,     // depois de N erros aparece "Continuar a Aventura"
+
+    // enquadramento (boca dentro do quadrado tracejado)
+    FRAME_PAD: 0.10,              // folga ao redor do quadrado (10% do tamanho dele)
+    MOUTH_MIN: 0.28,              // boca menor que isso (vs. largura do quadrado) = longe demais
+    MOUTH_MAX: 1.0,               // boca maior que isso = perto demais
+    FRAME_EVERY_MS: 100,          // confere o enquadramento 10x por segundo
+  };
+  const HAPTIC_SSS = [140, 160, 140, 160, 140];   // "3 toques suaves" no pulso
+
+  // Detector de rosto (MediaPipe). Roda no próprio aparelho; só baixa a biblioteca e o modelo.
+  // Para funcionar sem internet, baixe estes arquivos para a sua pasta e troque os endereços.
+  const MEDIAPIPE = {
+    LIB: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.0",
+    MODEL: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+  };
+
+  const params  = new URLSearchParams(location.search);
+  const DEMO    = params.get("demo");              // "ok" | "erro" | null
+  const PREVIEW = params.has("preview");
+
+  // ---------- Elementos ----------
+  const $ = (id) => document.getElementById(id);
+  const tabs   = [null, $("tab1"), $("tab2"), $("tab3")];
+  const panels = [null, $("panel1"), $("panel2"), $("panel3")];
+
+  const bandStatus = $("bandStatus") || document.createElement("div");      // opcional no HTML
+  const bandTag = $("bandTag") || Object.assign(document.createElement("span"), { textContent: " " });
+  const starCountEl = $("starCount");
+
+  // etapa 1
+  const btnSsss = $("btnSsss"), btnReplay = $("btnReplay"), btnMyTurn = $("btnMyTurn");
+  const demoEl = $("demo"), demoVideo = $("demoVideo"), demoPlaceholder = $("demoPlaceholder");
+  const tactile = $("tactile");
+
+  // etapa 2
+  const camera = $("camera"), camVideo = $("camVideo"), camOffText = $("camOffText"), btnAllow = $("btnAllow");
+  const guideBox = $("guideBox");
+  const chipMic = $("chipMic"), chipMicText = $("chipMicText"), chipFrame = $("chipFrame"), chipFrameText = $("chipFrameText");
+  const micLevel = $("micLevel").querySelectorAll("i");
+  const meterText = $("meterText"), meterFill = $("meterFill");
+  const btnRecord = $("btnRecord"), recWave = $("recWave"), recBar = $("recBar"), recFill = $("recFill"), recText = $("recText");
+  const btnReview = $("btnReview"), coachImg = $("coachImg");
+
+  // etapa 3
+  const seg = $("seg"), fbSuccess = $("fbSuccess"), fbRetry = $("fbRetry");
+  const starsPillText = $("starsPillText"), retryText = $("retryText");
+  const btnAgain = $("btnAgain"), btnContinue = $("btnContinue"), btnReview2 = $("btnReview2");
+  const btnTryAgain = $("btnTryAgain"), btnSkip = $("btnSkip");
+
+  // ---------- Estado ----------
+  let current = 1;
+  let tab3Unlocked = false;
+  let rewarded = false;
+  let fails = 0;
+
+  // =====================================================
+  //  ABAS
+  // =====================================================
+  function showTab(n) {
+    if (n === 3 && !tab3Unlocked) return;
+    const leaving = current;
+    current = n;
+
+    for (let i = 1; i <= 3; i++) {
+      const on = i === n;
+      panels[i].hidden = !on;
+      tabs[i].classList.toggle("is-active", on);
+      tabs[i].setAttribute("aria-selected", String(on));
+    }
+
+    if (leaving === 2 && n !== 2) leaveMirror();
+    if (n === 2) enterMirror();
+    if (n === 1) updateVideoSlot();
+
+    tabs[n].scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  tabs.forEach((t, i) => t && t.addEventListener("click", () => showTab(i)));
+  btnMyTurn.addEventListener("click", () => showTab(2));
+  btnReview.addEventListener("click", () => showTab(1));
+  btnReview2.addEventListener("click", () => showTab(1));
+  btnTryAgain.addEventListener("click", () => showTab(2));
+  btnAgain.addEventListener("click", () => showTab(2));
+
+  // =====================================================
+  //  ETAPA 1 — PRIMEIRO O LUMIS
+  // =====================================================
+
+  // Mostra o <video> se algum arquivo carregar; se nenhum existir, mantém o desenho do "ventinho".
+  let videoOk = false;
+  function updateVideoSlot() {
+    demoVideo.hidden = !videoOk;
+    demoPlaceholder.hidden = videoOk;
+    demoEl.classList.toggle("has-video", videoOk);
+    return videoOk;
+  }
+  // Ajusta o quadro à proporção real do vídeo (entre 4:5 e 16:9), para a boca não ser cortada
+  demoVideo.addEventListener("loadedmetadata", () => {
+    const w = demoVideo.videoWidth, h = demoVideo.videoHeight;
+    if (w && h) {
+      const r = Math.min(1.78, Math.max(0.8, w / h));
+      demoEl.style.setProperty("--demo-ratio", r.toFixed(4));
+    }
+    videoOk = true; updateVideoSlot();
+  });
+  // erro em TODAS as <source> => sem vídeo
+  const sources = demoVideo.querySelectorAll("source");
+  if (sources.length) {
+    sources[sources.length - 1].addEventListener("error", () => { videoOk = false; updateVideoSlot(); });
+  }
+  demoVideo.addEventListener("error", () => { videoOk = false; updateVideoSlot(); });
+  updateVideoSlot();
+
+  demoVideo.addEventListener("click", () => {
+    if (demoVideo.paused) demoVideo.play().catch(() => {}); else demoVideo.pause();
+  });
+
+  let hapticTimer = null;
+  function haptic(pattern, uiMs) {
+    if ("vibrate" in navigator) navigator.vibrate(pattern);
+    tactile.classList.add("is-active");
+    bandStatus.classList.add("is-active");
+    bandTag.firstChild.textContent = "Vibrando ";
+    clearTimeout(hapticTimer);
+    hapticTimer = setTimeout(stopHapticUi, uiMs);
+  }
+  function stopHapticUi() {
+    tactile.classList.remove("is-active");
+    bandStatus.classList.remove("is-active");
+    bandTag.firstChild.textContent = "Vibração pronto ";
+  }
+
+  function playDemo() {
+    haptic(HAPTIC_SSS, 2200);
+    if (!updateVideoSlot()) playSound("ssss"); // com vídeo, o som é o do próprio vídeo
+    if (videoOk) {
+      demoVideo.currentTime = 0;
+      demoVideo.play().catch(() => {});
+    }
+  }
+  btnSsss.addEventListener("click", playDemo);
+  btnReplay.addEventListener("click", playDemo);
+
+  // =====================================================
+  //  ETAPA 2 — CÂMERA + MICROFONE
+  // =====================================================
+  let stream = null, srcNode = null, analyser = null, freqData = null;
+  let hasMic = false, hasCam = false;
+  let ambientDb = null;
+  let rafId = 0, lastTs = 0;
+
+  let listening = false, listenStart = 0, hitMs = 0, soundMs = 0, smooth = 0, lastBuzz = 0;
+
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+  async function ensureMedia() {
+    if (stream && stream.active) { updateMediaUI(); return; }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      updateMediaUI("Este navegador não consegue ligar a câmera. Tente o Chrome ou o Safari atualizados.");
+      return;
+    }
+
+    // ruído/eco desligados: senão o navegador "limpa" o sssss achando que é barulho
+    const audio = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+    const tries = [
+      { audio, video: { facingMode: "user", width: { ideal: 960 }, height: { ideal: 720 } } },
+      { audio },
+      { video: { facingMode: "user" } },
+    ];
+
+    let denied = false;
+    for (const constraints of tries) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        break;
+      } catch (err) {
+        if (err && (err.name === "NotAllowedError" || err.name === "SecurityError")) { denied = true; break; }
+      }
+    }
+
+    if (!stream) {
+      updateMediaUI(denied
+        ? "Para o Lumis te ver e te ouvir, toque em “Permitir câmera e microfone”."
+        : "Não encontrei câmera nem microfone neste aparelho.");
+      return;
+    }
+
+    hasCam = stream.getVideoTracks().length > 0;
+    hasMic = stream.getAudioTracks().length > 0;
+
+    if (hasCam) {
+      camVideo.srcObject = stream;
+      camVideo.play().catch(() => {});
+    }
+    if (hasMic) setupAnalyser();
+    updateMediaUI();
+  }
+
+  function stopMedia() {
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+    if (srcNode) { try { srcNode.disconnect(); } catch (e) {} }
+    stream = null; srcNode = null; analyser = null; freqData = null;
+    hasCam = false; hasMic = false; ambientDb = null;
+    camVideo.srcObject = null;
+  }
+
+  function updateMediaUI(message) {
+    camera.classList.toggle("is-off", !hasCam);
+    camOffText.textContent = message ||
+      (hasCam ? "" : stream ? "Sem câmera por aqui, mas o Lumis consegue te ouvir!" : "Ligando a câmera...");
+    btnAllow.hidden = !message;
+
+    chipMic.classList.toggle("is-off", !hasMic);
+    chipMicText.textContent = hasMic ? "Microfone Ativo" : "Microfone desligado";
+    paintFraming();
+  }
+
+  btnAllow.addEventListener("click", async () => {
+    camOffText.textContent = "Ligando a câmera...";
+    btnAllow.hidden = true;
+    await ensureMedia();
+  });
+
+  function setupAnalyser() {
+    const ac = getCtx();
+    if (!ac) return;
+    if (ac.state === "suspended") ac.resume();
+    srcNode = ac.createMediaStreamSource(stream);
+    analyser = ac.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.2;
+    freqData = new Float32Array(analyser.frequencyBinCount);
+    srcNode.connect(analyser);               // não liga na caixa de som (sem eco)
+  }
+
+  // Mede o som: volume total (dB) e quanto dele está nos agudos (onde mora o "sssss")
+  function measure() {
+    analyser.getFloatFrequencyData(freqData);
+    const binHz = getCtx().sampleRate / analyser.fftSize;
+    const lowStart  = Math.floor(100 / binHz);
+    const midStart  = Math.floor(1500 / binHz);
+    const highStart = Math.floor(4000 / binHz);
+    const highEnd   = Math.min(freqData.length - 1, Math.floor(12000 / binHz));
+    let low = 0, mid = 0, high = 0;
+    for (let i = lowStart; i <= highEnd; i++) {
+      const p = Math.pow(10, freqData[i] / 10);
+      if (i < midStart) low += p; else if (i < highStart) mid += p; else high += p;
+    }
+    const total = low + mid + high + 1e-12;
+    return { db: 10 * Math.log10(total), ratio: high / total };
+  }
+
+  // =====================================================
+  //  ENQUADRAMENTO — a boca (e os dentes) estão dentro do quadrado?
+  //  Usa o MediaPipe Face Landmarker: acha os pontos dos lábios no vídeo
+  //  e confere se todos cabem dentro do quadrado tracejado.
+  // =====================================================
+  let lmState = "idle";                 // idle | loading | ready | failed
+  let landmarker = null, lipIdx = null;
+  let frameOk = null;                   // null = ainda não sei | true | false
+  let frameHint = "", frameHist = [], lastFrameCheck = 0;
+
+  // só dá para exigir o enquadramento se o detector estiver pronto (ou no modo de teste)
+  const framingKnown = () => (DEMO ? true : lmState === "ready" && hasCam);
+
+  async function loadFaceLandmarker() {
+    if (landmarker || lmState === "loading") return;
+    lmState = "loading";
+    paintFraming();
+    try {
+      const { FaceLandmarker, FilesetResolver } = await import(MEDIAPIPE.LIB + "/vision_bundle.mjs");
+      const fileset = await FilesetResolver.forVisionTasks(MEDIAPIPE.LIB + "/wasm");
+      const make = (delegate) => FaceLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: MEDIAPIPE.MODEL, delegate },
+        runningMode: "VIDEO",
+        numFaces: 1,
+      });
+      try { landmarker = await make("GPU"); } catch (e) { landmarker = await make("CPU"); }
+      lipIdx = [...new Set(FaceLandmarker.FACE_LANDMARKS_LIPS.flatMap((c) => [c.start, c.end]))];
+      lmState = "ready";
+    } catch (e) {
+      lmState = "failed";               // sem internet / bloqueado: a atividade segue sem exigir o enquadramento
+    }
+    paintFraming();
+  }
+
+  function resetFraming() {
+    frameHist = [];
+    lastFrameCheck = 0;
+    frameOk = DEMO ? DEMO !== "fora" : null;
+    frameHint = DEMO === "fora" ? "Leve a boca para o quadrado ➡️" : "";
+    if (DEMO) lmState = "ready";
+  }
+
+  // caixa que envolve todos os pontos dos lábios, em pixels da área da câmera
+  // (considera o recorte "cover" do vídeo e o efeito espelho)
+  function lipsBox(lm, idx, cw, ch, vw, vh) {
+    const scale = Math.max(cw / vw, ch / vh);
+    const offX = (cw - vw * scale) / 2, offY = (ch - vh * scale) / 2;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const i of idx) {
+      const p = lm[i];
+      if (!p) continue;
+      const x = cw - (offX + p.x * vw * scale);       // espelho
+      const y = offY + p.y * vh * scale;
+      if (x < x0) x0 = x; if (x > x1) x1 = x;
+      if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    return { x0, y0, x1, y1 };
+  }
+
+  // a boca está dentro do quadrado? Se não, diz o que fazer.
+  function judgeBox(m, g) {
+    const mw = m.x1 - m.x0;
+    if (mw < g.w * CONFIG.MOUTH_MIN) return { ok: false, hint: "Chegue mais pertinho 🔍" };
+    if (mw > g.w * CONFIG.MOUTH_MAX) return { ok: false, hint: "Afaste um pouquinho ↔️" };
+
+    const padX = g.w * CONFIG.FRAME_PAD, padY = g.h * CONFIG.FRAME_PAD;
+    const left   = g.x - padX - m.x0;                 // > 0: a boca passou da esquerda
+    const right  = m.x1 - (g.x + g.w + padX);
+    const top    = g.y - padY - m.y0;
+    const bottom = m.y1 - (g.y + g.h + padY);
+    const worst = Math.max(left, right, top, bottom);
+    if (worst <= 0) return { ok: true, hint: "" };
+
+    const arrow = worst === left ? "➡️" : worst === right ? "⬅️" : worst === top ? "⬇️" : "⬆️";
+    return { ok: false, hint: `Leve a boca para o quadrado ${arrow}` };
+  }
+
+  function detectFraming(now) {
+    if (camVideo.readyState < 2 || !camVideo.videoWidth) return;
+    let res;
+    try { res = landmarker.detectForVideo(camVideo, now); } catch (e) { return; }
+    const lm = res && res.faceLandmarks && res.faceLandmarks[0];
+
+    let r;
+    if (!lm) {
+      r = { ok: false, hint: "Não achei seu rostinho 🔍" };
+    } else {
+      const cam = camera.getBoundingClientRect(), g = guideBox.getBoundingClientRect();
+      if (!cam.width) return;
+      const m = lipsBox(lm, lipIdx, cam.width, cam.height, camVideo.videoWidth, camVideo.videoHeight);
+      r = judgeBox(m, { x: g.left - cam.left, y: g.top - cam.top, w: g.width, h: g.height });
+    }
+
+    // evita piscar: vale o que aconteceu na maioria das últimas 5 conferências
+    frameHist.push(r);
+    if (frameHist.length > 5) frameHist.shift();
+    const okCount = frameHist.filter((x) => x.ok).length;
+    frameOk = okCount >= Math.ceil(frameHist.length * 0.6);
+    frameHint = frameOk ? "" : [...frameHist].reverse().find((x) => !x.ok).hint;
+    paintFraming();
+  }
+
+  function paintFraming() {
+    let text, warn = false;
+    if (DEMO) { text = frameOk ? "Enquadramento OK" : frameHint; warn = !frameOk; }
+    else if (!hasCam) { text = "Aguardando câmera"; warn = true; }
+    else if (lmState === "failed") { text = "Enquadramento: não consegui conferir"; warn = true; }
+    else if (lmState !== "ready") { text = "Enquadramento: carregando..."; }
+    else if (frameOk === true) { text = "Enquadramento OK"; }
+    else { text = frameHint || "Procurando seu rostinho..."; warn = frameOk === false; }
+
+    chipFrameText.textContent = text;
+    chipFrame.classList.toggle("is-off", warn);
+    const known = framingKnown();
+    camera.classList.toggle("is-framed", known && frameOk === true);
+    camera.classList.toggle("is-misframed", known && frameOk === false);
+  }
+
+  function enterMirror() {
+    resetMeter();
+    recText.textContent = "";
+    recText.classList.remove("is-warn");
+    resetFraming();
+    updateMediaUI();
+    startLoop();
+    ensureMedia();
+    if (!DEMO) loadFaceLandmarker();
+  }
+
+  function leaveMirror() {
+    if (listening) { listening = false; setRecordingUI(false); }
+    stopLoop();
+    stopMedia();
+    resetFraming();
+    updateMediaUI();
+  }
+
+  // ---------- laço de análise (a cada quadro) ----------
+  function startLoop() { if (!rafId) { lastTs = performance.now(); rafId = requestAnimationFrame(loop); } }
+  function stopLoop()  { cancelAnimationFrame(rafId); rafId = 0; }
+
+  function loop(now) {
+    rafId = requestAnimationFrame(loop);
+    const dt = Math.min(now - lastTs, 100);
+    lastTs = now;
+
+    let above = 0, ratio = 0;
+    if (analyser) {
+      const m = measure();
+      if (ambientDb === null) ambientDb = m.db;
+      above = m.db - ambientDb;
+      ratio = m.ratio;
+      // aprende o barulho do ambiente enquanto ninguém está fazendo o som
+      if (!listening && above < 6) ambientDb += (m.db - ambientDb) * 0.03;
+    }
+
+    // confere se a boca está no quadrado (10x por segundo)
+    if (landmarker && hasCam && now - lastFrameCheck >= CONFIG.FRAME_EVERY_MS) {
+      lastFrameCheck = now;
+      detectFraming(now);
+    }
+
+    // barrinhas do microfone
+    const lv = clamp(above / 30, 0, 1);
+    micLevel[0].style.height = 20 + lv * 70 + "%";
+    micLevel[1].style.height = 20 + lv * 100 + "%";
+    micLevel[2].style.height = 20 + lv * 60 + "%";
+
+    if (!listening) return;
+
+    const elapsed = now - listenStart;
+    let soundHit, target;
+    if (DEMO) {
+      soundHit = DEMO !== "erro" && elapsed > 600;
+      target = DEMO !== "erro" ? (elapsed > 600 ? 0.97 : 0.3) : 0.02;
+    } else {
+      soundHit = ratio > CONFIG.HIGH_RATIO && above > CONFIG.MIN_DB_ABOVE_AMBIENT;
+      target = clamp((above - 3) / 22, 0, 1) * clamp((ratio - 0.5) / 0.4, 0, 1);
+    }
+
+    // o ventinho só vale se a boca estiver dentro do quadrado
+    const framedNow = framingKnown() ? frameOk === true : true;
+    smooth += (target - smooth) * 0.25;
+    if (soundHit) soundMs += dt;
+    if (soundHit && framedNow) hitMs += dt;
+
+    const pct = Math.round(smooth * 100);
+    meterFill.style.width = pct + "%";
+    meterText.textContent = pct < 8 ? "Ouvindo..."
+      : framedNow ? `Ventinho detectado: ${pct}% 🍃`
+      : (frameHint || "Leve a boca para o quadrado");
+    recFill.style.width = Math.min(100, (elapsed / CONFIG.LISTEN_MS) * 100) + "%";
+
+    // carinho no pulso enquanto o ventinho está saindo
+    if (soundHit && framedNow && now - lastBuzz > 700) {
+      lastBuzz = now;
+      if ("vibrate" in navigator) navigator.vibrate(40);
+    }
+
+    if (hitMs >= CONFIG.SUCCESS_HIT_MS) {
+      finish(true);
+    } else if (elapsed >= CONFIG.LISTEN_MS) {
+      // houve "sssss" suficiente, mas a boca não estava no quadrado -> o problema foi o enquadramento
+      finish(false, soundMs >= CONFIG.SUCCESS_HIT_MS * 0.7 ? "frame" : "sound");
+    }
+  }
+
+  // ---------- gravar minha tentativa ----------
+  async function startRecording() {
+    if (listening) return;
+    recText.classList.remove("is-warn");
+
+    if (!DEMO && !hasMic) await ensureMedia();
+    if (!DEMO && !hasMic) {
+      recText.textContent = "Não consegui ouvir você. Toque em “Permitir câmera e microfone” e tente de novo.";
+      recText.classList.add("is-warn");
+      if (btnAllow.hidden && !hasCam) btnAllow.hidden = false;
+      return;
+    }
+
+    // a boca precisa estar no quadrado antes de começar
+    if (framingKnown() && frameOk !== true) {
+      recText.textContent = `${frameHint || "Leve a boca para o quadrado"}. Depois toque em “Gravar Minha Tentativa” de novo.`;
+      recText.classList.add("is-warn");
+      camera.classList.add("nudge");
+      setTimeout(() => camera.classList.remove("nudge"), 600);
+      return;
+    }
+
+    const ac = getCtx();
+    if (ac && ac.state === "suspended") await ac.resume();
+
+    listening = true;
+    listenStart = performance.now();
+    hitMs = 0; soundMs = 0; smooth = 0; lastBuzz = 0;
+    setRecordingUI(true);
+    startLoop();
+  }
+  btnRecord.addEventListener("click", startRecording);
+
+  function setRecordingUI(on) {
+    btnRecord.disabled = on;
+    recWave.hidden = !on;
+    recBar.hidden = !on;
+    camera.classList.toggle("is-listening", on);
+    if (on) {
+      recFill.style.width = "0%";
+      recText.textContent = "Ouvindo e sentindo o ventinho... 🍃";
+      meterText.textContent = "Ouvindo...";
+      bandStatus.classList.add("is-active");
+      bandTag.firstChild.textContent = "Ouvindo ";
+    } else {
+      recText.textContent = "";
+      bandStatus.classList.remove("is-active");
+      bandTag.firstChild.textContent = "Vibração pronto ";
+    }
+  }
+
+  function resetMeter() {
+    smooth = 0;
+    meterFill.style.width = "0%";
+    meterText.textContent = "Pronto para ouvir";
+    recFill.style.width = "0%";
+  }
+
+  function finish(ok, reason) {
+    if (!listening) return;
+    listening = false;
+    recFill.style.width = "100%";
+    meterText.textContent = ok ? "Ventinho detectado! 🍃" : "Pronto para ouvir";
+    btnRecord.disabled = true;               // segura o botão até mudar de etapa
+    setTimeout(() => {
+      setRecordingUI(false);
+      showResult(ok, reason);
+    }, ok ? 700 : 500);
+  }
+
+  // =====================================================
+  //  ETAPA 3 — FEEDBACK CARINHOSO
+  // =====================================================
+  const RETRY_TEXTS = [
+    "O ventinho ainda está tímido. Vamos tentar de novo, soltando o ar bem devagarzinho, como o Lumis fez?",
+    "Você está quase lá! Abra um sorriso de leve, deixe os dentinhos pertinho e solte um Sssss bem longo.",
+    "Cada tentativa deixa você mais craque! Que tal olhar o Lumis mais uma vez e depois soprar com calma?",
+  ];
+
+  // quando o ventinho saiu, mas a boca não estava dentro do quadrado
+  const FRAME_RETRY_TEXT =
+    "O Lumis ouviu o seu ventinho, mas não viu a sua boquinha no quadrado! Leve o sorriso para o quadrado tracejado e tente de novo.";
+
+  function unlockTab3() {
+    tab3Unlocked = true;
+    tabs[3].disabled = false;
+  }
+
+  function setFbView(view) {
+    fbSuccess.hidden = view !== "success";
+    fbRetry.hidden = view !== "retry";
+    seg.querySelectorAll(".seg__btn").forEach((b) => b.classList.toggle("is-active", b.dataset.view === view));
+  }
+
+  function showResult(ok, reason) {
+    unlockTab3();
+    if (ok) {
+      if (!rewarded) {
+        rewarded = true;
+        starCountEl.textContent = String(Number(starCountEl.textContent) + CONFIG.STARS_REWARD);
+        starsPillText.textContent = `+${CONFIG.STARS_REWARD} Estrelas Mágicas conquistadas para a Missão!`;
+      } else {
+        starsPillText.textContent = "Você já tem as Estrelas Mágicas desta Missão. Que sopro lindo!";
+      }
+      setFbView("success");
+      if ("vibrate" in navigator) navigator.vibrate([100, 60, 100, 60, 220]);
+      playSound("sucesso");
+      confetti();
+    } else {
+      retryText.textContent = reason === "frame"
+        ? FRAME_RETRY_TEXT
+        : RETRY_TEXTS[fails % RETRY_TEXTS.length];
+      fails += 1;
+      btnSkip.hidden = fails < CONFIG.MAX_TRIES_BEFORE_SKIP;
+      setFbView("retry");
+      if ("vibrate" in navigator) navigator.vibrate(60);
+      playSound("tentar");
+    }
+    showTab(3);
+  }
+
+  seg.querySelectorAll(".seg__btn").forEach((b) => b.addEventListener("click", () => setFbView(b.dataset.view)));
+
+  // continuar a aventura: defina data-next="atividade-005.html" nos botões do HTML
+  function goNext(btn) {
+    window.dispatchEvent(new CustomEvent("atividade004:continuar"));
+    const dest = btn.dataset.next;
+    if (dest) window.location.href = dest;
+  }
+  btnContinue.addEventListener("click", () => goNext(btnContinue));
+  btnSkip.addEventListener("click", () => goNext(btnSkip));
+
+  // =====================================================
+  //  EXTRAS
+  // =====================================================
+
+  // se a foto do mascote não carregar, mostra um gatinho no lugar
+  coachImg.addEventListener("error", () => {
+    const box = coachImg.parentElement;
+    coachImg.remove();
+    box.textContent = "🐱";
+  });
+
+  // privacidade: desliga câmera/microfone se a pessoa trocar de aba do navegador
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && current === 2) { leaveMirrorKeepTab(); }
+    else if (!document.hidden && current === 2) { enterMirror(); }
+  });
+  function leaveMirrorKeepTab() { leaveMirror(); }
+  window.addEventListener("pagehide", stopMedia);
+
+  // confete
+  function confetti() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const colors = ["#ffd54a", "#2f78ff", "#36c6ff", "#ff8fb1", "#7be495"];
+    const wrap = document.createElement("div");
+    wrap.className = "confetti";
+    wrap.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 28; i++) {
+      const s = document.createElement("span");
+      s.style.left = Math.random() * 100 + "%";
+      s.style.background = colors[i % colors.length];
+      s.style.animationDelay = Math.random() * 0.4 + "s";
+      s.style.setProperty("--dx", Math.random() * 160 - 80 + "px");
+      wrap.appendChild(s);
+    }
+    document.body.appendChild(wrap);
+    setTimeout(() => wrap.remove(), 2600);
+  }
+
+  // =====================================================
+  //  SONS (Web Audio API — sem arquivos externos)
+  // =====================================================
+  let audioCtx = null;
+
+  function getCtx() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!audioCtx) audioCtx = new AC();
+    return audioCtx;
+  }
+
+  function playSound(kind) {
+    try {
+      const ac = getCtx();
+      if (!ac) return;
+      if (ac.state === "suspended") ac.resume();
+      if (kind === "sucesso") return cheer(ac);
+      if (kind === "tentar") return softTry(ac);
+      return hiss(ac, 2);
+    } catch (e) {
+      /* áudio não suportado: segue sem som */
+    }
+  }
+
+  // "sssss" suave e contínuo
+  function hiss(ac, seconds) {
+    const t = ac.currentTime;
+    const len = Math.floor(ac.sampleRate * seconds);
+    const buffer = ac.createBuffer(1, len, ac.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+
+    const src = ac.createBufferSource();
+    src.buffer = buffer;
+
+    const high = ac.createBiquadFilter();
+    high.type = "highpass"; high.frequency.value = 4000; high.Q.value = 0.7;
+    const low = ac.createBiquadFilter();
+    low.type = "lowpass"; low.frequency.value = 9500;
+
+    const gain = ac.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.16, t + 0.3);
+    gain.gain.linearRampToValueAtTime(0.16, t + seconds - 0.5);
+    gain.gain.linearRampToValueAtTime(0.0001, t + seconds);
+
+    src.connect(high).connect(low).connect(gain).connect(ac.destination);
+    src.start(t);
+  }
+
+  // notinhas alegres de acerto (dó-mi-sol-dó agudo)
+  function cheer(ac) {
+    const t = ac.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+      const start = t + i * 0.12;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.3, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(start);
+      osc.stop(start + 0.5);
+    });
+  }
+
+  // duas notinhas suaves para "vamos tentar de novo"
+  function softTry(ac) {
+    const t = ac.currentTime;
+    [392, 329.63].forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const start = t + i * 0.16;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.15, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(start);
+      osc.stop(start + 0.45);
+    });
+  }
+
+  // =====================================================
+  //  INÍCIO
+  // =====================================================
+  if (PREVIEW) {
+    unlockTab3();
+    seg.hidden = false;
+  }
+})();
+</script>
 </body>
 </html>
