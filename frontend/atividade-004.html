@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lumis • Atividade 4 — Espelho do Lumis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="atividade-004.css" />
+</head>
+<body>
+
+  <!-- ============ TOPO ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand__paw">🐾</span>
+      <strong>Lumis</strong>
+    </div>
+
+    <div class="mission-chip">
+      <span class="dot-icon">◎</span>
+      <span>Missão do Dia • <b>Espelho perfeito</b></span>
+    </div>
+
+    <div class="band-chip band-chip--top">
+      <span class="live-dot"></span> Pulseira Conectada
+    </div>
+  </header>
+
+  <main class="page">
+
+    <!-- ============ BARRA SECUNDÁRIA ============ -->
+    <div class="subbar">
+      <button class="btn-back" type="button">‹ Voltar para a Missão</button>
+
+      <div class="band-status" id="bandStatus">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v12h6V6H9ZM3 9h2v6H3V9Zm16 0h2v6h-2V9Z"/></svg>
+        <span>Pulseira Ativa</span>
+        <span class="band-status__tag" id="bandTag">Vibração pronto <i>📳</i></span>
+      </div>
+
+      <div class="stars">⭐ <b id="starCount">125</b> estrelas</div>
+    </div>
+
+    <!-- ============ PROGRESSO ============ -->
+    <section class="progress card-soft" aria-label="Progresso da jornada">
+      <div class="progress__head">
+        <span><span class="dot-icon">◎</span> Etapa 4 de 8: <b>Espelho do Lumis</b> <small>Espelho perfeito</small></span>
+        <a href="#" class="progress__start">Progresso da Jornada</a>
+      </div>
+      <div class="progress__bars">
+        <span class="bar bar--done"></span><span class="bar bar--done"></span><span class="bar bar--done"></span><span class="bar bar--current"></span>
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </div>
+      <div class="progress__labels">
+        <span>1. Som</span><span>2. Espelho</span><span>3. Língua</span><span class="cur">4. Imite</span>
+        <span>5. Amigos</span><span>6. Frases</span><span>7. Desafio</span><span>8. Tesouro</span>
+      </div>
+      <div class="hints">
+        <span class="hint hint--visual">👁 Pista Visual: veja o ventinho azul se movendo nos dentes</span>
+        <span class="hint hint--tactile">📳 Pista Tátil: sinta os 3 toques no pulso</span>
+      </div>
+    </section>
+
+    <!-- ============ ABAS DA ATIVIDADE ============ -->
+    <nav class="steps" role="tablist" aria-label="Etapas da atividade">
+      <button class="steps__tab is-active" id="tab1" role="tab" type="button" aria-selected="true"  aria-controls="panel1">1. Primeiro o Lumis 👀</button>
+      <button class="steps__tab"           id="tab2" role="tab" type="button" aria-selected="false" aria-controls="panel2">2. Agora Você! (Espelho) 🐾</button>
+      <button class="steps__tab"           id="tab3" role="tab" type="button" aria-selected="false" aria-controls="panel3" disabled>3. Feedback Carinhoso ✨</button>
+    </nav>
+
+    <!-- =====================================================
+         ETAPA 1 — PRIMEIRO O LUMIS
+         ===================================================== -->
+    <section class="layout" id="panel1" role="tabpanel" aria-labelledby="tab1">
+
+      <div class="card-soft lesson">
+        <p class="lesson__who">🐾 Lumis ensina com carinho:</p>
+
+        <div class="coach-bubble">
+          <p>"Primeiro eu! Olhe bem como meus lábios abrem e o ventinho sai suave pelos dentes:
+            <button class="ssss-link" id="btnSsss" type="button">Sssss...</button> 🍃 🫧 "</p>
+        </div>
+
+        <!-- ESPAÇO DO VÍDEO (boca fazendo "Sssss")
+             Quando tiver o vídeo, basta incluir o arquivo de uma destas formas:
+               1) <video ... src="assets/video-sssss.mp4"> (atributo src)
+               2) <source src="assets/video-sssss.mp4" type="video/mp4" /> dentro do <video>
+             O JavaScript percebe sozinho, mostra o vídeo e esconde o desenho de "ventinho".
+             Dica: use  poster="assets/capa-video.jpg"  para a imagem de capa. -->
+        <div class="demo" id="demo">
+          <video class="demo__video" id="demoVideo" playsinline preload="metadata" hidden>
+            <!-- <source src="assets/video-sssss.mp4" type="video/mp4" /> -->
+          </video>
+
+          <div class="demo__placeholder" id="demoPlaceholder" aria-hidden="true">
+            <svg class="wind wind--1" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>
+            <svg class="wind wind--2" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>
+            <svg class="wind wind--3" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>
+          </div>
+
+          <span class="demo__sound">🔊 Som do Ventinho: Frequência Suave Contínua</span>
+        </div>
+
+        <div class="tactile" id="tactile">
+          <span class="tactile__icon">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v12h6V6H9ZM3 9h2v6H3V9Zm16 0h2v6h-2V9Z"/></svg>
+          </span>
+          <div class="tactile__text">
+            <b>Pista Tátil na sua Pulseira</b>
+            <small>Vibrando em ritmo calmo (3 toques suaves) ~~~</small>
+          </div>
+          <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        </div>
+      </div>
+
+      <aside class="card-soft observe">
+        <h2>👁 O que observar no Lumis:</h2>
+
+        <ul class="obs-list">
+          <li class="obs-item">
+            <span class="obs-item__icon obs-item__icon--1">😊</span>
+            <div><b>1. Sorriso Aberto</b><small>Lábios esticadinhos de leve, sem tampar a saída do ventinho.</small></div>
+          </li>
+          <li class="obs-item">
+            <span class="obs-item__icon obs-item__icon--2">🦷</span>
+            <div><b>2. Dentes Próximos</b><small>Dentes de cima e baixo quase se tocando como uma portinha fina.</small></div>
+          </li>
+          <li class="obs-item">
+            <span class="obs-item__icon obs-item__icon--3">🌬️</span>
+            <div><b>3. Arzinho Frio e Suave</b><small>Sopre suave! Não precisa fazer força, apenas soltar o som longo: Sssssss!</small></div>
+          </li>
+        </ul>
+
+        <div class="observe__actions">
+          <button class="btn-soft" id="btnReplay" type="button">↻ Ouvir / Sentir de novo 📳</button>
+          <button class="btn-primary" id="btnMyTurn" type="button">Agora é a minha vez! ✏️ ➔</button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- =====================================================
+         ETAPA 2 — AGORA VOCÊ! (ESPELHO / CÂMERA)
+         ===================================================== -->
+    <section class="layout" id="panel2" role="tabpanel" aria-labelledby="tab2" hidden>
+
+      <div class="card-soft mirror">
+        <div class="mirror__chips">
+          <span class="chip" id="chipMic">🎙️ <span id="chipMicText">Microfone Ativo</span>
+            <span class="level" id="micLevel" aria-hidden="true"><i></i><i></i><i></i></span>
+          </span>
+          <span class="chip" id="chipFrame">🔲 <span id="chipFrameText">Enquadramento OK</span></span>
+          <span class="chip chip--right">↻ Feedback Háptico Pronto</span>
+        </div>
+
+        <!-- ESPAÇO DA CÂMERA (a criança aparece aqui) -->
+        <div class="camera" id="camera">
+          <video id="camVideo" autoplay playsinline muted></video>
+
+          <div class="camera__off" id="camOff">
+            <span class="camera__off-ico">📷</span>
+            <p id="camOffText">Ligando a câmera...</p>
+            <button class="btn-soft" id="btnAllow" type="button" hidden>Permitir câmera e microfone</button>
+          </div>
+
+          <div class="camera__guide" id="guideBox" aria-hidden="true"><span>Desafie seu sorriso aqui</span></div>
+
+          <div class="meter" id="meter">
+            <span class="meter__icon">
+              <svg class="ico ico--wind" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>
+            </span>
+            <div class="meter__body">
+              <div class="meter__row">
+                <span>Intensidade do Ventinho</span>
+                <b id="meterText">Pronto para ouvir</b>
+              </div>
+              <div class="meter__bar"><i id="meterFill"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <p class="mirror__hint">Faça o som do ventinho quando estiver pronto! Lembre do sorriso do Lumis. 🍃</p>
+
+        <button class="btn-record" id="btnRecord" type="button">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="6.5" cy="9.5" rx="2" ry="2.6"/><ellipse cx="12" cy="6.5" rx="2" ry="2.8"/><ellipse cx="17.5" cy="9.5" rx="2" ry="2.6"/><path d="M12 11c-3 0-5.5 3.2-5.5 5.4 0 1.6 1.2 2.6 2.7 2.6 1 0 1.8-.5 2.8-.5s1.8.5 2.8.5c1.5 0 2.7-1 2.7-2.6C17.5 14.2 15 11 12 11Z"/></svg>
+          <span>Gravar Minha Tentativa</span>
+          <span class="btn-record__wave" id="recWave" hidden>〰</span>
+        </button>
+
+        <div class="rec-status" aria-live="polite">
+          <div class="rec-bar" id="recBar" hidden><i id="recFill"></i></div>
+          <p class="rec-text" id="recText"></p>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="card-soft coach">
+          <div class="coach__avatar"><img id="coachImg" src="assets/gato.falando.jpeg" alt="Lumis Mascote" /></div>
+          <p class="coach__quote">"Eu sinto você daqui!"</p>
+          <p class="coach__text">Solte o ar bem devagarzinho. Se a pulseira fizer uma cosquinha, significa que você está brilhando!</p>
+        </div>
+
+        <div class="comfort">
+          <span class="comfort__ico">♡</span>
+          <div>
+            <b>Sem Pressa, Amiguinho!</b>
+            <p>Aqui não tem nota de prova! Cada sopro de ventinho é um passo na nossa aventura pela floresta.</p>
+          </div>
+        </div>
+
+        <button class="link-btn" id="btnReview" type="button">← Rever o Lumis fazendo 📳</button>
+      </aside>
+    </section>
+
+    <!-- =====================================================
+         ETAPA 3 — FEEDBACK CARINHOSO
+         ===================================================== -->
+    <section id="panel3" role="tabpanel" aria-labelledby="tab3" hidden>
+      <div class="card-soft feedback">
+
+        <!-- alternador só para PREVISUALIZAR (aparece com ?preview=1 no endereço) -->
+        <div class="seg" id="seg" role="group" aria-label="Ver resultado" hidden>
+          <button class="seg__btn is-active" type="button" data-view="success">Ver: Conquista com Estrelas ⭐</button>
+          <button class="seg__btn" type="button" data-view="retry">Ver: Tentar com Carinho 🏝️</button>
+        </div>
+
+        <!-- acertou -->
+        <div class="fb" id="fbSuccess" role="status" aria-live="polite">
+          <div class="fb__badge"><span class="fb__circle">🎉</span><span class="fb__star">★</span></div>
+          <h2>Muito bem! ⭐</h2>
+          <p>Você soltou o ventinho no lugar certinho! A sua pulseira comemorou com cosquinhas carinhosas.</p>
+          <div class="fb__pill" id="starsPill"><span class="fb__pill-ico">★</span> <span id="starsPillText">+3 Estrelas Mágicas conquistadas para a Missão!</span></div>
+          <div class="fb__actions">
+            <button class="btn-soft" id="btnAgain" type="button">Fazer mais uma vez 🔄</button>
+            <!-- coloque em data-next o endereço da próxima atividade, ex.: data-next="atividade-005.html" -->
+            <button class="btn-primary btn-primary--lg" id="btnContinue" type="button" data-next="">Continuar a Aventura →</button>
+          </div>
+        </div>
+
+        <!-- ainda não deu: incentivo para tentar de novo -->
+        <div class="fb fb--retry" id="fbRetry" role="status" aria-live="polite" hidden>
+          <div class="fb__badge"><span class="fb__circle fb__circle--warm">🌈</span><span class="fb__star fb__star--warm">💛</span></div>
+          <h2>Quase lá, amiguinho! 💛</h2>
+          <p id="retryText">O ventinho ainda está tímido. Vamos tentar de novo, soltando o ar bem devagarzinho, como o Lumis fez?</p>
+          <div class="fb__pill fb__pill--warm"><span>🌱</span> <span>Cada tentativa deixa você mais pertinho!</span></div>
+          <div class="fb__actions">
+            <button class="btn-soft" id="btnReview2" type="button">Rever o Lumis fazendo 👀</button>
+            <button class="btn-primary btn-primary--lg" id="btnTryAgain" type="button">Tentar de novo →</button>
+          </div>
+          <!-- aparece depois de algumas tentativas, para a criança nunca ficar presa -->
+          <button class="link-btn link-btn--inline" id="btnSkip" type="button" data-next="" hidden>Continuar a Aventura →</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="atividade-004.js"></script>
+</body>
+</html>
