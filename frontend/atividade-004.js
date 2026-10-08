@@ -112,14 +112,29 @@
   //  ETAPA 1 — PRIMEIRO O LUMIS
   // =====================================================
 
-  // Mostra o <video> assim que existir um arquivo (src ou <source>)
+  // Mostra o <video> se algum arquivo carregar; se nenhum existir, mantém o desenho do "ventinho".
+  let videoOk = false;
   function updateVideoSlot() {
-    const hasSrc = !!(demoVideo.getAttribute("src") || demoVideo.querySelector("source[src]"));
-    demoVideo.hidden = !hasSrc;
-    demoPlaceholder.hidden = hasSrc;
-    demoEl.classList.toggle("has-video", hasSrc);
-    return hasSrc;
+    demoVideo.hidden = !videoOk;
+    demoPlaceholder.hidden = videoOk;
+    demoEl.classList.toggle("has-video", videoOk);
+    return videoOk;
   }
+  // Ajusta o quadro à proporção real do vídeo (entre 4:5 e 16:9), para a boca não ser cortada
+  demoVideo.addEventListener("loadedmetadata", () => {
+    const w = demoVideo.videoWidth, h = demoVideo.videoHeight;
+    if (w && h) {
+      const r = Math.min(1.78, Math.max(0.8, w / h));
+      demoEl.style.setProperty("--demo-ratio", r.toFixed(4));
+    }
+    videoOk = true; updateVideoSlot();
+  });
+  // erro em TODAS as <source> => sem vídeo
+  const sources = demoVideo.querySelectorAll("source");
+  if (sources.length) {
+    sources[sources.length - 1].addEventListener("error", () => { videoOk = false; updateVideoSlot(); });
+  }
+  demoVideo.addEventListener("error", () => { videoOk = false; updateVideoSlot(); });
   updateVideoSlot();
 
   demoVideo.addEventListener("click", () => {
@@ -143,8 +158,8 @@
 
   function playDemo() {
     haptic(HAPTIC_SSS, 2200);
-    playSound("ssss");
-    if (updateVideoSlot()) {
+    if (!updateVideoSlot()) playSound("ssss"); // com vídeo, o som é o do próprio vídeo
+    if (videoOk) {
       demoVideo.currentTime = 0;
       demoVideo.play().catch(() => {});
     }

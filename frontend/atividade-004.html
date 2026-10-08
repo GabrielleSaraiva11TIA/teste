@@ -90,8 +90,10 @@
              O JavaScript percebe sozinho, mostra o vídeo e esconde o desenho de "ventinho".
              Dica: use  poster="assets/capa-video.jpg"  para a imagem de capa. -->
         <div class="demo" id="demo">
-          <video class="demo__video" id="demoVideo" playsinline preload="metadata" hidden>
-            <!-- <source src="assets/video-sssss.mp4" type="video/mp4" /> -->
+          <video class="demo__video" id="demoVideo" playsinline preload="auto" aria-label="Boca fazendo o som Sssss">
+            <source src="assets/video.boca.mp4" type="video/mp4" />
+            <source src="assets/video.boca.webm" type="video/webm" />
+            <source src="assets/video.boca.mov" type="video/quicktime" />
           </video>
 
           <div class="demo__placeholder" id="demoPlaceholder" aria-hidden="true">
@@ -134,7 +136,7 @@
         </ul>
 
         <div class="observe__actions">
-          <button class="btn-soft" id="btnReplay" type="button">↻ Ouvir / Sentir de novo 📳</button>
+          <button class="btn-soft" id="btnReplay" type="button">↻ Sentir de novo 📳</button>
           <button class="btn-primary" id="btnMyTurn" type="button">Agora é a minha vez! ✏️ ➔</button>
         </div>
       </aside>
