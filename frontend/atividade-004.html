@@ -11,36 +11,17 @@
 </head>
 <body>
 
-  <!-- ============ TOPO ============ -->
-  <header class="topbar">
-    <div class="brand">
-      <span class="brand__paw">🐾</span>
-      <strong>Lumis</strong>
-    </div>
-
-    <div class="mission-chip">
-      <span class="dot-icon">◎</span>
-      <span>Missão do Dia • <b>Espelho perfeito</b></span>
-    </div>
-
-    <div class="band-chip band-chip--top">
-      <span class="live-dot"></span> Pulseira Conectada
-    </div>
-  </header>
+  
 
   <main class="page">
 
     <!-- ============ BARRA SECUNDÁRIA ============ -->
     <div class="subbar">
-      <button class="btn-back" type="button">‹ Voltar para a Missão</button>
+      <button class="btn-back" type="button">← Voltar para a Missão</button>
 
-      <div class="band-status" id="bandStatus">
-        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v12h6V6H9ZM3 9h2v6H3V9Zm16 0h2v6h-2V9Z"/></svg>
-        <span>Pulseira Ativa</span>
-        <span class="band-status__tag" id="bandTag">Vibração pronto <i>📳</i></span>
-      </div>
+      
 
-      <div class="stars">⭐ <b id="starCount">125</b> estrelas</div>
+      <div class="stars">☆  <b id="starCount">125</b> estrelas</div>
     </div>
 
     <!-- ============ PROGRESSO ============ -->
@@ -57,13 +38,15 @@
         <span>1. Som</span><span>2. Espelho</span><span>3. Língua</span><span class="cur">4. Imite</span>
         <span>5. Amigos</span><span>6. Frases</span><span>7. Desafio</span><span>8. Tesouro</span>
       </div>
-      <div class="hints">
-        <span class="hint hint--visual">👁 Pista Visual: veja o ventinho azul se movendo nos dentes</span>
-        <span class="hint hint--tactile">📳 Pista Tátil: sinta os 3 toques no pulso</span>
-      </div>
+      
     </section>
 
-    
+    <!-- ============ ABAS DA ATIVIDADE ============ -->
+    <nav class="steps" role="tablist" aria-label="Etapas da atividade">
+      <button class="steps__tab is-active" id="tab1" role="tab" type="button" aria-selected="true"  aria-controls="panel1">1. Primeiro o Lumis 👀</button>
+      <button class="steps__tab"           id="tab2" role="tab" type="button" aria-selected="false" aria-controls="panel2">2. Agora Você! (Espelho) 🐾</button>
+      <button class="steps__tab"           id="tab3" role="tab" type="button" aria-selected="false" aria-controls="panel3" disabled>3. Feedback Carinhoso ✨</button>
+    </nav>
 
     <!-- =====================================================
          ETAPA 1 — PRIMEIRO O LUMIS
@@ -131,7 +114,7 @@
         </ul>
 
         <div class="observe__actions">
-          <button class="btn-soft" id="btnReplay" type="button">↻ Sentir de novo 📳</button>
+          <button class="btn-soft" id="btnReplay" type="button">↻ Ouvir / Sentir de novo 📳</button>
           <button class="btn-primary" id="btnMyTurn" type="button">Agora é a minha vez! ✏️ ➔</button>
         </div>
       </aside>
