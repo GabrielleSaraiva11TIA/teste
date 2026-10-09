@@ -720,6 +720,7 @@ svg.i.f{fill:currentColor;stroke:none}
       <div class="done-actions">
         <button class="btn" type="button" id="prontoGeral"><span>Ir para a Visão Geral</span><svg class="i"><use href="#i-right"/></svg></button>
         <button class="btn soft" type="button" id="prontoCodigo" hidden><svg class="i"><use href="#i-link"/></svg>Digitar código do aparelho</button>
+        <button class="logout" type="button" data-logout style="margin-top:6px"><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
       </div>
     </section>
 
@@ -790,6 +791,7 @@ svg.i.f{fill:currentColor;stroke:none}
           </div>
         </div>
       </div>
+      <button class="logout" type="button" data-logout style="margin-top:30px"><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
     </section>
 
   </main>
@@ -942,7 +944,8 @@ svg.i.f{fill:currentColor;stroke:none}
     return S.me;
   }
   function sair(expirou){
-    S.token = null; S.me = null; lsSet(K_TOKEN, null);
+    S.token = null; S.me = null; S.linked = false; lsSet(K_TOKEN, null);
+    if (!expirou) limparPar();
     if (expirou) toast("Sua sessão expirou. Entre novamente.");
     go("perfil");
   }

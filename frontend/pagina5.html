@@ -259,6 +259,10 @@
     <div class="pill brand"><span class="dot"></span>LUMIS • CONHECENDO SEU AMIGO</div>
     
     <div class="status">
+      <button class="pill" id="logoutBtn" type="button" style="cursor:pointer;font-family:inherit;color:var(--ink-soft)" aria-label="Sair da conta da criança">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        SAIR
+      </button>
       <div class="pill ok" id="vibPill">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4 8v8M20 8v8"/></svg>
         VIBROTÁTIL ATIVO
@@ -375,6 +379,14 @@
     u.lang = 'pt-BR'; u.rate = .95; u.pitch = 1.15;
     u.onend = u.onerror = function(){ setPlaying(false); };
     setPlaying(true); synth.speak(u);
+  });
+
+  // Sair da conta da criança (volta para a tela do QR Code)
+  var logoutBtn = $('logoutBtn');
+  if (logoutBtn) logoutBtn.addEventListener('click', function(){
+    if (!confirm('Sair da conta da criança neste aparelho?')) return;
+    try{ localStorage.removeItem('lumis_device_token'); localStorage.removeItem('lumis_pairing'); }catch(e){}
+    window.location.href = 'inicio.html';
   });
 
   // Bloqueia zoom por gesto e menu de contexto (comportamento de quiosque)
