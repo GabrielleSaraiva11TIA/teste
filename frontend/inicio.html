@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Lumis • Vamos preparar tudo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!--
+  QR CODE (quando você tiver):
+  1) adicione aqui a biblioteca que preferir, ex.:
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  2) defina a função abaixo ANTES do <script> principal (ela recebe o elemento e a URL do portal):
+       window.renderLumisQR = function (el, url) {
+         el.innerHTML = "";
+         new QRCode(el, { text: url, width: el.clientWidth, height: el.clientHeight });
+       };
+  Enquanto não existir, aparece um QR de enfeite + o link "abrir portal (teste)".
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --ink:#1b2437; --ink-soft:#4b5870; --ink-mute:#7b879c;
+  --blue:#0a56d6; --blue-2:#2f63ee; --sky:#38b6f5;
+  --line:#dfe8f6; --green:#16a869;
+  --bg-a:#f4f8ff; --bg-b:#e6f1ff; --bg-c:#d9f3fb;
+  /* unidade base: escala com a menor dimensão da tela (tablet 16:10) */
+  --u: clamp(8px, min(1.55vw, 2.5vh), 20px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none !important}
+html,body{height:100%}
+body{
+  font-family:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+  color:var(--ink); font-size:var(--u);
+  background:
+    radial-gradient(60% 55% at 90% 80%, var(--bg-c) 0%, transparent 70%),
+    radial-gradient(55% 60% at 5% 5%, #e3edff 0%, transparent 70%),
+    linear-gradient(135deg,var(--bg-a),var(--bg-b));
+  overflow-x:hidden; user-select:none; -webkit-user-select:none;
+  touch-action:manipulation; overscroll-behavior:none;
+}
+.screen{
+  height:100dvh; width:100%;
+  display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr);
+  gap:calc(var(--u)*.8);
+  padding:calc(var(--u)*1) calc(var(--u)*1.2) calc(var(--u)*1.2);
+  padding-top:max(calc(var(--u)*1), env(safe-area-inset-top));
+}
+
+/* ---------- barra superior ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--u)*.8)}
+.pill{
+  display:inline-flex;align-items:center;gap:calc(var(--u)*.5);
+  height:calc(var(--u)*2.1);padding:0 calc(var(--u)*.9);border-radius:999px;
+  background:rgba(255,255,255,.85);border:1px solid rgba(160,190,235,.45);
+  font-size:calc(var(--u)*.66);font-weight:800;letter-spacing:.02em;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(40,90,180,.06);
+}
+.pill svg{width:calc(var(--u)*.9);height:calc(var(--u)*.9);flex:none}
+.pill.brand{color:var(--blue)}
+.pill.brand .dot{width:calc(var(--u)*.5);height:calc(var(--u)*.5);border-radius:50%;background:var(--sky)}
+.pill.ok{color:#0e6e8f;background:#fff}
+.status{display:flex;align-items:center;gap:calc(var(--u)*.8)}
+#wifi{width:calc(var(--u)*1.2);height:calc(var(--u)*1.2);color:#5b6b86}
+#wifi.off{color:#d4455b}
+
+/* ---------- cartão principal ---------- */
+.card{
+  min-height:0;background:#fff;border-radius:calc(var(--u)*1.5);
+  box-shadow:0 calc(var(--u)*.9) calc(var(--u)*2.6) rgba(50,100,190,.13), 0 2px 6px rgba(50,100,190,.06);
+  padding:calc(var(--u)*1.3) calc(var(--u)*1.6) calc(var(--u)*1.1);
+  display:grid;grid-template-columns:minmax(0,1fr);gap:calc(var(--u)*.7);
+}
+#viewQR{grid-template-rows:auto minmax(0,1fr) auto}
+#viewLoad{grid-template-rows:auto minmax(0,1fr) auto auto}
+
+.h-title{font-size:calc(var(--u)*1.05);font-weight:800;color:var(--blue);line-height:1.2}
+.h-sub{font-size:calc(var(--u)*.74);color:var(--ink-soft);font-weight:500;margin-top:calc(var(--u)*.25);line-height:1.35}
+
+.btn-soft{
+  appearance:none;border:0;cursor:pointer;font:inherit;
+  display:inline-flex;align-items:center;gap:calc(var(--u)*.45);
+  height:calc(var(--u)*2.1);padding:0 calc(var(--u)*.9);border-radius:calc(var(--u)*.6);
+  background:#e8f0ff;color:var(--blue);font-size:calc(var(--u)*.72);font-weight:700;
+  transition:transform .12s ease, background .2s;
+}
+.btn-soft:active{transform:scale(.96)}
+.btn-soft svg{width:calc(var(--u)*.9);height:calc(var(--u)*.9)}
+.btn-soft.done{background:#dff7ea;color:#0e7a4b}
+
+/* ---------- tela 1: QR ---------- */
+.qr-head{display:flex;justify-content:space-between;align-items:flex-start;gap:calc(var(--u)*1)}
+.qr-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;justify-items:center;gap:calc(var(--u)*1.5);min-height:0}
+.qr-col{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.6);min-height:0}
+.qr-frame{
+  width:calc(var(--u)*11.5);height:calc(var(--u)*11.5);max-height:100%;aspect-ratio:1;
+  background:#fff;border-radius:calc(var(--u)*1.1);padding:calc(var(--u)*.9);
+  box-shadow:0 0 calc(var(--u)*2.2) rgba(47,99,238,.32), 0 0 0 1px rgba(47,99,238,.08);
+}
+#qrSlot{width:100%;height:100%;display:grid;place-items:center}
+#qrSlot svg,#qrSlot img,#qrSlot canvas{width:100%;height:100%;display:block}
+.qr-dev{font-size:calc(var(--u)*.6);color:var(--ink-mute);text-decoration:underline;font-weight:600}
+.steps{display:flex;flex-direction:column;gap:calc(var(--u)*.7);width:min(100%,calc(var(--u)*17))}
+.step{
+  display:flex;align-items:center;gap:calc(var(--u)*.8);
+  background:#eef3ff;border-radius:calc(var(--u)*1);padding:calc(var(--u)*.8) calc(var(--u)*.9);
+}
+.step .ic{width:calc(var(--u)*2.1);height:calc(var(--u)*2.1);border-radius:50%;display:grid;place-items:center;flex:none}
+.step .ic svg{width:55%;height:55%}
+.step .ic.cam{background:#cfe9fb;color:var(--blue)}
+.step .ic.bt{background:#dbe5ff;color:var(--blue)}
+.step b{display:block;font-size:calc(var(--u)*.78);font-weight:800;color:#12306e}
+.step span{display:block;font-size:calc(var(--u)*.68);color:var(--ink-soft);font-weight:500;line-height:1.25;margin-top:calc(var(--u)*.15)}
+.hint-pink{
+  align-self:flex-start;display:inline-flex;align-items:center;gap:calc(var(--u)*.45);
+  background:#ffe3ea;color:#a52a56;border-radius:calc(var(--u)*.8);
+  padding:calc(var(--u)*.45) calc(var(--u)*.9);font-size:calc(var(--u)*.7);font-weight:700;
+}
+.hint-pink svg{width:calc(var(--u)*.8);height:calc(var(--u)*.8)}
+.qr-foot{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--u)*1);flex-wrap:wrap}
+.waiting{display:inline-flex;align-items:center;gap:calc(var(--u)*.5);font-size:calc(var(--u)*.7);font-weight:600;color:var(--blue)}
+.waiting i{width:calc(var(--u)*.6);height:calc(var(--u)*.6);border-radius:50%;background:var(--blue-2);animation:pulse 1.6s ease-in-out infinite}
+.waiting.err{color:#c23b52}.waiting.err i{background:#d4455b;animation:none}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.code-wrap{display:inline-flex;align-items:center;gap:calc(var(--u)*.6);font-size:calc(var(--u)*.68);color:var(--ink-soft);font-weight:600}
+.code{
+  appearance:none;border:0;cursor:pointer;font:inherit;
+  display:inline-flex;align-items:center;gap:calc(var(--u)*.5);
+  height:calc(var(--u)*2);padding:0 calc(var(--u)*.9);border-radius:calc(var(--u)*.7);
+  background:var(--blue);color:#fff;font-weight:800;font-size:calc(var(--u)*.74);letter-spacing:.03em;
+  box-shadow:0 calc(var(--u)*.3) calc(var(--u)*.8) rgba(10,86,214,.3);
+}
+.code:active{transform:scale(.97)}
+.code svg{width:calc(var(--u)*.85);height:calc(var(--u)*.85);padding:calc(var(--u)*.12);border-radius:calc(var(--u)*.2);background:rgba(255,255,255,.2)}
+
+/* ---------- tela 2: carregando ---------- */
+.l-head{display:flex;align-items:flex-start;gap:calc(var(--u)*.7)}
+.l-head .chk{width:calc(var(--u)*1.2);height:calc(var(--u)*1.2);border-radius:calc(var(--u)*.3);background:var(--blue);color:#fff;display:grid;place-items:center;flex:none;margin-top:calc(var(--u)*.1)}
+.l-head .chk svg{width:70%;height:70%}
+.l-body{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;justify-items:center;gap:calc(var(--u)*1.2);min-height:0}
+.phone-col{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.6)}
+.phone{
+  width:calc(var(--u)*7.4);height:calc(var(--u)*10);border-radius:calc(var(--u)*1.2);
+  border:calc(var(--u)*.2) solid #2b6be0;background:#f3f7ff;padding:calc(var(--u)*1.1) calc(var(--u)*.8);
+  display:flex;flex-direction:column;gap:calc(var(--u)*.9);justify-content:center;position:relative;
+  box-shadow:0 calc(var(--u)*.6) calc(var(--u)*1.4) rgba(47,99,238,.15);
+}
+.phone::before{content:"";position:absolute;top:calc(var(--u)*.4);left:50%;width:30%;height:calc(var(--u)*.2);transform:translateX(-50%);background:#b9cdf3;border-radius:9px}
+.prow{display:flex;align-items:center;gap:calc(var(--u)*.55)}
+.prow i{
+  width:calc(var(--u)*1.15);height:calc(var(--u)*1.15);border-radius:50%;flex:none;display:grid;place-items:center;
+  border:calc(var(--u)*.14) solid #c4d4f1;background:#fff;color:#fff;
+}
+.prow i svg{width:70%;height:70%;display:none}
+.prow u{display:block;flex:1;height:calc(var(--u)*.55);border-radius:9px;background:#d6e2f8;text-decoration:none}
+.prow.done i{background:var(--blue);border-color:var(--blue)}
+.prow.done i svg{display:block}
+.prow.work i{border-color:#cfe0ff;border-top-color:var(--blue);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.phone-label{display:inline-flex;align-items:center;gap:calc(var(--u)*.4);font-size:calc(var(--u)*.66);font-weight:700;color:var(--ink-soft)}
+.phone-label svg{width:calc(var(--u)*.7);height:calc(var(--u)*.7)}
+.flow{display:flex;align-items:center;gap:calc(var(--u)*.5);color:var(--blue)}
+.flow i{display:block;border-radius:50%;background:var(--sky);animation:dots 1.4s ease-in-out infinite}
+.flow i:nth-child(1){width:calc(var(--u)*.45);height:calc(var(--u)*.45)}
+.flow i:nth-child(2){width:calc(var(--u)*.65);height:calc(var(--u)*.65);background:var(--blue-2);animation-delay:.2s}
+.flow i:nth-child(3){width:calc(var(--u)*.9);height:calc(var(--u)*.9);background:var(--blue);animation-delay:.4s}
+.flow svg{width:calc(var(--u)*1);height:calc(var(--u)*1)}
+@keyframes dots{0%,100%{opacity:1}50%{opacity:.35}}
+.ring-col{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.7)}
+.ring{position:relative;width:calc(var(--u)*9.4);height:calc(var(--u)*9.4)}
+.ring svg.r{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .track{fill:none;stroke:#dbe7fb;stroke-width:9}
+.ring .bar{fill:none;stroke:var(--blue);stroke-width:9;stroke-linecap:round}
+.ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u)*.15)}
+.ring .mid svg{width:calc(var(--u)*1.5);height:calc(var(--u)*1.5);color:var(--blue)}
+.ring .mid b{font-size:calc(var(--u)*1.7);font-weight:800;color:var(--blue);line-height:1}
+.badge{display:inline-flex;align-items:center;gap:calc(var(--u)*.45);padding:calc(var(--u)*.35) calc(var(--u)*.9);border-radius:999px;background:#fff;border:1px solid #cfe0fb;font-size:calc(var(--u)*.68);font-weight:700;color:var(--ink-soft)}
+.badge i{width:calc(var(--u)*.5);height:calc(var(--u)*.5);border-radius:50%;background:var(--sky)}
+.stepper{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr) auto;align-items:center;gap:calc(var(--u)*.7);
+  background:#f5f8ff;border:1px solid #e3ecfb;border-radius:calc(var(--u)*1);padding:calc(var(--u)*.7) calc(var(--u)*1.2);
+}
+.st{display:flex;align-items:center;gap:calc(var(--u)*.55)}
+.st .bub{width:calc(var(--u)*1.7);height:calc(var(--u)*1.7);border-radius:50%;display:grid;place-items:center;background:#e3e9f5;color:#a4afc4;flex:none;transition:all .3s}
+.st .bub svg{width:55%;height:55%}
+.st b{display:block;font-size:calc(var(--u)*.7);font-weight:800;color:var(--ink-soft)}
+.st span{display:block;font-size:calc(var(--u)*.58);font-weight:600;color:var(--ink-mute)}
+.st.done .bub{background:var(--blue);color:#fff}
+.st.done b{color:#12306e}
+.st.now .bub{background:#fff;color:var(--blue);border:calc(var(--u)*.22) solid var(--blue)}
+.st.now b{color:#12306e}.st.now span{color:var(--blue)}
+.st.done span{color:var(--blue)}
+.line{height:2px;background:repeating-linear-gradient(90deg,#c9d7ee 0 6px,transparent 6px 10px)}
+.banner{
+  display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*.55);
+  background:#e3eeff;border-radius:calc(var(--u)*.7);padding:calc(var(--u)*.55) calc(var(--u)*1);
+  font-size:calc(var(--u)*.7);font-weight:700;color:#12306e;text-align:center;
+}
+.banner svg{width:calc(var(--u)*.8);height:calc(var(--u)*.8);color:var(--blue);flex:none}
+
+:focus-visible{outline:3px solid #7fb0ff;outline-offset:3px}
+
+/* ---------- celular / retrato ---------- */
+@media (max-aspect-ratio: 1/1){
+  :root{--u: clamp(10px, 2.6vw, 20px)}
+  .screen{height:auto;min-height:100dvh}
+  .card{padding:calc(var(--u)*1.2)}
+  .qr-head{flex-direction:column}
+  .qr-body,.l-body{grid-template-columns:1fr}
+  .qr-frame{width:calc(var(--u)*14);height:calc(var(--u)*14)}
+  .flow{transform:rotate(90deg)}
+  .stepper{grid-template-columns:1fr;justify-items:start}
+  .stepper .line{display:none}
+  #viewQR,#viewLoad{grid-template-rows:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-paw" viewBox="0 0 24 24"><g fill="currentColor"><ellipse cx="12" cy="16.5" rx="5" ry="4"/><ellipse cx="5" cy="10.5" rx="2.2" ry="3"/><ellipse cx="9.5" cy="5.5" rx="2.2" ry="3"/><ellipse cx="14.5" cy="5.5" rx="2.2" ry="3"/><ellipse cx="19" cy="10.5" rx="2.2" ry="3"/></g></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 18.5h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></symbol>
+  </defs>
+</svg>
+
+<div class="screen">
+  <header class="topbar">
+    <div class="pill brand"><svg><use href="#i-paw"/></svg>LUMIS <span class="dot"></span></div>
+    <div class="status">
+      <div class="pill ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4 8v8M20 8v8"/></svg>
+        VIBROTÁTIL ATIVO
+      </div>
+      <svg id="wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-label="Conexão"><path d="M2.5 9a15 15 0 0 1 19 0M5.5 12.5a10.500 10.500 0 0 1 13 0M8.700 16a6 6 0 0 1 6.600 0"/><circle cx="12" cy="19.500" r="1" fill="currentColor"/></svg>
+    </div>
+  </header>
+
+  <!-- ===== TELA 1: QR Code ===== -->
+  <main class="card" id="viewQR">
+    <div class="qr-head">
+      <div>
+        <h1 class="h-title">Vamos preparar tudo para você!</h1>
+        <p class="h-sub">Peça para um responsável ou profissional escanear este código.</p>
+      </div>
+      <button class="btn-soft" id="testBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a3 3 0 0 0-3 3v1a5 5 0 0 0-3 4.500V15l-2 3h16l-2-3v-3.500A5 5 0 0 0 15 7V6a3 3 0 0 0-3-3zM10 21h4"/></svg>
+        <span id="testTxt">Testar toque</span>
+      </button>
+    </div>
+
+    <div class="qr-body">
+      <div class="qr-col">
+        <div class="qr-frame"><div id="qrSlot" aria-label="QR Code para parear o aparelho"></div></div>
+        <a class="qr-dev" id="devLink" href="#" target="_blank" rel="noopener">QR Code em breve · abrir portal (teste)</a>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="ic cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.500-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.500"/></svg></div>
+          <div><b>1. Aponte o celular</b><span>Abra a câmera normal</span></div>
+        </div>
+        <div class="step">
+          <div class="ic bt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7.500l10 9-5 4.500V3l5 4.500-10 9"/></svg></div>
+          <div><b>2. Conexão direta</b><span>Toque para parear</span></div>
+        </div>
+        <div class="hint-pink">
+          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 21s-8-5.300-8-11a4.600 4.600 0 0 1 8-3 4.600 4.600 0 0 1 8 3c0 5.700-8 11-8 11z"/></svg>
+          Vibração suave ao conectar
+        </div>
+      </div>
+    </div>
+
+    <div class="qr-foot">
+      <div class="waiting" id="waiting"><i></i><span id="waitingTxt">Aguardando leitura pelo celular...</span></div>
+      <div class="code-wrap">Ou digite:
+        <button class="code" id="codeBtn" type="button" title="Copiar código">
+          <span id="codeTxt">LUMIS-····</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== TELA 2: preparando ===== -->
+  <main class="card" id="viewLoad" hidden aria-live="polite">
+    <div class="l-head">
+      <span class="chk"><svg><use href="#i-check"/></svg></span>
+      <div style="flex:1">
+        <h1 class="h-title" id="loadTitle">Estamos preparando tudo...</h1>
+        <p class="h-sub" id="loadSub">Aguardando o responsável concluir o cadastro no celular:</p>
+      </div>
+      <button class="btn-soft" id="novoQrBtn" type="button">Gerar novo QR Code</button>
+    </div>
+
+    <div class="l-body">
+      <div class="phone-col">
+        <div class="phone" aria-hidden="true">
+          <div class="prow" id="pr1"><i><svg><use href="#i-check"/></svg></i><u></u></div>
+          <div class="prow" id="pr2"><i><svg><use href="#i-check"/></svg></i><u></u></div>
+          <div class="prow" id="pr3"><i><svg><use href="#i-check"/></svg></i><u></u></div>
+        </div>
+        <span class="phone-label"><svg><use href="#i-phone"/></svg>Celular do Adulto</span>
+      </div>
+
+      <div class="flow" aria-hidden="true"><i></i><i></i><i></i>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+      </div>
+
+      <div class="ring-col">
+        <div class="ring" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="ringBox">
+          <svg class="r" viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle class="bar" id="ringBar" cx="50" cy="50" r="42"/></svg>
+          <div class="mid"><svg><use href="#i-paw"/></svg><b id="pct">0%</b></div>
+        </div>
+        <span class="badge"><i></i><span id="badgeTxt">Celular conectado!</span></span>
+      </div>
+    </div>
+
+    <div class="stepper">
+      <div class="st done" id="st1"><span class="bub"><svg><use href="#i-check"/></svg></span><div><b>QR Code</b><span>Conectado</span></div></div>
+      <div class="line"></div>
+      <div class="st now" id="st2"><span class="bub"><svg><use href="#i-paw"/></svg></span><div><b>Cadastro</b><span id="st2t">Em andamento</span></div></div>
+      <div class="line"></div>
+      <div class="st" id="st3"><span class="bub"><svg><use href="#i-star"/></svg></span><div><b>Brincar!</b><span id="st3t">Em breve</span></div></div>
+    </div>
+
+    <div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4 8v8M20 8v8"/></svg>Lumis vai vibrar suavemente na pulseira assim que terminar</div>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===== Configuração ===== */
+  var KEY_TOKEN = "lumis_device_token";   // conta da criança logada neste aparelho
+  var KEY_PAR   = "lumis_pairing";        // pareamento em andamento (sobrevive a recarregar a página)
+  var PROXIMA   = "pagina5.html";         // para onde ir depois de logado
+  var POLL_MS   = 1800;
+
+  // Mesma origem na Vercel / node server.js. No Live Server (porta 5500 etc.) aponta para o Node na 3000.
+  var API = (function(){
+    if (window.LUMIS_API) return window.LUMIS_API;
+    var h = location.hostname, p = location.port;
+    if ((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") return "http://localhost:3000";
+    return "";
+  })();
+
+  var $ = function(id){ return document.getElementById(id); };
+  var qs = new URLSearchParams(location.search);
+  var reduzMovimento = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function store(k, v){ try{ if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); }catch(e){} return null; }
+  function buzz(p){
+    try{ if (navigator.vibrate) navigator.vibrate(p); }catch(e){}
+    // evento para a pulseira / outros módulos (Raspberry Pi, backend...)
+    window.dispatchEvent(new CustomEvent("lumis:vibrate", { detail:{ pattern:p } }));
+  }
+
+  function api(path, opts){
+    opts = opts || {};
+    return fetch(API + path, {
+      method: opts.method || "GET",
+      headers: Object.assign({ "content-type":"application/json" }, opts.headers || {}),
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(d){ return { status:r.status, data:d }; });
+    });
+  }
+
+  /* ===== QR Code (espaço reservado) ===== */
+  var qrSlot = $("qrSlot");
+  function placeholderQR(){
+    var n = 25, s = 1337, out = "";
+    function rnd(){ s = (s * 16807) % 2147483647; return s / 2147483647; }
+    function reservado(x, y){
+      if (x < 8 && y < 8) return true; if (x > 16 && y < 8) return true; if (x < 8 && y > 16) return true;
+      return x > 9 && x < 15 && y > 9 && y < 15;
+    }
+    for (var y = 0; y < n; y++) for (var x = 0; x < n; x++){
+      if (!reservado(x, y) && rnd() > .52) out += '<rect x="' + x + '" y="' + y + '" width="1" height="1" rx=".25"/>';
+    }
+    function finder(x, y){
+      return '<rect x="' + (x + .6) + '" y="' + (y + .6) + '" width="5.8" height="5.8" rx="1.3" fill="none" stroke="#0a56d6" stroke-width="1.2"/>' +
+             '<rect x="' + (x + 2.1) + '" y="' + (y + 2.1) + '" width="2.8" height="2.8" rx=".8" fill="#0a56d6"/>';
+    }
+    return '<svg viewBox="0 0 25 25" aria-hidden="true"><g fill="#1b2437">' + out + '</g>' + finder(0,0) + finder(18,0) + finder(0,18) +
+           '<circle cx="12.5" cy="12.5" r="3" fill="#0a56d6"/><g fill="#fff" transform="translate(10.7 10.7) scale(.15)"><ellipse cx="12" cy="16.5" rx="5" ry="4"/><ellipse cx="5" cy="10.5" rx="2.2" ry="3"/><ellipse cx="9.5" cy="5.5" rx="2.2" ry="3"/><ellipse cx="14.5" cy="5.5" rx="2.2" ry="3"/><ellipse cx="19" cy="10.5" rx="2.2" ry="3"/></g></svg>';
+  }
+  function renderQR(url){
+    qrSlot.dataset.url = url;
+    $("devLink").href = url;
+    if (typeof window.renderLumisQR === "function"){
+      window.renderLumisQR(qrSlot, url);
+      $("devLink").hidden = true;
+    } else if (window.QRCode){
+      qrSlot.innerHTML = "";
+      var lado = Math.max(120, qrSlot.clientWidth || 200);
+      new QRCode(qrSlot, { text:url, width:lado, height:lado, colorDark:"#1b2437", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.M });
+      $("devLink").textContent = "abrir portal neste aparelho (teste)";
+      $("devLink").hidden = false;
+    } else {
+      qrSlot.innerHTML = placeholderQR();
+      $("devLink").hidden = false;
+    }
+  }
+
+  /* ===== Pareamento ===== */
+  var par = null, pollTimer = null, concluido = false;
+
+  function portalUrl(token){
+    var u = new URL("portal.html", location.href);
+    u.searchParams.set("t", token);
+    return u.href;
+  }
+
+  function mostrarQR(){
+    $("viewLoad").hidden = true; $("viewQR").hidden = false;
+    $("codeTxt").textContent = par.codigo;
+    renderQR(portalUrl(par.token));
+    setWaiting("Aguardando leitura pelo celular...", false);
+  }
+
+  function setWaiting(txt, erro){
+    $("waitingTxt").textContent = txt;
+    $("waiting").classList.toggle("err", !!erro);
+  }
+
+  function criarPareamento(){
+    return api("/api/pareamentos", { method:"POST" }).then(function(r){
+      if (r.status !== 201) throw new Error("falha");
+      par = { codigo:r.data.codigo, token:r.data.token, segredo:r.data.segredo, expira: Date.now() + r.data.expiraEmSegundos * 1000 };
+      store(KEY_PAR, JSON.stringify(par));
+      resetarProgresso();
+      mostrarQR();
+    });
+  }
+
+  function iniciarPareamento(){
+    var salvo = null;
+    try{ salvo = JSON.parse(store(KEY_PAR) || "null"); }catch(e){}
+    function novo(){
+      store(KEY_PAR, null);
+      criarPareamento().then(poll).catch(function(){
+        setWaiting("Sem conexão com o servidor. Tentando de novo...", true);
+        setTimeout(iniciarPareamento, 4000);
+      });
+    }
+    if (salvo && salvo.expira > Date.now() + 60000){
+      // só reaproveita se ninguém começou a usar esse código; senão, QR novo
+      api("/api/pareamentos/status", { headers:{ "x-segredo": salvo.segredo } }).then(function(r){
+        if (r.status === 200 && r.data.status === "aguardando"){ par = salvo; mostrarQR(); poll(); }
+        else novo();
+      }).catch(novo);
+      return;
+    }
+    novo();
+  }
+
+  function poll(){
+    clearTimeout(pollTimer);
+    if (concluido) return;
+    api("/api/pareamentos/status", { headers:{ "x-segredo": par.segredo } }).then(function(r){
+      setOnline(true);
+      if (r.status === 404 || r.status === 410 || (r.data && r.data.status === "entregue")){
+        store(KEY_PAR, null);
+        return criarPareamento();
+      }
+      if (r.status !== 200) throw new Error("status " + r.status);
+      var d = r.data;
+      if (d.status === "concluido" && d.deviceToken){
+        concluido = true;
+        store(KEY_TOKEN, d.deviceToken);
+        store(KEY_PAR, null);
+        mostrarCarregando(); setProgresso(100);
+        return;
+      }
+      if (d.status !== "aguardando"){ mostrarCarregando(); setProgresso(d.progresso || 25); }
+      else if (!$("viewLoad").hidden){ mostrarQR(); resetarProgresso(); }
+    }).catch(function(){
+      setOnline(false);
+      if (!$("viewQR").hidden) setWaiting("Sem conexão com o servidor. Tentando de novo...", true);
+    }).then(function(){
+      if (!concluido) pollTimer = setTimeout(poll, POLL_MS);
+    });
+  }
+
+  /* ===== Tela de carregamento ===== */
+  var C = 2 * Math.PI * 42, ringBar = $("ringBar");
+  ringBar.style.strokeDasharray = C;
+  ringBar.style.strokeDashoffset = C;
+  var mostrado = 0, alvo = 0, raf = null, avisouConexao = false;
+
+  function mostrarCarregando(){
+    if (!$("viewLoad").hidden) return;
+    $("viewQR").hidden = true; $("viewLoad").hidden = false;
+    if (!avisouConexao){ avisouConexao = true; buzz(60); }   // "vibração suave ao conectar"
+  }
+  function resetarProgresso(){ mostrado = 0; alvo = 0; avisouConexao = false; desenhar(); atualizarEtapas(0); }
+
+  function setProgresso(v){
+    if (v <= alvo) return;
+    alvo = v; atualizarEtapas(v);
+    if (reduzMovimento){ mostrado = alvo; desenhar(); } else if (!raf){ raf = requestAnimationFrame(passo); }
+  }
+  function passo(){
+    raf = null;
+    var dif = alvo - mostrado;
+    if (Math.abs(dif) < .2){ mostrado = alvo; desenhar(); if (alvo >= 100) finalizar(); return; }
+    mostrado += dif * .06 + (dif > 0 ? .05 : -.05);
+    desenhar(); raf = requestAnimationFrame(passo);
+  }
+  function desenhar(){
+    var p = Math.round(mostrado);
+    ringBar.style.strokeDashoffset = C * (1 - mostrado / 100);
+    $("pct").textContent = p + "%";
+    $("ringBox").setAttribute("aria-valuenow", p);
+  }
+  function atualizarEtapas(v){
+    function linha(id, feito, trabalhando){ var el = $(id); el.classList.toggle("done", feito); el.classList.toggle("work", !feito && trabalhando); }
+    linha("pr1", v >= 45, v < 45);
+    linha("pr2", v >= 70, v >= 45 && v < 70);
+    linha("pr3", v >= 90, v >= 70 && v < 90);
+    $("badgeTxt").textContent = v >= 100 ? "Tudo pronto!" : v >= 70 ? "Quase pronto!" : v >= 45 ? "Vamos lá!" : "Celular conectado!";
+    var fim = v >= 100;
+    $("st2").className = "st " + (fim ? "done" : "now");
+    $("st2t").textContent = fim ? "Concluído" : "Em andamento";
+    $("st3").className = "st" + (fim ? " now" : "");
+    $("st3t").textContent = fim ? "Vamos lá!" : "Em breve";
+    if (fim){
+      $("novoQrBtn").hidden = true;
+      $("loadTitle").textContent = "Tudo pronto!";
+      $("loadSub").textContent = "O Lumis já está te esperando. Vamos brincar?";
+    }
+  }
+  function finalizar(){
+    buzz([90, 60, 90, 60, 180]);
+    setTimeout(function(){ location.href = PROXIMA; }, 2200);
+  }
+
+  /* ===== Botões ===== */
+  $("testBtn").addEventListener("click", function(){
+    buzz([120, 70, 120]);
+    var b = $("testBtn"); b.classList.add("done"); $("testTxt").textContent = "Toque enviado!";
+    setTimeout(function(){ b.classList.remove("done"); $("testTxt").textContent = "Testar toque"; }, 1600);
+  });
+  $("novoQrBtn").addEventListener("click", function(){
+    if (concluido) return;
+    clearTimeout(pollTimer); store(KEY_PAR, null);
+    criarPareamento().then(poll).catch(function(){ setTimeout(iniciarPareamento, 3000); });
+  });
+  $("codeBtn").addEventListener("click", function(){
+    var txt = $("codeTxt").textContent;
+    function ok(){ var el = $("codeTxt"); el.textContent = "Copiado!"; setTimeout(function(){ if (par) el.textContent = par.codigo; }, 1200); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function(){});
+    else ok();
+    buzz(30);
+  });
+
+  /* ===== Conexão (ícone de wifi) ===== */
+  function setOnline(on){ $("wifi").classList.toggle("off", !on); }
+  window.addEventListener("online", function(){ setOnline(true); });
+  window.addEventListener("offline", function(){ setOnline(false); });
+  setOnline(navigator.onLine !== false);
+
+  // Bloqueia zoom por gesto e menu de contexto (comportamento de quiosque)
+  document.addEventListener("gesturestart", function(e){ e.preventDefault(); });
+  document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+
+  /* ===== Início: já está logado? ===== */
+  function iniciar(){
+    if (qs.get("reset") === "1"){ store(KEY_TOKEN, null); store(KEY_PAR, null); history.replaceState(null, "", location.pathname); }
+    var token = store(KEY_TOKEN);
+    if (!token){ iniciarPareamento(); return; }
+    api("/api/dispositivo/me", { headers:{ authorization:"Bearer " + token } }).then(function(r){
+      if (r.status === 200){ location.replace(PROXIMA); return; }
+      if (r.status === 401){ store(KEY_TOKEN, null); iniciarPareamento(); return; }
+      location.replace(PROXIMA);                  // erro do servidor: confia na sessão salva
+    }).catch(function(){ location.replace(PROXIMA); });   // sem internet: mantém logado
+  }
+  iniciar();
+})();
+</script>
+</body>
+</html>

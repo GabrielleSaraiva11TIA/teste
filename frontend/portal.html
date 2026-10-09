@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f8ff">
+<title>Lumis • Portal da Família</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#0a52c9; --blue-2:#1f66e0; --blue-d:#06317f; --sky:#2bb4f2;
+  --ink:#16203a; --ink2:#4a5775; --mute:#7a869e; --line:#e1e9f7;
+  --bg:#f5f8ff; --surface:#f5f8ff; --soft:#eaf1ff; --soft2:#dbe8ff; --card:#fff;
+  --pink:#a1245f; --pink-bg:#fde7ef; --green:#12a36b; --red:#d23b55;
+  --shadow:0 6px 24px rgba(40,90,190,.10), 0 1px 3px rgba(40,90,190,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Quicksand','Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;font-weight:600;font-size:16px;line-height:1.4;color:var(--ink);background:var(--bg);min-height:100dvh;overflow-x:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;text-align:inherit}
+a{color:inherit}
+svg.i{width:1.25em;height:1.25em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.f{fill:currentColor;stroke:none}
+:focus-visible{outline:3px solid #7fb0ff;outline-offset:2px;border-radius:10px}
+
+/* ---------- casca / responsivo ---------- */
+.app{min-height:100dvh;display:grid;grid-template-columns:minmax(0,1fr)}
+.brand-panel{display:none}
+.stage{display:flex;justify-content:center;align-items:flex-start;min-width:0}
+.view{width:100%;max-width:540px;padding:max(14px,env(safe-area-inset-top)) 16px 28px;min-width:0}
+.view.wide{max-width:560px}
+
+@media (min-width:600px){ .view{padding-top:28px} }
+
+@media (min-width:960px){
+  :root{--surface:#fff}
+  body{background:linear-gradient(135deg,#f4f8ff,#e4efff 55%,#d9f3fb)}
+  .app{grid-template-columns:minmax(360px,.85fr) minmax(0,1.15fr);height:100dvh;min-height:0}
+  .brand-panel{
+    display:flex;flex-direction:column;justify-content:space-between;gap:24px;padding:36px 40px;min-height:0;
+  }
+  .stage{align-items:center;padding:28px 40px 28px 0;min-height:0}
+  .view{
+    background:var(--surface);border-radius:30px;box-shadow:0 20px 60px rgba(40,90,190,.16),0 2px 8px rgba(40,90,190,.06);
+    padding:30px 36px 28px;max-height:calc(100dvh - 56px);overflow:auto;
+  }
+  .view .bar{margin-bottom:-28px}
+  body.wide .app{grid-template-columns:minmax(0,1fr)}
+  body.wide .brand-panel{display:none}
+  body.wide .stage{padding:0;align-items:flex-start;height:100dvh;overflow:auto}
+  body.wide .view{max-width:1080px;background:transparent;box-shadow:none;border-radius:0;max-height:none;overflow:visible;padding:30px 40px 40px}
+}
+
+.brand-panel .bp-logo{display:flex;align-items:center;gap:12px}
+.bp-logo .mark{width:46px;height:46px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;box-shadow:0 6px 16px rgba(10,82,201,.3)}
+.bp-logo .mark svg{width:24px;height:24px}
+.bp-logo b{display:block;font-size:22px;color:var(--blue-d);font-weight:700;line-height:1.1}
+.bp-logo span{font-size:12px;color:var(--mute);letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.bp-card{flex:1;min-height:0;background:#fff;border-radius:34px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.bp-card img{height:88%;max-width:90%;object-fit:contain;mix-blend-mode:multiply}
+.bp-card .tag{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);background:#fff;border-radius:999px;padding:8px 16px;font-size:12px;font-weight:700;color:var(--ink);box-shadow:0 6px 18px rgba(50,100,190,.18);border:1px solid #edf2fb;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.bp-card .tag svg{color:#f0466e;width:14px;height:14px}
+.bp-text h2{font-size:30px;line-height:1.15;color:var(--blue-d);font-weight:700}
+.bp-text p{margin-top:8px;color:var(--ink2);font-size:16px;max-width:30em}
+
+/* ---------- elementos comuns ---------- */
+.h1{font-size:28px;line-height:1.15;color:var(--blue);font-weight:700;letter-spacing:-.01em}
+.h1.c{text-align:center}
+.lead{margin-top:10px;color:var(--ink2);font-size:17px;line-height:1.4}
+.lead.c{text-align:center}
+.lbl{display:block;font-size:14px;font-weight:700;color:var(--blue-d);margin:14px 0 6px}
+.field{display:flex;align-items:center;gap:10px;background:#edf3ff;border:2px solid transparent;border-radius:16px;padding:0 14px;height:52px;color:var(--mute);transition:border-color .15s,background .15s}
+.field:focus-within{border-color:#8fb4f5;background:#f3f7ff}
+.field.bad{border-color:var(--red);background:#fff5f7}
+.field input,.field select{flex:1;min-width:0;border:0;background:transparent;outline:0;color:var(--ink);font-weight:600;height:100%}
+.field input::placeholder{color:#97a4bd;font-weight:500}
+.field .eye{color:var(--mute);display:grid;place-items:center;padding:6px;margin-right:-6px}
+.ferr{color:var(--red);font-size:13px;font-weight:700;margin-top:6px}
+.banner-err{background:#fff0f3;border:1px solid #f6c6d0;color:#a3263d;border-radius:14px;padding:10px 14px;font-size:14px;font-weight:700;margin-bottom:6px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 24px;border-radius:999px;
+  background:linear-gradient(180deg,#0d5ad8,#064bb8);color:#fff;font-weight:700;font-size:18px;width:100%;
+  box-shadow:0 8px 20px rgba(10,82,201,.32),inset 0 1px 0 rgba(255,255,255,.3);transition:transform .12s,opacity .2s;text-align:center;
+}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.6;cursor:progress}
+.btn.ghost{background:#e6eefc;color:var(--blue);box-shadow:none}
+.btn.soft{background:#e8f1ff;color:var(--blue);box-shadow:none;font-size:15px;line-height:1.2;padding:10px 16px}
+.btn.sm{min-height:44px;font-size:15px;width:auto}
+.link{color:var(--blue);font-weight:700;text-decoration:none}
+.link:hover{text-decoration:underline}
+.sep{display:flex;align-items:center;gap:12px;color:var(--mute);font-size:13px;margin:14px 0;font-weight:700}
+.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.panel{background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:18px 16px}
+.note{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2);font-weight:600}
+.note svg{color:var(--blue);width:18px;height:18px}
+.chip-pill{display:inline-flex;align-items:center;gap:8px;background:#e3ecff;color:var(--ink2);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700}
+.chip-pill svg{color:var(--blue);width:16px;height:16px}
+.center{display:flex;justify-content:center}
+
+/* topo (Figma): voltar + logo */
+.hdr{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;margin-bottom:18px}
+.hdr .back{width:46px;height:46px;border-radius:50%;background:#eef2ff;color:var(--blue-d);display:grid;place-items:center;transition:background .15s}
+.hdr .back:active{background:#dbe5ff}
+.hdr .back svg{width:22px;height:22px}
+.logo{display:flex;align-items:center;justify-content:center;gap:10px}
+.logo .mark{width:40px;height:40px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center}
+.logo .mark svg{width:20px;height:20px}
+.logo b{display:flex;align-items:center;gap:4px;font-size:18px;color:var(--blue-d);font-weight:700;line-height:1.05}
+.logo b svg{width:13px;height:13px;color:var(--blue)}
+.logo span{display:block;font-size:11px;color:var(--ink2);letter-spacing:.05em;font-weight:600;text-transform:uppercase}
+
+/* ---------- perfil ---------- */
+.conn{display:flex;justify-content:center;margin-bottom:22px}
+.conn-pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #d6e3fb;border-radius:999px;padding:8px 18px;font-size:14px;font-weight:700;color:var(--blue-d);box-shadow:0 2px 10px rgba(40,90,190,.08)}
+.conn-pill .d{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.conn-pill.off .d{background:#b2bccf}
+.conn-pill .sep-d{color:#b2bccf}
+.conn-pill svg{width:14px;height:14px;color:var(--blue)}
+.roles{display:flex;flex-direction:column;gap:18px;margin-top:26px}
+.role{
+  position:relative;display:block;width:100%;background:#fff;border-radius:26px;box-shadow:var(--shadow);padding:20px 18px 18px 26px;
+  transition:transform .12s,box-shadow .15s;overflow:hidden;
+}
+.role::before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:7px;border-radius:0 8px 8px 0;background:var(--blue-2)}
+.role.alt::before{background:var(--sky)}
+.role:active{transform:scale(.985)}
+.role:hover{box-shadow:0 10px 30px rgba(40,90,190,.16)}
+.role .top{display:flex;align-items:center;gap:14px}
+.role .ic{width:58px;height:58px;border-radius:50%;background:#dfe5ff;color:var(--blue-d);display:grid;place-items:center;flex:none}
+.role.alt .ic{background:#cdeafd;color:#0b5aa6}
+.role .ic svg{width:28px;height:28px}
+.role h2{flex:1;font-size:22px;color:var(--blue);font-weight:700;line-height:1.1}
+.role .go{width:42px;height:42px;border-radius:50%;background:#e5edff;color:var(--blue);display:grid;place-items:center;flex:none}
+.role p{margin-top:12px;font-size:16px;color:var(--ink2);line-height:1.4}
+.role .tag{margin-top:12px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--blue)}
+.role .tag svg{width:17px;height:17px}
+.pair-note{margin-top:26px;background:#eaf1ff;border-radius:18px;padding:12px 16px}
+.help-link{display:flex;justify-content:center;align-items:center;gap:8px;margin:20px auto 6px;color:var(--blue-d);font-size:15px;font-weight:700}
+.help-link svg{width:18px;height:18px}
+
+/* ---------- formulários de acesso ---------- */
+.auth-card{margin-top:20px;background:#fff;border-radius:26px;box-shadow:var(--shadow);padding:22px 18px 18px}
+.auth-foot{margin-top:22px;text-align:center;color:var(--ink2);font-size:15px}
+.forgot{display:flex;justify-content:flex-end;margin-top:8px;font-size:13px}
+.check{display:flex;align-items:flex-start;gap:10px;margin-top:16px;font-size:13px;color:var(--ink2);font-weight:600;line-height:1.35}
+.check input{width:20px;height:20px;accent-color:var(--blue);flex:none;margin-top:1px}
+.hint-s{font-size:12px;color:var(--mute);margin-top:6px;font-weight:600}
+
+/* ---------- menu ---------- */
+.menu-list{display:flex;flex-direction:column;gap:14px;margin-top:24px}
+.mitem{display:flex;align-items:center;gap:14px;width:100%;background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:16px;transition:transform .12s}
+.mitem:active{transform:scale(.985)}
+.mitem .ic{width:52px;height:52px;border-radius:16px;background:#dfe8ff;color:var(--blue);display:grid;place-items:center;flex:none}
+.mitem .ic.pk{background:#fde0ea;color:var(--pink)}
+.mitem .ic svg{width:26px;height:26px}
+.mitem .tx{flex:1;min-width:0}
+.mitem b{display:block;font-size:17px;color:var(--ink);line-height:1.2}
+.mitem span.d{display:block;font-size:14px;color:var(--ink2);margin-top:3px;font-weight:500}
+.mitem .st{margin-top:8px;font-size:12px;font-weight:700;border-radius:999px;padding:5px 10px;white-space:nowrap;background:#fff2d6;color:#8a5a00;display:inline-flex;align-items:center;gap:4px}
+.mitem .st svg{width:13px;height:13px}
+.mitem .st.ok{background:#dcf6ea;color:#0b7a4b}
+.mitem .st.lock{background:#eceff6;color:var(--mute)}
+.mitem[aria-disabled=true]{opacity:.7}
+.progress-txt{margin-top:18px;font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:10px}
+.progress-bar{flex:1;height:8px;border-radius:99px;background:#dde7fa;overflow:hidden}
+.progress-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sky),var(--blue));border-radius:99px;transition:width .4s}
+.logout{margin:26px auto 0;display:flex;align-items:center;gap:8px;color:var(--mute);font-weight:700;font-size:15px}
+.logout svg{width:18px;height:18px}
+
+/* ---------- privacidade ---------- */
+.pv-title{display:flex;align-items:center;gap:12px}
+.pv-title .sq{width:44px;height:44px;border-radius:14px;background:var(--blue);color:#fff;display:grid;place-items:center;flex:none}
+.pv-title .sq svg{width:24px;height:24px}
+.pv-title h1{font-size:28px;color:var(--blue-d);font-weight:700;line-height:1.1}
+.commit{display:flex;align-items:center;gap:14px;margin-top:18px;background:#e8f0ff;border-radius:24px;padding:16px}
+.commit .ic{width:56px;height:56px;border-radius:50%;background:#d3e1ff;color:var(--blue);display:grid;place-items:center;flex:none}
+.commit .ic svg{width:28px;height:28px}
+.commit b{color:var(--blue);font-size:16px;display:block}
+.commit span{font-size:14px;color:var(--ink2);font-weight:500;display:block;margin-top:2px}
+.h2{font-size:22px;font-weight:700;color:var(--ink);margin:26px 0 12px;line-height:1.2}
+.info-list{display:flex;flex-direction:column;gap:12px}
+.info{display:flex;gap:14px;background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(40,90,190,.06)}
+.info .ic{width:46px;height:46px;border-radius:50%;background:#dfe8ff;color:var(--blue);display:grid;place-items:center;flex:none}
+.info .ic.pk{background:#fde0ea;color:var(--pink)}
+.info .ic.sk{background:#cdeafd;color:#0b5aa6}
+.info .ic svg{width:22px;height:22px}
+.info b{display:block;font-size:16px;color:var(--ink)}
+.info span{display:block;font-size:15px;color:var(--ink2);font-weight:500;margin-top:2px;line-height:1.35}
+.perm{display:flex;align-items:center;gap:14px;background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(40,90,190,.06);width:100%}
+.perm .tx{flex:1}
+.perm b{display:block;font-size:16px;color:var(--ink);line-height:1.25}
+.perm small{display:block;margin-top:4px;font-size:13px;font-weight:700;color:#0a6f8f}
+.perm small.req{color:var(--ink2);font-weight:600}
+.sw{position:relative;width:62px;height:34px;border-radius:999px;background:#c5d1e8;flex:none;transition:background .2s}
+.sw::after{content:"";position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw svg{position:absolute;top:9px;left:37px;width:16px;height:16px;color:var(--blue);opacity:0;z-index:1;stroke-width:3;transition:opacity .2s}
+.perm[aria-checked=true] .sw{background:var(--blue)}
+.perm[aria-checked=true] .sw::after{left:32px}
+.perm[aria-checked=true] .sw svg{opacity:1}
+.perm.locked{cursor:default}
+.terms-link{display:flex;justify-content:center;align-items:center;gap:8px;text-align:center;color:var(--blue);font-weight:700;font-size:16px;margin:22px 8px 14px;line-height:1.3}
+.terms-link svg{width:18px;height:18px}
+.bar{position:sticky;bottom:0;z-index:5;margin:22px -16px -28px;padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--surface) 72%,transparent);display:flex;gap:12px}
+@media (min-width:960px){.bar{margin:22px -36px -28px;padding:14px 36px 24px}}
+
+/* ---------- diagnóstico ---------- */
+.dg-callout{display:flex;gap:14px;background:#e8f0ff;border:1px solid #cfe0fb;border-radius:20px;padding:14px;margin-top:18px}
+.dg-callout .ic{width:48px;height:48px;border-radius:50%;background:#d3e1ff;color:var(--blue);display:grid;place-items:center;flex:none}
+.dg-callout b{display:block;font-size:15px;color:var(--blue-d)}
+.dg-callout span{display:block;font-size:14px;color:var(--ink2);font-weight:500;margin-top:2px;line-height:1.35}
+.q{background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:16px;margin-top:16px}
+.q-head{display:flex;align-items:flex-start;gap:8px}
+.q-head h3{flex:1;font-size:17px;font-weight:700;color:var(--ink);line-height:1.3}
+.q-head .tools{display:flex;align-items:center;gap:8px;flex:none}
+.q-head .tools>svg{color:var(--blue);width:20px;height:20px}
+.q-badge{font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:#e3ecff;color:var(--blue)}
+.q-badge.optional{background:#eef0f4;color:var(--ink2);border:1px solid #d9dee8}
+.edit{display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-size:14px;font-weight:700}
+.edit::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--blue);opacity:.8}
+.q-sub{margin-top:8px;font-size:14px;color:var(--ink2);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #cfdcf5;background:#f0f5ff;color:var(--ink2);border-radius:999px;padding:9px 16px;font-size:15px;font-weight:700;transition:all .15s}
+.chip svg{width:16px;height:16px}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip.add{font-size:14px;padding:7px 13px;background:#eef2f9;border-color:#d8e0ee;color:var(--ink2)}
+.age{display:flex;align-items:center;gap:6px;margin-top:12px;background:#edf3ff;border-radius:16px;padding:0 14px;height:52px;border:2px solid transparent}
+.age.bad{border-color:var(--red);background:#fff5f7}
+.age>svg{color:var(--blue-d);margin-right:4px}
+.age select{height:36px;border:0;background:#fff;border-radius:10px;padding:0 8px;outline:0;font-weight:700;color:var(--ink)}
+.age span{font-size:14px;color:var(--ink2);font-weight:600}
+.age .ok{margin-left:auto;color:var(--blue);opacity:0}
+.age.set .ok{opacity:1}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.seg button{height:48px;border-radius:14px;background:#e9eff9;color:var(--ink2);font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+.seg button.on{background:var(--blue);color:#fff}
+.seg svg{width:18px;height:18px}
+.exames{margin-top:14px;background:#eef3ff;border:1px solid #dbe6fa;border-radius:18px;padding:14px}
+.exames h4{font-size:14px;color:var(--blue-d);margin-bottom:10px}
+.opt{display:flex;align-items:center;gap:10px;width:100%;background:#fff;border:1.5px solid #d8e3f8;border-radius:12px;padding:12px;margin-bottom:8px;color:var(--ink2);font-weight:700;font-size:15px}
+.opt svg{color:var(--blue);width:20px;height:20px}
+.opt.on{background:#d9e7fd;border-color:#d9e7fd;color:var(--blue)}
+.drop{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;border:2px dashed #b6caf0;border-radius:16px;padding:18px 12px;margin-top:6px;cursor:pointer;background:#f6f9ff}
+.drop>svg{width:32px;height:32px;color:var(--blue)}
+.drop b{color:var(--blue);font-size:15px}
+.drop small{font-size:12px;color:var(--ink2);font-weight:500}
+.drop .row{display:flex;align-items:center;gap:10px;margin-top:4px}
+.drop .enc{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #c5d5f2;background:#fff;color:var(--ink2);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700}
+.drop .enc svg{width:14px;height:14px;color:var(--blue)}
+.dg-tip{display:flex;gap:14px;background:#e8f0ff;border:1px solid #cfe0fb;border-radius:20px;padding:14px;margin-top:18px}
+.dg-tip .ic{width:48px;height:48px;border-radius:14px;background:#d3e1ff;color:var(--blue);display:grid;place-items:center;flex:none}
+.dg-tip b{display:block;color:var(--ink);font-size:15px}
+.dg-tip span{display:block;font-size:14px;color:var(--ink2);font-weight:500;margin-top:2px;line-height:1.35}
+.dg-foot{display:flex;gap:10px;align-items:flex-start;justify-content:center;margin:18px 6px 0;font-size:13px;color:var(--ink2);font-weight:500}
+.dg-foot svg{width:16px;height:16px;flex:none;margin-top:1px}
+
+/* ---------- profissional ---------- */
+.empty{margin-top:22px;border:2px dashed #b6caf0;border-radius:24px;padding:30px 20px;text-align:center;background:#f6f9ff;color:var(--ink2)}
+.empty svg{width:40px;height:40px;color:var(--blue);margin-bottom:8px}
+.empty b{display:block;color:var(--blue-d);font-size:18px;margin-bottom:4px}
+.empty p{font-weight:500;font-size:15px}
+
+/* ---------- tudo pronto ---------- */
+.done-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:18px}
+.done-badge{position:relative;width:128px;height:128px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#3b8cf5,#0a52c9);color:#fff;display:grid;place-items:center;box-shadow:0 14px 36px rgba(10,82,201,.38);animation:pop .6s cubic-bezier(.2,1.4,.4,1) both}
+.done-badge svg{width:62px;height:62px;stroke-width:3}
+.done-badge::before,.done-badge::after{content:"";position:absolute;border-radius:50%;border:3px solid rgba(43,180,242,.35);inset:-12px;animation:ring 2s ease-out infinite}
+.done-badge::after{animation-delay:1s}
+@keyframes ring{from{transform:scale(.85);opacity:1}to{transform:scale(1.25);opacity:0}}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.steps-done{width:100%;margin-top:26px;display:flex;flex-direction:column;gap:10px;text-align:left}
+.sd{display:flex;align-items:center;gap:12px;background:#fff;border-radius:18px;box-shadow:var(--shadow);padding:14px 16px}
+.sd .b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#dcf6ea;color:#0b7a4b;flex:none}
+.sd .b svg{width:18px;height:18px;stroke-width:3}
+.sd.work .b{background:#fff;border:3px solid #cfe0ff;border-top-color:var(--blue);animation:spin 1s linear infinite}
+.sd.work .b svg{display:none}
+.sd.warn .b{background:#fff2d6;color:#8a5a00}
+.sd b.t{display:block;font-size:16px;color:var(--ink)}
+.sd span.d{display:block;font-size:14px;color:var(--ink2);font-weight:500;margin-top:1px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.done-actions{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:24px}
+
+/* ---------- visão geral ---------- */
+.gh{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.gh .av{width:52px;height:52px;border-radius:18px;background:#cdeafd;color:var(--blue);display:grid;place-items:center;flex:none}
+.gh .av svg{width:26px;height:26px}
+.gh .who{flex:1;min-width:0}
+.gh .who small{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#0b6fa0;letter-spacing:.04em;text-transform:uppercase}
+.gh .who small i{width:8px;height:8px;border-radius:50%;background:var(--sky)}
+.gh .who small.off i{background:#b2bccf}
+.gh .who b{display:block;font-size:22px;color:var(--ink);line-height:1.15}
+.gh .ib{width:46px;height:46px;border-radius:50%;background:#eef2ff;color:var(--blue-d);display:grid;place-items:center;flex:none}
+.gh .ib.me{background:#dbe8ff;color:var(--blue)}
+.gh .ib svg{width:22px;height:22px}
+.demo-tag{display:inline-block;margin-top:8px;background:#fff2d6;color:#8a5a00;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+.dash{display:grid;gap:18px;margin-top:18px}
+.hero{background:linear-gradient(150deg,#0a4dc4,#1b6cf0);color:#fff;border-radius:28px;padding:18px;box-shadow:0 14px 34px rgba(10,82,201,.32)}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px;font-weight:700}
+.hero-top .fl{display:flex;align-items:center;gap:8px}
+.hero-top .fl svg{color:#ffb03a;width:22px;height:22px}
+.hero-top .act{display:flex;align-items:center;gap:6px;font-size:13px;color:#d9e8ff}
+.hero-top .act i{width:8px;height:8px;border-radius:50%;background:#3ddc97}
+.glass{margin-top:14px;display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:22px;padding:14px}
+.ritmo{position:relative;width:92px;height:92px;flex:none;border-radius:50%;background:conic-gradient(#35c8ff 0 var(--p,85%),rgba(255,255,255,.22) 0);display:grid;place-items:center}
+.ritmo::before{content:"";position:absolute;inset:9px;border-radius:50%;background:#0f56ce}
+.ritmo div{position:relative;text-align:center;line-height:1.05}
+.ritmo b{display:block;font-size:22px}
+.ritmo small{font-size:10px;letter-spacing:.1em;font-weight:700;color:#cfe2ff}
+.week{flex:1;min-width:0}
+.week .t{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.06em;color:#d9e8ff;text-transform:uppercase}
+.week .t svg{width:18px;height:18px}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px;text-align:center}
+.days small{font-size:12px;font-weight:700;color:#cfe2ff;display:block;margin-bottom:4px}
+.dayc{width:100%;aspect-ratio:1;max-width:36px;margin:0 auto;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700}
+.dayc.done{background:#062a73;color:#fff}
+.dayc.done svg{width:62%;height:62%}
+.dayc.now{background:#ffc83d;color:#5a3d00;box-shadow:0 0 0 3px rgba(255,200,61,.35)}
+.dayc.now svg{width:62%;height:62%}
+.dayc.todo{border:1.5px dashed rgba(255,255,255,.45);color:rgba(255,255,255,.7)}
+.meta{margin-top:14px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+.meta i{width:8px;height:8px;border-radius:50%;background:#35c8ff}
+.meta .pc{margin-left:auto;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:3px 10px;font-size:12px}
+.mbar{margin-top:8px;height:8px;border-radius:99px;background:rgba(6,42,115,.55);overflow:hidden}
+.mbar i{display:block;height:100%;width:80%;background:#ffc83d;border-radius:99px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:14px 8px 12px;text-align:center}
+.stat .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;margin:0 auto 6px}
+.stat .ic svg{width:22px;height:22px}
+.stat .n{font-size:30px;font-weight:700;line-height:1;color:var(--ink)}
+.stat b{display:block;font-size:14px;margin-top:4px}
+.stat small{display:block;font-size:12px;color:var(--ink2);font-weight:500;line-height:1.25;margin-top:2px}
+.skills{background:#fff;border-radius:26px;box-shadow:var(--shadow);padding:16px}
+.sk+.sk{margin-top:16px}
+.sk .row{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;color:var(--ink)}
+.sk .row svg{width:22px;height:22px}
+.sk .row .pc{margin-left:auto;font-size:14px;color:#0a6f8f}
+.sk p{font-size:14px;color:var(--ink2);font-weight:500;margin:4px 0 8px}
+.bar-t{height:10px;border-radius:99px;background:#eaf0fb;overflow:hidden}
+.bar-t i{display:block;height:100%;border-radius:99px;width:var(--p)}
+.skills .tipbox{margin-top:18px;display:flex;align-items:center;gap:12px;background:#eef3ff;border-radius:18px;padding:12px 14px;font-size:14px;color:var(--ink2);font-weight:600}
+.skills .tipbox .ic{width:40px;height:40px;border-radius:50%;background:#fff;color:var(--blue);display:grid;place-items:center;flex:none;border:1px solid #d7e4fb}
+.fase{background:#fff;border-radius:26px;box-shadow:var(--shadow);padding:16px}
+.fase .top{display:flex;gap:14px;align-items:center}
+.fase .ic{position:relative;width:64px;height:64px;border-radius:18px;background:#d8f0fd;color:#0b6fa0;display:grid;place-items:center;flex:none}
+.fase .ic svg{width:30px;height:30px}
+.fase .ic .lk{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;border:3px solid #fff}
+.fase .ic .lk svg{width:13px;height:13px}
+.fase .badge{display:inline-block;background:#d3e8fd;color:#0b5aa6;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px}
+.fase b{display:block;font-size:19px;margin-top:4px;color:var(--ink)}
+.fase span.d{display:block;font-size:14px;color:var(--ink2);font-weight:500}
+.fase .btn{margin-top:14px;justify-content:space-between;padding:0 14px 0 22px}
+.fase .btn .a{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center}
+.dica{background:linear-gradient(160deg,#fde7f0,#f4e8fb);border:1px solid #f6cfe0;border-radius:26px;padding:16px}
+.dica .top{display:flex;gap:12px;align-items:center}
+.dica .ic{width:48px;height:48px;border-radius:50%;background:#fbd4e5;color:var(--pink);display:grid;place-items:center;flex:none}
+.dica small{display:block;font-size:12px;letter-spacing:.06em;color:var(--pink);font-weight:700;text-transform:uppercase}
+.dica b{display:block;font-size:21px;color:var(--ink);line-height:1.15}
+.dica p{margin-top:12px;font-size:16px;color:var(--ink2);font-weight:500;line-height:1.45}
+.dica .more{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:10px;color:var(--pink);font-weight:700}
+.dash .colA,.dash .colB{display:flex;flex-direction:column;gap:18px}
+@media (min-width:880px){
+  .dash{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);align-items:start;gap:22px}
+}
+
+/* ---------- sheets / toast ---------- */
+.sheet-bg{position:fixed;inset:0;background:rgba(15,30,70,.45);display:flex;align-items:flex-end;justify-content:center;z-index:50;padding:0}
+.sheet{width:100%;max-width:520px;background:#fff;border-radius:28px 28px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));max-height:88dvh;overflow:auto;animation:up .25s ease}
+@media (min-width:600px){.sheet-bg{align-items:center;padding:20px}.sheet{border-radius:28px}}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet h2{font-size:22px;color:var(--blue);line-height:1.2}
+.sheet ol{margin:12px 0 4px 20px;color:var(--ink2);font-weight:500;font-size:15px;line-height:1.5}
+.sheet p{color:var(--ink2);font-weight:500;font-size:15px;margin-top:10px;line-height:1.5}
+.sheet .row{display:flex;gap:10px;margin-top:18px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,30px);background:#16203a;color:#fff;border-radius:16px;padding:12px 18px;font-size:15px;font-weight:700;max-width:min(92vw,460px);text-align:center;opacity:0;pointer-events:none;transition:all .25s;z-index:80}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.spin{width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;animation:spin .8s linear infinite}
+.shake{animation:shake .35s}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-paw" viewBox="0 0 24 24"><g><ellipse cx="12" cy="16.5" rx="5" ry="4"/><ellipse cx="5" cy="10.5" rx="2.2" ry="3"/><ellipse cx="9.5" cy="5.5" rx="2.2" ry="3"/><ellipse cx="14.5" cy="5.5" rx="2.2" ry="3"/><ellipse cx="19" cy="10.5" rx="2.2" ry="3"/></g></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.500l2.900 6 6.600.9-4.800 4.600 1.200 6.500L12 17.400 6.100 20.500l1.200-6.500L2.500 9.400l6.600-.9z"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.500-7 10-7 10 7 10 7-3.500 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M2 12s3.500-7 10-7 10 7 10 7-3.500 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.500-7-10a4 4 0 0 1 7-2.500A4 4 0 0 1 19 10c0 5.500-7 10-7 10z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.500"/><path d="M2.500 20c0-3.500 3-5.500 6.500-5.500s6.500 2 6.500 5.500"/><circle cx="17" cy="9" r="2.500"/><path d="M17.500 14.500c2.500.3 4 2 4 5"/></symbol>
+    <symbol id="i-clinic" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2.500"/><circle cx="12" cy="10" r="2.500"/><path d="M8 17c.5-2 2-3 4-3s3.500 1 4 3"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.500-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.500"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+    <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.500 2 4 2 4-2 4-2M9 9.500h.01M15 9.500h.01"/></symbol>
+    <symbol id="i-records" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2.500"/><path d="M8 8h8M8 12h4"/><circle cx="15" cy="16" r="2"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="i-ear" viewBox="0 0 24 24"><path d="M7 9a5 5 0 0 1 10 0c0 3-2 4-3 5.500s-.5 3.500-2.500 4.500A3 3 0 0 1 7.500 17"/><path d="M10 9a2 2 0 0 1 4 0"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.600 0l3-3a4 4 0 0 0-5.600-5.600l-1 1M14 10a4 4 0 0 0-5.600 0l-3 3a4 4 0 0 0 5.600 5.600l1-1"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M7 18a4.500 4.500 0 0 1-.5-9A6 6 0 0 1 18 9.500 4 4 0 0 1 17.500 18"/><path d="M12 12v8M9 14.500l3-3 3 3"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9.500 3A3.500 3.500 0 0 0 6 6.500 3.500 3.500 0 0 0 4 10c0 1.500.8 2.500 1.800 3.200A3.500 3.500 0 0 0 9.500 20 2.500 2.500 0 0 0 12 17.500V5.500A2.500 2.500 0 0 0 9.500 3zM14.500 3A3.500 3.500 0 0 1 18 6.500 3.500 3.500 0 0 1 20 10c0 1.500-.8 2.500-1.800 3.200A3.500 3.500 0 0 1 14.500 20 2.500 2.500 0 0 1 12 17.500"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.500 10.900c.6.500 1 1.200 1 2.100h5c0-.9.4-1.600 1-2.100A6 6 0 0 0 12 3z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-6 1-9z"/></symbol>
+    <symbol id="i-wind" viewBox="0 0 24 24"><path d="M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7a2.500 2.500 0 1 1-2.500 2.500"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.500 9a2.500 2.500 0 1 1 3.500 2.300c-.7.400-1 1-1 1.700M12 17h.01"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-bt" viewBox="0 0 24 24"><path d="M7 7.500l10 9-5 4.500V3l5 4.500-10 9"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-finger" viewBox="0 0 24 24"><path d="M12 11v4M8.500 20c0-2 .5-4 .5-6a3 3 0 0 1 6 0c0 3 .5 5 1 6M5.500 17c.5-1.500.7-3 .5-5a6 6 0 0 1 12 0c0 1.500.2 2.500.5 3.500M9.500 21c-.3-1-.5-2-.5-3"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M4 9v6M8 5v14M12 8v8M16 4v16M20 9v6"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 0-1z"/></symbol>
+    <symbol id="i-watch" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="3"/><path d="M9 7l.5-4h5L15 7M9 17l.5 4h5L15 17M12 10v2.500l1.500 1"/></symbol>
+    <symbol id="i-robot" viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.500 16.500h5"/></symbol>
+    <symbol id="i-lockfill" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <!-- Painel lateral (só aparece no computador) -->
+  <aside class="brand-panel" aria-hidden="true">
+    <div class="bp-logo"><span class="mark"><svg class="i f"><use href="#i-paw"/></svg></span><div><b>Lumis</b><span id="bpRole">Portal da Família</span></div></div>
+    <div class="bp-card">
+      <img src="assets/gato.jpeg" alt="" draggable="false" onerror="this.style.display='none'">
+      <div class="tag"><svg class="i f"><use href="#i-heart"/></svg>SEU COMPANHEIRO 3D</div>
+    </div>
+    <div class="bp-text">
+      <h2>Acompanhe com carinho cada pequena grande conquista.</h2>
+      <p>Cadastre-se, conte um pouco sobre a audição do seu filho(a) e deixe o Lumis pronto para brincar.</p>
+    </div>
+  </aside>
+
+  <main class="stage">
+
+    <!-- ===================== PERFIL ===================== -->
+    <section class="view" id="v-perfil" hidden>
+      <div class="conn"><span class="conn-pill" id="connPill"><b>Lumis</b><span class="sep-d">•</span><i class="d"></i><span id="connTxt">Sem aparelho</span><svg class="i"><use href="#i-bt"/></svg></span></div>
+      <h1 class="h1 c">Como você deseja acessar?</h1>
+      <p class="lead c">Selecione o seu perfil para personalizar a experiência de acompanhamento.</p>
+
+      <div class="roles">
+        <button class="role" type="button" data-papel="responsavel">
+          <div class="top"><span class="ic"><svg class="i"><use href="#i-users"/></svg></span><h2>Sou responsável</h2><span class="go"><svg class="i"><use href="#i-right"/></svg></span></div>
+          <p>Acompanhar o desenvolvimento do meu filho(a), ver relatórios de progresso e ajustar rotinas...</p>
+          <span class="tag">Área da família <svg class="i"><use href="#i-heart"/></svg></span>
+        </button>
+        <button class="role alt" type="button" data-papel="profissional">
+          <div class="top"><span class="ic"><svg class="i"><use href="#i-clinic"/></svg></span><h2>Sou profissional</h2><span class="go"><svg class="i"><use href="#i-right"/></svg></span></div>
+          <p>Acompanhamento clínico, metas fonoaudiológicas personalizadas e relatórios de biofeedback.</p>
+          <span class="tag">Fonoaudiologia &amp; Terapia <svg class="i"><use href="#i-check"/></svg></span>
+        </button>
+      </div>
+
+      <div class="pair-note note" id="pairNote" hidden><svg class="i"><use href="#i-lock"/></svg>Dispositivo Lumis emparelhado com segurança via Bluetooth e Nuvem protegida.</div>
+      <button class="help-link" type="button" id="btnAjuda"><svg class="i"><use href="#i-help"/></svg>Precisa de ajuda com o pareamento?</button>
+    </section>
+
+    <!-- ===================== LOGIN / CADASTRO ===================== -->
+    <section class="view" id="v-auth" hidden>
+      <div class="hdr">
+        <button class="back" type="button" data-back="perfil" aria-label="Voltar"><svg class="i"><use href="#i-left"/></svg></button>
+        <div class="logo"><span class="mark"><svg class="i f"><use href="#i-paw"/></svg></span><div><b>Lumis <svg class="i"><use href="#i-shield"/></svg></b><span class="roleName">Portal da Família</span></div></div>
+        <span></span>
+      </div>
+
+      <h1 class="h1 c" id="authTitle">Acesse sua conta</h1>
+      <p class="lead c" id="authLead"></p>
+
+      <form class="auth-card" id="formLogin" novalidate>
+        <div class="banner-err" id="lgErr" hidden></div>
+        <label class="lbl" for="lgEmail">E-mail cadastrado</label>
+        <div class="field"><svg class="i"><use href="#i-mail"/></svg><input id="lgEmail" type="email" inputmode="email" autocomplete="email" placeholder="exemplo@email.com"></div>
+        <p class="ferr" hidden></p>
+        <label class="lbl" for="lgSenha">Sua senha</label>
+        <div class="field"><svg class="i"><use href="#i-lock"/></svg><input id="lgSenha" type="password" autocomplete="current-password" placeholder="••••••••"><button type="button" class="eye" data-eye="lgSenha" aria-label="Mostrar senha"><svg class="i"><use href="#i-eye"/></svg></button></div>
+        <p class="ferr" hidden></p>
+        <div class="forgot"><button type="button" class="link" id="btnEsqueci">Esqueci minha senha</button></div>
+        <button class="btn" type="submit" style="margin-top:18px"><span>Entrar</span><svg class="i"><use href="#i-right"/></svg></button>
+        <div class="sep">ou</div>
+        <button class="btn soft" type="button" id="btnBio"><svg class="i"><use href="#i-finger"/></svg>Entrar com Face ID ou Biometria</button>
+        <p class="note" style="margin-top:16px"><svg class="i"><use href="#i-lock"/></svg>Seus dados e relatórios clínicos são protegidos por criptografia de ponta a ponta.</p>
+      </form>
+
+      <form class="auth-card" id="formCadastro" hidden novalidate>
+        <div class="banner-err" id="cdErr" hidden></div>
+        <label class="lbl" for="cdNome" style="margin-top:0">Nome completo</label>
+        <div class="field"><svg class="i"><use href="#i-user"/></svg><input id="cdNome" type="text" autocomplete="name" placeholder="Digite seu nome completo"></div>
+        <p class="ferr" hidden></p>
+        <label class="lbl" for="cdEmail">E-mail cadastrado</label>
+        <div class="field"><svg class="i"><use href="#i-mail"/></svg><input id="cdEmail" type="email" inputmode="email" autocomplete="email" placeholder="exemplo@email.com"></div>
+        <p class="ferr" hidden></p>
+        <label class="lbl" for="cdSenha">Criar senha</label>
+        <div class="field"><svg class="i"><use href="#i-lock"/></svg><input id="cdSenha" type="password" autocomplete="new-password" placeholder="Crie uma senha"><button type="button" class="eye" data-eye="cdSenha" aria-label="Mostrar senha"><svg class="i"><use href="#i-eye"/></svg></button></div>
+        <p class="hint-s">Mínimo de 8 caracteres.</p>
+        <p class="ferr" hidden></p>
+        <label class="lbl" for="cdSenha2">Confirmar senha</label>
+        <div class="field"><svg class="i"><use href="#i-lock"/></svg><input id="cdSenha2" type="password" autocomplete="new-password" placeholder="Confirme sua senha"><button type="button" class="eye" data-eye="cdSenha2" aria-label="Mostrar senha"><svg class="i"><use href="#i-eye"/></svg></button></div>
+        <p class="ferr" hidden></p>
+        <label class="check"><input type="checkbox" id="cdTermos"><span>Li e concordo com os <button type="button" class="link" data-termos>Termos de Uso</button> e a <button type="button" class="link" data-termos>Política de Privacidade</button>.</span></label>
+        <p class="ferr" id="cdTermosErr" hidden></p>
+        <button class="btn" type="submit" style="margin-top:18px"><span>Criar conta</span><svg class="i"><use href="#i-right"/></svg></button>
+        <p class="note" style="margin-top:16px;justify-content:center"><svg class="i"><use href="#i-lock"/></svg>Seus dados são protegidos pela LGPD.</p>
+      </form>
+
+      <p class="auth-foot" id="footLogin">Ainda não tem uma conta? <button type="button" class="link" id="goCadastro">Cadastre-se</button></p>
+      <p class="auth-foot" id="footCadastro" hidden>Já possui uma conta? <button type="button" class="link" id="goLogin">Entrar</button></p>
+    </section>
+
+    <!-- ===================== MENU DO RESPONSÁVEL ===================== -->
+    <section class="view" id="v-menu" hidden>
+      <div class="hdr">
+        <button class="back" type="button" id="menuBack" data-back="geral" aria-label="Voltar" hidden><svg class="i"><use href="#i-left"/></svg></button>
+        <span></span>
+        <span></span>
+      </div>
+      <h1 class="h1" id="menuTitle">Complete seu cadastro</h1>
+      <p class="lead" id="menuLead"></p>
+      <div class="progress-txt" id="menuProg"><span id="menuProgTxt">0 de 2</span><div class="progress-bar"><i id="menuProgBar"></i></div></div>
+
+      <div class="menu-list">
+        <button class="mitem" type="button" id="mPriv">
+          <span class="ic"><svg class="i"><use href="#i-shield"/></svg></span>
+          <span class="tx"><b>Privacidade e Segurança</b><span class="d">Entenda como cuidamos dos dados e escolha as autorizações.</span><span class="st" id="mPrivSt"></span></span>
+        </button>
+        <button class="mitem" type="button" id="mDiag">
+          <span class="ic pk"><svg class="i"><use href="#i-records"/></svg></span>
+          <span class="tx"><b>Diagnóstico e Histórico Clínico</b><span class="d">Conte sobre a audição do seu filho(a) para a fonoaudióloga.</span><span class="st" id="mDiagSt"></span></span>
+        </button>
+      </div>
+      <button class="logout" type="button" data-logout><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
+    </section>
+
+    <!-- ===================== PRIVACIDADE E SEGURANÇA ===================== -->
+    <section class="view" id="v-privacidade" hidden>
+      <div class="hdr">
+        <button class="back" type="button" data-back="menu" aria-label="Voltar"><svg class="i"><use href="#i-left"/></svg></button>
+        <div class="logo"><span class="mark"><svg class="i f"><use href="#i-paw"/></svg></span><div><b>Lumis <svg class="i"><use href="#i-shield"/></svg></b><span>Portal da Família</span></div></div>
+        <span></span>
+      </div>
+      <div class="pv-title"><span class="sq"><svg class="i"><use href="#i-shield"/></svg></span><h1>Privacidade e segurança</h1></div>
+      <p class="lead">Queremos que você entenda exatamente como os dados do seu filho(a) serão usados com carinho e proteção total.</p>
+
+      <div class="commit"><span class="ic"><svg class="i f"><use href="#i-paw"/></svg></span><div><b>Compromisso Lumis</b><span>Tecnologia acolhedora que cuida da fala sem violar o espaço seguro da sua família.</span></div></div>
+
+      <h2 class="h2">Como cuidamos das informações</h2>
+      <div class="info-list">
+        <div class="info"><span class="ic"><svg class="i"><use href="#i-camera"/></svg></span><div><b>Câmera</b><span>Usada durante as atividades para observar movimentos da boca e articulações.</span></div></div>
+        <div class="info"><span class="ic"><svg class="i"><use href="#i-mic"/></svg></span><div><b>Microfone</b><span>Capta a voz da criança durante as tentativas de fala para exercícios lúdicos.</span></div></div>
+        <div class="info"><span class="ic"><svg class="i"><use href="#i-smile"/></svg></span><div><b>Informações da criança</b><span>Nome, idade e dados básicos usados exclusivamente para personalizar a jornada.</span></div></div>
+        <div class="info"><span class="ic pk"><svg class="i"><use href="#i-records"/></svg></span><div><b>Registros fonoaudiológicos</b><span>Podem ser guardados para acompanhamento e evolução com a fonoaudióloga.</span></div></div>
+        <div class="info"><span class="ic"><svg class="i"><use href="#i-users"/></svg></span><div><b>Quem tem acesso</b><span>Apenas você e o profissional responsável pelo acompanhamento clínico.</span></div></div>
+        <div class="info"><span class="ic sk"><svg class="i"><use href="#i-target"/></svg></span><div><b>Finalidade exclusiva</b><span>Os dados são usados exclusivamente para apoiar o desenvolvimento da fala infantil.</span></div></div>
+      </div>
+
+      <h2 class="h2" style="margin-bottom:4px">Autorizações</h2>
+      <p class="lead" style="margin:0 0 12px;font-size:16px">Selecione cada permissão individualmente para continuar:</p>
+      <div class="info-list" id="perms">
+        <button type="button" class="perm locked" role="switch" aria-checked="true" data-perm="sistema"><span class="tx"><b>Autorizo o uso necessário para funcionamento do sistema</b><small class="req">Obrigatório para sincronização básica</small></span><span class="sw"><svg class="i"><use href="#i-check"/></svg></span></button>
+        <button type="button" class="perm" role="switch" aria-checked="false" data-perm="audio"><span class="tx"><b>Autorizo a captura de áudio durante as atividades</b><small>Permite biofeedback de voz</small></span><span class="sw"><svg class="i"><use href="#i-check"/></svg></span></button>
+        <button type="button" class="perm" role="switch" aria-checked="false" data-perm="imagem"><span class="tx"><b>Autorizo a captura de imagem</b><small>Para análise de fonoarticulação visual</small></span><span class="sw"><svg class="i"><use href="#i-check"/></svg></span></button>
+        <button type="button" class="perm" role="switch" aria-checked="false" data-perm="armazenamento"><span class="tx"><b>Autorizo o armazenamento dos registros para acompanhamento profissional</b><small>Compartilhado com fonoaudióloga</small></span><span class="sw"><svg class="i"><use href="#i-check"/></svg></span></button>
+      </div>
+
+      <button type="button" class="terms-link" data-termos>Ler informações completas sobre privacidade e termos <svg class="i"><use href="#i-ext"/></svg></button>
+      <div class="center"><span class="chip-pill"><svg class="i"><use href="#i-lock"/></svg>Criptografia de ponta a ponta conforme a LGPD</span></div>
+      <p class="ferr" id="pvErr" hidden style="text-align:center"></p>
+
+      <div class="bar"><button class="btn" type="button" id="pvOk"><span>Continuar</span><svg class="i"><use href="#i-right"/></svg></button></div>
+    </section>
+
+    <!-- ===================== DIAGNÓSTICO E HISTÓRICO CLÍNICO ===================== -->
+    <section class="view" id="v-diagnostico" hidden>
+      <div class="hdr">
+        <button class="back" type="button" data-back="menu" aria-label="Voltar"><svg class="i"><use href="#i-left"/></svg></button>
+        <div class="logo"><span class="mark"><svg class="i f"><use href="#i-paw"/></svg></span><div><b>Lumis <svg class="i"><use href="#i-shield"/></svg></b><span>Portal da Família</span></div></div>
+        <span></span>
+      </div>
+      <div class="pv-title"><span class="sq" style="background:#e3ecff;color:var(--blue)"><svg class="i"><use href="#i-records"/></svg></span><h1 style="font-size:25px;color:var(--blue)">Diagnóstico e Histórico Clínico</h1></div>
+      <p class="lead">Essas informações ajudam a fonoaudióloga a conhecer melhor seu filho(a) antes do primeiro contato.</p>
+
+      <div class="dg-callout"><span class="ic"><svg class="i"><use href="#i-heart"/></svg></span><div><b>Cuidado acolhedor e confidencial</b><span>Todas as respostas são sigilosas e ajudam a calibrar as atividades lúdicas do Lumis com carinho e precisão médica.</span></div></div>
+
+      <!-- 1 -->
+      <div class="q" id="q1">
+        <div class="q-head"><h3>1. A criança possui diagnóstico de perda auditiva?</h3><div class="tools"><svg class="i"><use href="#i-ear"/></svg><button type="button" class="edit" data-edit="q1">Editar</button></div></div>
+        <p class="q-sub">Selecione o grau diagnosticado pela equipe médica:</p>
+        <div class="chips" id="chGrau">
+          <button type="button" class="chip" data-grau="leve">Leve</button>
+          <button type="button" class="chip" data-grau="moderada">Moderada</button>
+          <button type="button" class="chip" data-grau="severa">Severa</button>
+          <button type="button" class="chip" data-grau="profunda">Profunda</button>
+          <button type="button" class="chip" data-grau="investigacao"><svg class="i"><use href="#i-search"/></svg>Em investigação</button>
+        </div>
+        <p class="ferr" hidden></p>
+      </div>
+
+      <!-- 2 -->
+      <div class="q" id="q2">
+        <div class="q-head"><h3>2. Idade do diagnóstico</h3><div class="tools"><span class="q-badge">Obrigatório</span><button type="button" class="edit" data-edit="q2">Editar</button></div></div>
+        <div class="age" id="age">
+          <svg class="i"><use href="#i-calendar"/></svg>
+          <select id="idAnos" aria-label="Anos"><option value="">–</option></select><span>ano(s)</span>
+          <select id="idMeses" aria-label="Meses"><option value="">–</option></select><span>mes(es)</span>
+          <svg class="i ok"><use href="#i-check"/></svg>
+        </div>
+        <p class="ferr" hidden></p>
+      </div>
+
+      <!-- 3 -->
+      <div class="q" id="q3">
+        <div class="q-head"><h3>3. Causa conhecida (se houver)</h3><div class="tools"><span class="q-badge optional">Opcional</span><button type="button" class="edit" data-edit="q3">Editar</button></div></div>
+        <div class="field" style="margin-top:12px"><svg class="i"><use href="#i-link"/></svg><input id="dgCausa" type="text" maxlength="255" placeholder="Ex: Congênita, prematuridade, citomegalovírus..."></div>
+        <div class="chips" id="chCausa">
+          <button type="button" class="chip add" data-causa="Congênita">+ Congênita</button>
+          <button type="button" class="chip add" data-causa="Prematuridade">+ Prematuridade</button>
+          <button type="button" class="chip add" data-causa="Genética">+ Genética</button>
+          <button type="button" class="chip add" data-causa="Não identificada">+ Não identificada</button>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="q" id="q4">
+        <div class="q-head"><h3>4. Já realizou exames auditivos?</h3><div class="tools"><svg class="i"><use href="#i-doc"/></svg><button type="button" class="edit" data-edit="q4">Editar</button></div></div>
+        <div class="seg" id="segExames">
+          <button type="button" data-fez="1"><svg class="i"><use href="#i-check"/></svg>Sim, já realizou</button>
+          <button type="button" data-fez="0">Não realizou</button>
+        </div>
+        <div class="exames" id="examesBox" hidden>
+          <h4>Quais procedimentos foram feitos?</h4>
+          <button type="button" class="opt" data-exame="audiometria"><svg class="i"><use href="#i-check"/></svg>Audiometria Infantil</button>
+          <button type="button" class="opt" data-exame="bera"><svg class="i"><use href="#i-check"/></svg>BERA / PEATE</button>
+          <button type="button" class="opt" data-exame="eoa"><svg class="i"><use href="#i-check"/></svg>EOA (Otoemissões)</button>
+          <button type="button" class="opt" data-exame="impedanciometria"><svg class="i"><use href="#i-check"/></svg>Impedanciometria</button>
+          <label class="drop" id="drop" for="laudoFile">
+            <svg class="i"><use href="#i-upload"/></svg>
+            <b id="dropTitle">Anexar laudo ou audiometria recente</b>
+            <small id="dropSub">PDF ou foto legível • Até 15MB</small>
+            <span class="row"><span class="enc"><svg class="i"><use href="#i-lock"/></svg>Anexo criptografado</span><span class="edit" id="dropChange" hidden>Alterar</span></span>
+          </label>
+          <input type="file" id="laudoFile" accept="application/pdf,image/*" hidden>
+        </div>
+        <p class="ferr" hidden></p>
+      </div>
+
+      <!-- 5 -->
+      <div class="q" id="q5">
+        <div class="q-head"><h3>5. Possui outra condição associada?</h3><div class="tools"><svg class="i"><use href="#i-brain"/></svg><button type="button" class="edit" data-edit="q5">Editar</button></div></div>
+        <p class="q-sub">Selecione para adaptar estímulos visuais e sonoros:</p>
+        <div class="chips" id="chCond">
+          <button type="button" class="chip" data-cond="nenhuma">Nenhuma</button>
+          <button type="button" class="chip" data-cond="tea">TEA (Espectro Autista)</button>
+          <button type="button" class="chip" data-cond="motor">Desenvolvimento motor</button>
+          <button type="button" class="chip" data-cond="tdah">TDAH</button>
+          <button type="button" class="chip add" data-cond="outra">+ Descrever outra</button>
+        </div>
+        <div class="field" id="outraBox" style="margin-top:12px" hidden><svg class="i"><use href="#i-link"/></svg><input id="dgOutra" type="text" maxlength="255" placeholder="Descreva a condição"></div>
+        <p class="ferr" hidden></p>
+      </div>
+
+      <div class="dg-tip"><span class="ic"><svg class="i"><use href="#i-robot"/></svg></span><div><b>Dica do Lumis</b><span>Você poderá atualizar estes dados clínicos a qualquer momento no Menu do Responsável ou via fonoaudióloga responsável.</span></div></div>
+      <p class="dg-foot"><svg class="i"><use href="#i-lock"/></svg>Dados médicos protegidos em conformidade com a LGPD (Lei nº 13.709/18).</p>
+      <p class="ferr" id="dgErr" hidden style="text-align:center;margin-top:12px"></p>
+
+      <div class="bar">
+        <button class="btn ghost" type="button" data-back="menu" style="flex:1"><svg class="i"><use href="#i-left"/></svg>Voltar</button>
+        <button class="btn" type="button" id="dgOk" style="flex:1.3"><svg class="i"><use href="#i-check"/></svg><span>Continuar</span></button>
+      </div>
+    </section>
+
+    <!-- ===================== PROFISSIONAL (formulário a definir) ===================== -->
+    <section class="view" id="v-fono" hidden>
+      <div class="hdr">
+        <span></span>
+        <div class="logo"><span class="mark"><svg class="i f"><use href="#i-paw"/></svg></span><div><b>Lumis <svg class="i"><use href="#i-shield"/></svg></b><span>Portal do Profissional</span></div></div>
+        <span></span>
+      </div>
+      <h1 class="h1" id="fonoTitle">Cadastro profissional</h1>
+      <p class="lead">Olá! Em breve você preencherá aqui as informações da sua atuação clínica.</p>
+
+      <form id="fonoForm" novalidate>
+        <div id="fonoPerguntas"></div>
+        <div class="empty" id="fonoVazio">
+          <svg class="i"><use href="#i-clinic"/></svg>
+          <b>Formulário em preparação</b>
+          <p>As perguntas para fonoaudiólogos e terapeutas serão adicionadas aqui.</p>
+        </div>
+        <p class="ferr" id="fonoErr" hidden style="margin-top:12px"></p>
+        <button class="btn" type="submit" id="fonoSalvar" style="margin-top:18px" hidden><span>Salvar</span><svg class="i"><use href="#i-check"/></svg></button>
+      </form>
+      <button class="logout" type="button" data-logout><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
+    </section>
+
+    <!-- ===================== TUDO PRONTO ===================== -->
+    <section class="view" id="v-pronto" hidden>
+      <div class="done-wrap">
+        <div class="done-badge"><svg class="i"><use href="#i-check"/></svg></div>
+        <h1 class="h1" style="margin-top:28px">Tudo pronto!</h1>
+        <p class="lead" id="prontoLead">Cadastro concluído com carinho. Agora é só brincar!</p>
+      </div>
+      <div class="steps-done">
+        <div class="sd"><span class="b"><svg class="i"><use href="#i-check"/></svg></span><div><b class="t">Cadastro concluído</b><span class="d">Privacidade e diagnóstico salvos.</span></div></div>
+        <div class="sd work" id="sdAparelho"><span class="b"><svg class="i"><use href="#i-check"/></svg></span><div><b class="t" id="sdTitulo">Liberando o Lumis</b><span class="d" id="sdTexto">Conectando ao aparelho da criança...</span></div></div>
+      </div>
+      <div class="done-actions">
+        <button class="btn" type="button" id="prontoGeral"><span>Ir para a Visão Geral</span><svg class="i"><use href="#i-right"/></svg></button>
+        <button class="btn soft" type="button" id="prontoCodigo" hidden><svg class="i"><use href="#i-link"/></svg>Digitar código do aparelho</button>
+      </div>
+    </section>
+
+    <!-- ===================== VISÃO GERAL ===================== -->
+    <section class="view wide" id="v-geral" hidden>
+      <div class="gh">
+        <span class="av"><svg class="i f"><use href="#i-paw"/></svg></span>
+        <div class="who"><small id="ghConn"><i></i><span id="ghConnTxt">Lumis conectado</span></small><b>Visão Geral</b></div>
+        <button class="ib" type="button" aria-label="Notificações" data-soon><svg class="i"><use href="#i-bell"/></svg></button>
+        <button class="ib me" type="button" aria-label="Menu do Responsável" id="geralMenu"><svg class="i"><use href="#i-user"/></svg></button>
+      </div>
+      <h1 class="h1">Como está a jornada?</h1>
+      <p class="lead" style="margin-top:6px">Acompanhe com carinho cada pequena grande conquista</p>
+      <span class="demo-tag">Prévia com dados de exemplo</span>
+
+      <div class="dash">
+        <div class="colA">
+          <div class="hero">
+            <div class="hero-top"><span class="fl"><svg class="i"><use href="#i-flame"/></svg>4 dias seguidos de prática</span><span class="act"><i></i>Ativo hoje</span></div>
+            <div class="glass">
+              <div class="ritmo" style="--p:85%"><div><b>85%</b><small>RITMO</small></div></div>
+              <div class="week">
+                <div class="t"><svg class="i"><use href="#i-calendar"/></svg>Jornada semanal</div>
+                <div class="days">
+                  <div><small>S</small><span class="dayc done"><svg class="i f"><use href="#i-paw"/></svg></span></div>
+                  <div><small>T</small><span class="dayc done"><svg class="i f"><use href="#i-paw"/></svg></span></div>
+                  <div><small>Q</small><span class="dayc done"><svg class="i f"><use href="#i-paw"/></svg></span></div>
+                  <div><small>Q</small><span class="dayc now"><svg class="i f"><use href="#i-star"/></svg></span></div>
+                  <div><small>S</small><span class="dayc todo">5</span></div>
+                  <div><small>S</small><span class="dayc todo">6</span></div>
+                  <div><small>D</small><span class="dayc todo">7</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="meta"><i></i>Meta Semanal: 4 de 5 sessões concluídas<span class="pc">80%</span></div>
+            <div class="mbar"><i></i></div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><div class="ic" style="background:#dfe8ff;color:var(--blue)"><svg class="i"><use href="#i-target"/></svg></div><div class="n">5</div><b style="color:var(--blue)">atividades</b><small>realizadas na semana</small></div>
+            <div class="stat"><div class="ic" style="background:#fde0ea;color:var(--pink)"><svg class="i f"><use href="#i-star"/></svg></div><div class="n">3</div><b style="color:var(--pink)">conquistas</b><small>no mapa lúdico</small></div>
+            <div class="stat"><div class="ic" style="background:#cdeafd;color:#0b5aa6"><svg class="i"><use href="#i-trend"/></svg></div><div class="n">2</div><b style="color:#0b6fa0">habilidades</b><small>em evolução suave</small></div>
+          </div>
+
+          <div>
+            <h2 class="h2" style="margin-top:6px">Habilidades em desenvolvimento</h2>
+            <div class="skills">
+              <div class="sk"><div class="row"><svg class="i" style="color:var(--blue)"><use href="#i-wave"/></svg>Sons e Articulação<span class="pc">80%</span></div><p>Treino suave fonemas /s/ e /b/</p><div class="bar-t"><i style="--p:80%;background:linear-gradient(90deg,#38b6f5,#0b6fa0)"></i></div></div>
+              <div class="sk"><div class="row"><svg class="i" style="color:var(--blue)"><use href="#i-smile"/></svg>Reconhecimento Orofacial<span class="pc" style="color:var(--blue)">65%</span></div><p>Expressões em frente ao espelho do Lumis</p><div class="bar-t"><i style="--p:65%;background:linear-gradient(90deg,#a9c4f7,#0a52c9)"></i></div></div>
+              <div class="sk"><div class="row"><svg class="i" style="color:var(--pink)"><use href="#i-chat"/></svg>Palavras &amp; Frases<span class="pc" style="color:var(--pink)">45%</span></div><p>Cadência rítmica e repetição alegre</p><div class="bar-t"><i style="--p:45%;background:linear-gradient(90deg,#f6a9c9,#a1245f)"></i></div></div>
+              <div class="tipbox"><span class="ic"><svg class="i"><use href="#i-watch"/></svg></span>Práticas acompanhadas com feedback vibratório da pulseira tátil e espelho integrado.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="colB">
+          <div class="fase">
+            <div class="top">
+              <span class="ic"><svg class="i"><use href="#i-wind"/></svg><span class="lk"><svg class="i"><use href="#i-lockfill"/></svg></span></span>
+              <div><span class="badge">Fase 2 desbloqueada</span><b>O Bosque dos Ecos</b><span class="d">Desafio lúdico: O Som do Vento.</span></div>
+            </div>
+            <button class="btn" type="button" data-soon><span>Ver mapa da aventura</span><span class="a"><svg class="i"><use href="#i-right"/></svg></span></button>
+          </div>
+          <div class="dica">
+            <div class="top"><span class="ic"><svg class="i"><use href="#i-bulb"/></svg></span><div><small>Dica de carinho</small><b>Recomendação da semana</b></div></div>
+            <p>Experimente fazer brincadeiras de soprar bolhas de sabão ou imitar o ventinho juntos antes da próxima sessão. Isso reforça a respiração e os lábios de forma muito lúdica!</p>
+            <button class="more" type="button" data-soon style="margin-left:auto">Ver orientação completa <svg class="i"><use href="#i-right"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Ajuda com o pareamento / digitar código -->
+<div class="sheet-bg" id="sheetCodigo" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shCodT">
+    <h2 id="shCodT">Conectar ao aparelho do Lumis</h2>
+    <ol>
+      <li>No aparelho, deixe aberta a tela do <b>QR Code</b>.</li>
+      <li>Aponte a câmera do celular para ele — ou digite o código que aparece no canto da tela, como <b>LUMIS-8820</b>.</li>
+    </ol>
+    <label class="lbl" for="codigoInput">Código do aparelho</label>
+    <div class="field"><svg class="i"><use href="#i-link"/></svg><input id="codigoInput" type="text" maxlength="10" autocapitalize="characters" autocomplete="off" placeholder="LUMIS-0000"></div>
+    <p class="ferr" id="codigoErr" hidden></p>
+    <div class="row"><button class="btn ghost" type="button" data-close style="flex:1">Fechar</button><button class="btn" type="button" id="codigoOk" style="flex:1.4">Conectar</button></div>
+  </div>
+</div>
+
+<!-- Termos (texto oficial a inserir) -->
+<div class="sheet-bg" id="sheetTermos" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shTerT">
+    <h2 id="shTerT">Termos de Uso e Política de Privacidade</h2>
+    <p>O texto completo dos Termos de Uso e da Política de Privacidade do Lumis será publicado aqui.</p>
+    <!-- >>> Cole aqui o texto jurídico oficial (ou troque por um link para a página dos termos). -->
+    <div class="row"><button class="btn" type="button" data-close>Entendi</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     CONFIG
+     ============================================================ */
+  var K_TOKEN = "lumis_portal_token";   // sessão do adulto (localStorage)
+  var K_PAR   = "lumis_portal_par";     // token do pareamento lido no QR (sessionStorage)
+
+  // Mesma origem na Vercel / node server.js. No Live Server (porta 5500 etc.) aponta para o Node na 3000.
+  var API = (function(){
+    var qa = new URLSearchParams(location.search).get("api");
+    if (qa) return qa;
+    if (window.LUMIS_API) return window.LUMIS_API;
+    var h = location.hostname, p = location.port;
+    if ((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") return "http://localhost:3000";
+    return "";
+  })();
+
+  var $  = function(id){ return document.getElementById(id); };
+  var $$ = function(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k, v){ try{ if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); }catch(e){} }
+  function ssGet(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }
+  function ssSet(k, v){ try{ if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); }catch(e){} }
+
+  var S = {
+    papel: null,          // perfil escolhido na 1ª tela
+    token: lsGet(K_TOKEN),
+    me: null,             // resposta de /api/me
+    par: ssGet(K_PAR),    // token do pareamento
+    linked: false
+  };
+
+  /* ============================================================
+     HELPERS
+     ============================================================ */
+  var toastTimer;
+  function toast(msg, ms){
+    var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove("show"); }, ms || 2800);
+  }
+
+  async function api(path, o){
+    o = o || {};
+    var headers = { "content-type": "application/json" };
+    if (o.auth !== false && S.token) headers.authorization = "Bearer " + S.token;
+    var r;
+    try{
+      r = await fetch(API + path, { method: o.method || "GET", headers: headers, body: o.body ? JSON.stringify(o.body) : undefined });
+    }catch(e){
+      var er = new Error("Sem conexão com o servidor. Verifique a internet e tente de novo."); er.status = 0; throw er;
+    }
+    var d = {}; try{ d = await r.json(); }catch(e){}
+    if (!r.ok){
+      var err = new Error(d.erro || "Algo deu errado. Tente novamente."); err.status = r.status;
+      if (r.status === 401 && o.auth !== false && S.token){ sair(true); }
+      throw err;
+    }
+    return d;
+  }
+
+  async function ocupado(btn, fn){
+    if (btn.disabled) return;
+    var html = btn.innerHTML; btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>';
+    try{ return await fn(); } finally{ btn.disabled = false; btn.innerHTML = html; }
+  }
+
+  function setErr(el, msg){
+    var q = el.closest(".q"), box = el.closest(".field, .age"), p = null;
+    if (q) p = q.querySelector(".ferr");
+    else if (box){ p = box.nextElementSibling; while (p && !p.classList.contains("ferr")) p = p.nextElementSibling; }
+    if (box) box.classList.toggle("bad", !!msg);
+    if (p){ p.textContent = msg || ""; p.hidden = !msg; }
+    return !msg;
+  }
+  function limparErros(root){
+    $$(".bad", root).forEach(function(e){ e.classList.remove("bad"); });
+    $$(".ferr, .banner-err", root).forEach(function(e){ e.hidden = true; });
+  }
+  function emailOk(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+  function balancar(el){ el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+
+  /* ============================================================
+     NAVEGAÇÃO
+     ============================================================ */
+  var views = $$(".view");
+  var PRECISA_LOGIN = { menu:1, privacidade:1, diagnostico:1, fono:1, pronto:1, geral:1 };
+  var current = null;
+
+  function go(name, opts){
+    opts = opts || {};
+    if (PRECISA_LOGIN[name] && !S.me) name = "perfil";
+    views.forEach(function(v){ v.hidden = v.id !== "v-" + name; });
+    document.body.classList.toggle("wide", name === "geral");
+    var v = $("v-" + name); if (v){ v.scrollTop = 0; }
+    window.scrollTo(0, 0);
+    current = name;
+    if (opts.push !== false){ try{ history.pushState({ v:name }, "", "#" + name); }catch(e){} }
+    if (onShow[name]) onShow[name]();
+    var h = v && v.querySelector("h1"); if (h){ h.setAttribute("tabindex", "-1"); }
+  }
+  window.addEventListener("popstate", function(e){
+    var n = e.state && e.state.v;
+    if (n) go(n, { push:false });
+  });
+  $$("[data-back]").forEach(function(b){ b.addEventListener("click", function(){ go(b.getAttribute("data-back")); }); });
+
+  /* ============================================================
+     SESSÃO
+     ============================================================ */
+  async function carregarMe(){
+    S.me = await api("/api/me");
+    S.linked = !!S.me.aparelhoVinculado || S.linked;
+    return S.me;
+  }
+  function sair(expirou){
+    S.token = null; S.me = null; lsSet(K_TOKEN, null);
+    if (expirou) toast("Sua sessão expirou. Entre novamente.");
+    go("perfil");
+  }
+  $$("[data-logout]").forEach(function(b){ b.addEventListener("click", function(){ sair(false); }); });
+
+  function rotear(){
+    var me = S.me;
+    if (!me) return go("perfil");
+    if (me.usuario.papel === "profissional") return go("fono");
+    if (me.status.completo){ if (S.par) return finalizar(); return go("geral"); }
+    go("menu");
+  }
+
+  /* ============================================================
+     PAREAMENTO (QR / código)
+     ============================================================ */
+  function limparPar(){ S.par = null; ssSet(K_PAR, null); atualizarConexao(); }
+
+  async function etapa(nome){
+    if (!S.par || !S.me || S.me.usuario.papel !== "responsavel") return;
+    try{ await api("/api/pareamentos/" + S.par + "/etapa", { method:"PUT", body:{ etapa:nome } }); }
+    catch(e){ if (e.status === 410){ limparPar(); toast(e.message, 5000); } }
+  }
+  async function sincronizarProgresso(){
+    if (!S.par || !S.me || S.me.usuario.papel !== "responsavel") return;
+    await etapa("cadastro");
+    if (S.me.status.privacidade) await etapa("privacidade");
+    if (S.me.status.diagnostico) await etapa("diagnostico");
+  }
+
+  function atualizarConexao(){
+    var on = !!(S.par || S.linked);
+    $("connPill").classList.toggle("off", !on);
+    $("connTxt").textContent = on ? "Conectado" : "Sem aparelho";
+    $("pairNote").hidden = !on;
+    var g = $("ghConn"); g.classList.toggle("off", !S.linked);
+    $("ghConnTxt").textContent = S.linked ? "Lumis conectado" : "Lumis sem aparelho";
+  }
+
+  function abrirCodigo(){ $("codigoErr").hidden = true; $("codigoInput").value = ""; $("sheetCodigo").hidden = false; setTimeout(function(){ $("codigoInput").focus(); }, 50); }
+  $("btnAjuda").addEventListener("click", abrirCodigo);
+  $("prontoCodigo").addEventListener("click", abrirCodigo);
+
+  $("codigoOk").addEventListener("click", function(){
+    var btn = $("codigoOk");
+    ocupado(btn, async function(){
+      var err = $("codigoErr"); err.hidden = true;
+      try{
+        var r = await api("/api/pareamentos/resolver", { method:"POST", auth:false, body:{ codigo: $("codigoInput").value } });
+        await api("/api/pareamentos/" + r.token + "/escaneado", { method:"POST", auth:false });
+        S.par = r.token; ssSet(K_PAR, r.token); atualizarConexao();
+        $("sheetCodigo").hidden = true;
+        toast("Aparelho conectado!");
+        if (S.me && S.me.usuario.papel === "responsavel"){
+          await sincronizarProgresso();
+          if (S.me.status.completo && current === "pronto") finalizar();
+        }
+      }catch(e){ err.textContent = e.message; err.hidden = false; }
+    });
+  });
+  $("codigoInput").addEventListener("keydown", function(e){ if (e.key === "Enter") $("codigoOk").click(); });
+  $$("[data-close]").forEach(function(b){ b.addEventListener("click", function(){ b.closest(".sheet-bg").hidden = true; }); });
+  $$(".sheet-bg").forEach(function(bg){ bg.addEventListener("click", function(e){ if (e.target === bg) bg.hidden = true; }); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") $$(".sheet-bg").forEach(function(b){ b.hidden = true; }); });
+  $$("[data-termos]").forEach(function(b){ b.addEventListener("click", function(){ $("sheetTermos").hidden = false; }); });
+  $$("[data-soon]").forEach(function(b){ b.addEventListener("click", function(){ toast("Em breve! 💙"); }); });
+
+  /* ============================================================
+     PERFIL
+     ============================================================ */
+  $$(".role").forEach(function(b){
+    b.addEventListener("click", function(){
+      S.papel = b.getAttribute("data-papel");
+      modoAuth("login");
+      go("auth");
+    });
+  });
+
+  /* ============================================================
+     LOGIN / CADASTRO
+     ============================================================ */
+  function textosPapel(){
+    var prof = S.papel === "profissional";
+    $$(".roleName").forEach(function(e){ e.textContent = prof ? "Portal do Profissional" : "Portal da Família"; });
+    $("bpRole").textContent = prof ? "Portal do Profissional" : "Portal da Família";
+    return prof;
+  }
+  function modoAuth(modo){
+    var prof = textosPapel(), login = modo === "login";
+    $("formLogin").hidden = !login; $("formCadastro").hidden = login;
+    $("footLogin").hidden = !login; $("footCadastro").hidden = login;
+    $("authTitle").textContent = login ? "Acesse sua conta" : "Crie sua conta";
+    $("authLead").textContent = login
+      ? (prof ? "Entre para acompanhar seus pacientes e as atividades personalizadas do Lumis." : "Entre para acompanhar as missões e o desenvolvimento fonoaudiológico de seu filho(a).")
+      : (prof ? "Cadastre-se para acompanhar seus pacientes e personalizar a experiência no Lumis." : "Cadastre-se para acompanhar o desenvolvimento e personalizar sua experiência no Lumis.");
+    limparErros($("v-auth"));
+  }
+  $("goCadastro").addEventListener("click", function(){ modoAuth("cadastro"); });
+  $("goLogin").addEventListener("click", function(){ modoAuth("login"); });
+  $("btnEsqueci").addEventListener("click", function(){ toast("Recuperação de senha em breve."); });
+  $("btnBio").addEventListener("click", function(){ toast("Face ID / biometria em breve."); });
+
+  $$("[data-eye]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var inp = $(b.getAttribute("data-eye")), mostrar = inp.type === "password";
+      inp.type = mostrar ? "text" : "password";
+      b.querySelector("use").setAttribute("href", mostrar ? "#i-eyeoff" : "#i-eye");
+      b.setAttribute("aria-label", mostrar ? "Ocultar senha" : "Mostrar senha");
+    });
+  });
+
+  async function aposAuth(r){
+    S.token = r.token; lsSet(K_TOKEN, r.token);
+    await carregarMe();
+    if (S.papel && S.me.usuario.papel !== S.papel){
+      toast("Esta conta é de " + (S.me.usuario.papel === "profissional" ? "profissional" : "responsável") + ". Abrindo a área correta.", 4000);
+    }
+    S.papel = S.me.usuario.papel;
+    atualizarConexao();
+    await sincronizarProgresso();
+    rotear();
+  }
+
+  $("formLogin").addEventListener("submit", function(e){
+    e.preventDefault();
+    var f = $("formLogin"); limparErros(f);
+    var email = $("lgEmail").value.trim(), senha = $("lgSenha").value, ok = true;
+    if (!emailOk(email)) ok = setErr($("lgEmail"), "Informe um e-mail válido.") && ok;
+    if (!senha) ok = setErr($("lgSenha"), "Informe sua senha.") && ok;
+    if (!ok){ balancar(f); return; }
+    ocupado(f.querySelector("button[type=submit]"), async function(){
+      try{ await aposAuth(await api("/api/auth/login", { method:"POST", auth:false, body:{ email:email, senha:senha } })); f.reset(); }
+      catch(err){ var b = $("lgErr"); b.textContent = err.message; b.hidden = false; balancar(f); }
+    });
+  });
+
+  $("formCadastro").addEventListener("submit", function(e){
+    e.preventDefault();
+    var f = $("formCadastro"); limparErros(f);
+    var nome = $("cdNome").value.trim(), email = $("cdEmail").value.trim(), s1 = $("cdSenha").value, s2 = $("cdSenha2").value, ok = true;
+    if (nome.length < 2) ok = setErr($("cdNome"), "Informe seu nome completo.") && ok;
+    if (!emailOk(email)) ok = setErr($("cdEmail"), "Informe um e-mail válido.") && ok;
+    if (s1.length < 8) ok = setErr($("cdSenha"), "A senha precisa ter pelo menos 8 caracteres.") && ok;
+    if (s2 !== s1) ok = setErr($("cdSenha2"), "As senhas não são iguais.") && ok;
+    if (!$("cdTermos").checked){ var te = $("cdTermosErr"); te.textContent = "Aceite os Termos de Uso e a Política de Privacidade para continuar."; te.hidden = false; ok = false; }
+    if (!ok){ balancar(f); return; }
+    ocupado(f.querySelector("button[type=submit]"), async function(){
+      try{
+        var r = await api("/api/auth/cadastro", { method:"POST", auth:false,
+          body:{ nome:nome, email:email, senha:s1, papel: S.papel || "responsavel", aceitouTermos:true } });
+        await aposAuth(r); f.reset();
+      }catch(err){ var b = $("cdErr"); b.textContent = err.message; b.hidden = false; balancar(f); }
+    });
+  });
+
+  /* ============================================================
+     MENU DO RESPONSÁVEL
+     ============================================================ */
+  function renderMenu(){
+    var st = S.me.status, feitos = (st.privacidade ? 1 : 0) + (st.diagnostico ? 1 : 0), completo = st.completo;
+    var primeiro = (S.me.usuario.nome || "").split(" ")[0];
+    $("menuTitle").textContent = completo ? "Menu do Responsável" : "Olá, " + primeiro + "!";
+    $("menuLead").textContent = completo
+      ? "Atualize as informações da família quando precisar."
+      : "Falta pouco para liberar o Lumis. Complete os dois passos abaixo.";
+    $("menuBack").hidden = !completo;
+    $("menuProg").hidden = completo;
+    $("menuProgTxt").textContent = feitos + " de 2 concluídos";
+    $("menuProgBar").style.width = (feitos / 2 * 100) + "%";
+    function chip(el, ok, bloqueado){
+      el.className = "st" + (ok ? " ok" : bloqueado ? " lock" : "");
+      el.innerHTML = '<svg class="i"><use href="#' + (ok ? "i-check" : bloqueado ? "i-lock" : "i-right") + '"/></svg>' + (ok ? "Concluído" : bloqueado ? "Bloqueado" : "Pendente");
+    }
+    chip($("mPrivSt"), st.privacidade, false);
+    chip($("mDiagSt"), st.diagnostico, !st.privacidade);
+    $("mDiag").setAttribute("aria-disabled", st.privacidade ? "false" : "true");
+  }
+  $("mPriv").addEventListener("click", function(){ go("privacidade"); });
+  $("mDiag").addEventListener("click", function(){
+    if (!S.me.status.privacidade){ toast("Aceite primeiro a Privacidade e Segurança."); return; }
+    go("diagnostico");
+  });
+  $("geralMenu").addEventListener("click", function(){ go("menu"); });
+
+  /* ============================================================
+     PRIVACIDADE E SEGURANÇA
+     ============================================================ */
+  var perms = { sistema:true, audio:false, imagem:false, armazenamento:false };
+  function pintarPerms(){
+    $$(".perm").forEach(function(b){ b.setAttribute("aria-checked", perms[b.getAttribute("data-perm")] ? "true" : "false"); });
+  }
+  $$(".perm").forEach(function(b){
+    b.addEventListener("click", function(){
+      var k = b.getAttribute("data-perm");
+      if (k === "sistema"){ toast("Esta autorização é obrigatória para o Lumis funcionar."); return; }
+      perms[k] = !perms[k]; pintarPerms();
+    });
+  });
+
+  $("pvOk").addEventListener("click", function(){
+    ocupado($("pvOk"), async function(){
+      var err = $("pvErr"); err.hidden = true;
+      try{
+        var eraCompleto = S.me.status.completo;
+        await api("/api/responsavel/privacidade", { method:"PUT", body:perms });
+        await carregarMe();
+        if (!eraCompleto) await etapa("privacidade");
+        if (!S.me.status.diagnostico) go("diagnostico");
+        else { toast("Autorizações atualizadas."); go("menu"); }
+      }catch(e){ err.textContent = e.message; err.hidden = false; }
+    });
+  });
+
+  /* ============================================================
+     DIAGNÓSTICO E HISTÓRICO CLÍNICO
+     ============================================================ */
+  var D = { grau:null, anos:"", meses:"", causa:"", fez:null, exames:[], laudo:null, cond:[], outra:"" };
+  var EXAME_IDS = ["audiometria","bera","eoa","impedanciometria"];
+
+  (function popularIdade(){
+    var a = $("idAnos"), m = $("idMeses"), i;
+    for (i = 0; i <= 18; i++) a.insertAdjacentHTML("beforeend", '<option value="' + i + '">' + i + "</option>");
+    for (i = 0; i <= 11; i++) m.insertAdjacentHTML("beforeend", '<option value="' + i + '">' + i + "</option>");
+  })();
+
+  function fmtBytes(n){ return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB"; }
+
+  function pintarDiag(){
+    $$("#chGrau .chip").forEach(function(c){ c.classList.toggle("on", c.getAttribute("data-grau") === D.grau); });
+    $("idAnos").value = D.anos; $("idMeses").value = D.meses;
+    $("age").classList.toggle("set", D.anos !== "" && D.meses !== "");
+    $("dgCausa").value = D.causa;
+    $$("#segExames button").forEach(function(b){
+      var on = D.fez !== null && b.getAttribute("data-fez") === (D.fez ? "1" : "0");
+      b.classList.toggle("on", on);
+    });
+    $$("#segExames button[data-fez='1'] svg").forEach(function(s){ s.style.display = D.fez === true ? "" : "none"; });
+    $("examesBox").hidden = D.fez !== true;
+    $$("#examesBox .opt").forEach(function(o){ o.classList.toggle("on", D.exames.indexOf(o.getAttribute("data-exame")) >= 0); });
+    if (D.laudo){
+      $("dropTitle").textContent = D.laudo.nome;
+      $("dropSub").textContent = (D.laudo.tamanho ? fmtBytes(D.laudo.tamanho) + " • " : "") + "Anexo selecionado";
+      $("dropChange").hidden = false;
+    } else {
+      $("dropTitle").textContent = "Anexar laudo ou audiometria recente";
+      $("dropSub").textContent = "PDF ou foto legível • Até 15MB";
+      $("dropChange").hidden = true;
+    }
+    $$("#chCond .chip").forEach(function(c){
+      var on = D.cond.indexOf(c.getAttribute("data-cond")) >= 0; c.classList.toggle("on", on);
+      c.classList.toggle("add", c.getAttribute("data-cond") === "outra" && !on);
+    });
+    $("outraBox").hidden = D.cond.indexOf("outra") < 0;
+    $("dgOutra").value = D.outra;
+  }
+
+  function carregarDiag(){
+    var d = S.me.diagnostico;
+    D = { grau:null, anos:"", meses:"", causa:"", fez:null, exames:[], laudo:null, cond:[], outra:"" };
+    if (d){
+      D.grau = d.grau; D.anos = String(d.idadeAnos); D.meses = String(d.idadeMeses); D.causa = d.causa;
+      D.fez = d.fezExames; D.exames = d.exames.slice(); D.laudo = d.laudo; D.cond = d.condicoes.slice(); D.outra = d.outraCondicao;
+    }
+    limparErros($("v-diagnostico")); pintarDiag();
+  }
+
+  $$("#chGrau .chip").forEach(function(c){ c.addEventListener("click", function(){ D.grau = c.getAttribute("data-grau"); pintarDiag(); setErr(c, ""); }); });
+  $("idAnos").addEventListener("change", function(){ D.anos = this.value; pintarDiag(); if (D.anos !== "" && D.meses !== "") setErr(this, ""); });
+  $("idMeses").addEventListener("change", function(){ D.meses = this.value; pintarDiag(); if (D.anos !== "" && D.meses !== "") setErr(this, ""); });
+  $("dgCausa").addEventListener("input", function(){ D.causa = this.value; });
+  $$("#chCausa .chip").forEach(function(c){
+    c.addEventListener("click", function(){
+      var t = c.getAttribute("data-causa");
+      if (D.causa.toLowerCase().indexOf(t.toLowerCase()) >= 0) return;
+      D.causa = D.causa.trim() ? D.causa.trim().replace(/[,;]\s*$/, "") + ", " + t : t; pintarDiag();
+    });
+  });
+  $$("#segExames button").forEach(function(b){
+    b.addEventListener("click", function(){ D.fez = b.getAttribute("data-fez") === "1"; pintarDiag(); setErr(b, ""); });
+  });
+  $$("#examesBox .opt").forEach(function(o){
+    o.addEventListener("click", function(){
+      var id = o.getAttribute("data-exame"), i = D.exames.indexOf(id);
+      if (i >= 0) D.exames.splice(i, 1); else D.exames.push(id);
+      pintarDiag(); setErr(o, "");
+    });
+  });
+  $("laudoFile").addEventListener("change", function(){
+    var f = this.files && this.files[0]; if (!f) return;
+    if (f.size > 15 * 1024 * 1024){ toast("O arquivo passa de 15MB. Escolha um menor."); this.value = ""; return; }
+    // Por enquanto só guardamos nome/tamanho/tipo (o envio do arquivo para um storage ainda será definido).
+    D.laudo = { nome:f.name, tamanho:f.size, tipo:f.type || "" }; pintarDiag();
+  });
+  $$("#chCond .chip").forEach(function(c){
+    c.addEventListener("click", function(){
+      var id = c.getAttribute("data-cond"), i = D.cond.indexOf(id);
+      if (id === "nenhuma"){ D.cond = i >= 0 ? [] : ["nenhuma"]; }
+      else {
+        D.cond = D.cond.filter(function(x){ return x !== "nenhuma"; });
+        i = D.cond.indexOf(id); if (i >= 0) D.cond.splice(i, 1); else D.cond.push(id);
+      }
+      pintarDiag(); setErr(c, "");
+      if (id === "outra" && D.cond.indexOf("outra") >= 0) setTimeout(function(){ $("dgOutra").focus(); }, 30);
+    });
+  });
+  $("dgOutra").addEventListener("input", function(){ D.outra = this.value; });
+  $$("[data-edit]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var card = $(b.getAttribute("data-edit")); card.scrollIntoView({ behavior:"smooth", block:"center" });
+      var el = card.querySelector("select, input:not([type=file]), .chip, .seg button"); if (el) setTimeout(function(){ el.focus(); }, 300);
+    });
+  });
+
+  function validarDiag(){
+    var erros = [];
+    function falha(el, msg){ setErr(el, msg); erros.push(el); }
+    limparErros($("v-diagnostico"));
+    if (!D.grau) falha($("chGrau"), "Selecione o grau do diagnóstico.");
+    if (D.anos === "" || D.meses === "") falha($("idAnos"), "Informe a idade do diagnóstico (anos e meses).");
+    if (D.fez === null) falha($("segExames"), "Informe se já foram realizados exames auditivos.");
+    else if (D.fez && D.exames.length === 0) falha($("segExames"), "Selecione ao menos um procedimento realizado.");
+    if (D.cond.length === 0) falha($("chCond"), "Selecione uma opção (ou \"Nenhuma\").");
+    return erros;
+  }
+
+  $("dgOk").addEventListener("click", function(){
+    var erros = validarDiag();
+    if (erros.length){
+      erros[0].closest(".q").scrollIntoView({ behavior:"smooth", block:"center" });
+      balancar(erros[0].closest(".q")); return;
+    }
+    ocupado($("dgOk"), async function(){
+      var err = $("dgErr"); err.hidden = true;
+      try{
+        var eraCompleto = S.me.status.completo;
+        await api("/api/responsavel/diagnostico", { method:"PUT", body:{
+          grau:D.grau, idadeAnos:Number(D.anos), idadeMeses:Number(D.meses), causa:D.causa.trim(),
+          fezExames:D.fez, exames:D.fez ? D.exames : [], laudo:D.fez ? D.laudo : null,
+          condicoes:D.cond, outraCondicao:D.outra.trim()
+        }});
+        await carregarMe();
+        if (eraCompleto){ toast("Dados atualizados."); go("menu"); return; }
+        await etapa("diagnostico");
+        finalizar();
+      }catch(e){ err.textContent = e.message; err.hidden = false; }
+    });
+  });
+
+  /* ============================================================
+     PROFISSIONAL (formulário ainda sem perguntas)
+     ============================================================ */
+  // >>> ADICIONE AS PERGUNTAS DA FONO AQUI quando estiverem prontas. Exemplos:
+  //   { id:"crfa",  tipo:"texto",    rotulo:"Número do CRFa", obrigatorio:true },
+  //   { id:"area",  tipo:"opcoes",   rotulo:"Área de atuação", opcoes:["Clínica","Escolar","Hospitalar"] },
+  //   { id:"tecs",  tipo:"multipla", rotulo:"Técnicas utilizadas", opcoes:["Biofeedback","Terapia miofuncional"] },
+  //   { id:"obs",   tipo:"longo",    rotulo:"Observações" }
+  var PERGUNTAS_FONO = [];
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]; }); }
+
+  function renderFono(){
+    var resp = (S.me && S.me.formulario) || {}, box = $("fonoPerguntas"), html = "";
+    PERGUNTAS_FONO.forEach(function(p){
+      var v = resp[p.id], id = "fq_" + p.id;
+      html += '<div class="q" data-q="' + esc(p.id) + '"><h3 style="font-size:17px">' + esc(p.rotulo) + (p.obrigatorio ? " *" : "") + "</h3>";
+      if (p.tipo === "texto") html += '<div class="field" style="margin-top:10px"><input id="' + id + '" type="text" value="' + esc(v || "") + '"></div>';
+      else if (p.tipo === "longo") html += '<div class="field" style="margin-top:10px;height:auto;padding:10px 14px"><textarea id="' + id + '" rows="4" style="flex:1;border:0;background:transparent;outline:0;font:inherit;resize:vertical">' + esc(v || "") + "</textarea></div>";
+      else if (p.tipo === "opcoes" || p.tipo === "multipla"){
+        html += '<div class="chips" data-tipo="' + p.tipo + '">';
+        (p.opcoes || []).forEach(function(o){
+          var on = p.tipo === "multipla" ? (v || []).indexOf(o) >= 0 : v === o;
+          html += '<button type="button" class="chip' + (on ? " on" : "") + '" data-v="' + esc(o) + '">' + esc(o) + "</button>";
+        });
+        html += "</div>";
+      }
+      html += '<p class="ferr" hidden></p></div>';
+    });
+    box.innerHTML = html;
+    $$(".chips[data-tipo]", box).forEach(function(g){
+      $$(".chip", g).forEach(function(c){
+        c.addEventListener("click", function(){
+          if (g.getAttribute("data-tipo") === "opcoes") $$(".chip", g).forEach(function(x){ x.classList.remove("on"); });
+          c.classList.toggle("on", g.getAttribute("data-tipo") === "opcoes" ? true : !c.classList.contains("on"));
+        });
+      });
+    });
+    var tem = PERGUNTAS_FONO.length > 0;
+    $("fonoVazio").hidden = tem; $("fonoSalvar").hidden = !tem;
+    $("fonoTitle").textContent = S.me ? "Olá, " + (S.me.usuario.nome || "").split(" ")[0] + "!" : "Cadastro profissional";
+  }
+
+  $("fonoForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var dados = {}, ok = true; limparErros($("fonoForm"));
+    PERGUNTAS_FONO.forEach(function(p){
+      var card = document.querySelector('#fonoPerguntas [data-q="' + p.id + '"]'), v;
+      if (p.tipo === "texto" || p.tipo === "longo") v = card.querySelector("input,textarea").value.trim();
+      else if (p.tipo === "opcoes"){ var a = card.querySelector(".chip.on"); v = a ? a.getAttribute("data-v") : ""; }
+      else v = $$(".chip.on", card).map(function(x){ return x.getAttribute("data-v"); });
+      dados[p.id] = v;
+      if (p.obrigatorio && (!v || (Array.isArray(v) && !v.length))){ var fe = card.querySelector(".ferr"); fe.textContent = "Resposta obrigatória."; fe.hidden = false; ok = false; }
+    });
+    if (!ok) return;
+    ocupado($("fonoSalvar"), async function(){
+      try{ await api("/api/profissional/formulario", { method:"PUT", body:{ respostas:dados, concluido:true } }); await carregarMe(); toast("Informações salvas."); }
+      catch(err){ var b = $("fonoErr"); b.textContent = err.message; b.hidden = false; }
+    });
+  });
+
+  /* ============================================================
+     TUDO PRONTO
+     ============================================================ */
+  function estadoAparelho(tipo, texto){
+    var el = $("sdAparelho");
+    el.className = "sd " + (tipo === "ok" ? "" : tipo === "carregando" ? "work" : "warn");
+    $("sdTitulo").textContent = tipo === "ok" ? "Aparelho liberado" : tipo === "carregando" ? "Liberando o Lumis" : "Falta conectar o aparelho";
+    $("sdTexto").textContent = texto;
+    el.querySelector("svg use").setAttribute("href", tipo === "ok" ? "#i-check" : "#i-link");
+    $("prontoCodigo").hidden = tipo === "ok" || tipo === "carregando";
+    $("prontoLead").textContent = tipo === "ok"
+      ? "O Lumis já está abrindo no aparelho da criança. Agora é só brincar!"
+      : "Cadastro concluído com carinho.";
+  }
+
+  async function finalizar(){
+    go("pronto");
+    if (!S.par){
+      estadoAparelho("aviso", "Escaneie o QR Code na tela do aparelho ou digite o código dele.");
+      return;
+    }
+    estadoAparelho("carregando", "Conectando ao aparelho da criança...");
+    try{
+      await api("/api/pareamentos/" + S.par + "/concluir", { method:"POST" });
+      limparPar(); S.linked = true; atualizarConexao();
+      estadoAparelho("ok", "A conta da criança já está logada no aparelho.");
+      if (navigator.vibrate) try{ navigator.vibrate([80, 60, 80]); }catch(e){}
+    }catch(e){
+      if (e.status === 410){ limparPar(); estadoAparelho("aviso", "O código do aparelho expirou. Digite o código atual da tela."); }
+      else estadoAparelho("aviso", e.message);
+    }
+  }
+  $("prontoGeral").addEventListener("click", function(){ go("geral"); });
+
+  /* ============================================================
+     O QUE MOSTRAR AO ENTRAR EM CADA TELA
+     ============================================================ */
+  var onShow = {
+    perfil:       function(){ S.papel = null; atualizarConexao(); },
+    auth:         function(){ textosPapel(); },
+    menu:         function(){ renderMenu(); },
+    privacidade:  function(){
+      var c = S.me.consentimento;
+      perms = { sistema:true, audio: !!(c && c.audio), imagem: !!(c && c.imagem), armazenamento: !!(c && c.armazenamento) };
+      pintarPerms(); $("pvErr").hidden = true;
+    },
+    diagnostico:  function(){ if (!S.me.status.privacidade){ toast("Aceite primeiro a Privacidade e Segurança."); return go("privacidade"); } carregarDiag(); },
+    fono:         function(){ S.papel = "profissional"; textosPapel(); renderFono(); },
+    geral:        function(){ atualizarConexao(); }
+  };
+
+  /* ============================================================
+     INÍCIO
+     ============================================================ */
+  async function boot(){
+    var url = new URL(location.href), t = url.searchParams.get("t");
+    if (t){
+      S.par = t; ssSet(K_PAR, t);
+      url.searchParams.delete("t"); history.replaceState(null, "", url.pathname + url.search + url.hash);
+      try{ await api("/api/pareamentos/" + t + "/escaneado", { method:"POST", auth:false }); }
+      catch(e){ if (e.status === 410){ limparPar(); toast(e.message, 6000); } }
+    }
+    atualizarConexao();
+
+    if (S.token){
+      try{
+        await carregarMe();
+        S.papel = S.me.usuario.papel; atualizarConexao();
+        await sincronizarProgresso();
+        history.replaceState({ v:"perfil" }, "", "#perfil");
+        return rotear();
+      }catch(e){ /* sessão inválida: segue para a escolha de perfil */ }
+    }
+    history.replaceState({ v:"perfil" }, "", "#perfil");
+    go("perfil", { push:false });
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

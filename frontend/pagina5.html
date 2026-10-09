@@ -221,6 +221,28 @@
     *{transition:none!important}
   }
 </style>
+<script>
+/* Só abre com a conta da criança logada (o token é gravado pela tela inicio.html depois do pareamento) */
+(function(){
+  var KEY = "lumis_device_token", token = null;
+  try{ token = localStorage.getItem(KEY); }catch(e){}
+  var h = location.hostname, p = location.port;
+  var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
+  function voltar(){ location.replace("inicio.html"); }
+  if (!token){ voltar(); return; }
+  fetch(API + "/api/dispositivo/me", { headers:{ authorization:"Bearer " + token } })
+    .then(function(r){
+      if (r.status === 401){ try{ localStorage.removeItem(KEY); }catch(e){} voltar(); return null; }
+      return r.ok ? r.json() : null;
+    })
+    .then(function(d){
+      if (!d) return;
+      window.LUMIS_CRIANCA = d.crianca; window.LUMIS_RESPONSAVEL = d.responsavel;   // disponível para o resto da página
+      window.dispatchEvent(new CustomEvent("lumis:logado", { detail:d }));
+    })
+    .catch(function(){ /* sem internet: continua com a sessão salva */ });
+})();
+</script>
 </head>
 <body>
 
