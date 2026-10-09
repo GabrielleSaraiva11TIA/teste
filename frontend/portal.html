@@ -966,6 +966,18 @@ svg.i.f{fill:currentColor;stroke:none}
     try{ await api("/api/pareamentos/" + S.par + "/etapa", { method:"PUT", body:{ etapa:nome } }); }
     catch(e){ if (e.status === 410){ limparPar(); toast(e.message, 5000); } }
   }
+  // Avisa o aparelho do andamento (a barra do aparelho sobe conforme a pessoa avança)
+  var ultimoAvanco = 0;
+  function progresso(v){
+    if (!S.par || v <= ultimoAvanco) return;
+    ultimoAvanco = v;
+    var logado = S.me && S.me.usuario.papel === "responsavel";
+    var p = logado
+      ? api("/api/pareamentos/" + S.par + "/etapa", { method:"PUT", body:{ etapa:"progresso", valor:v } })
+      : (v <= 40 ? api("/api/pareamentos/" + S.par + "/avanco", { method:"POST", auth:false, body:{ valor:v } }) : Promise.resolve());
+    p.catch(function(){});
+  }
+
   async function sincronizarProgresso(){
     if (!S.par || !S.me || S.me.usuario.papel !== "responsavel") return;
     await etapa("cadastro");
@@ -1016,6 +1028,7 @@ svg.i.f{fill:currentColor;stroke:none}
   $$(".role").forEach(function(b){
     b.addEventListener("click", function(){
       S.papel = b.getAttribute("data-papel");
+      progresso(30);
       modoAuth("login");
       go("auth");
     });
@@ -1040,7 +1053,7 @@ svg.i.f{fill:currentColor;stroke:none}
       : (prof ? "Cadastre-se para acompanhar seus pacientes e personalizar a experiência no Lumis." : "Cadastre-se para acompanhar o desenvolvimento e personalizar sua experiência no Lumis.");
     limparErros($("v-auth"));
   }
-  $("goCadastro").addEventListener("click", function(){ modoAuth("cadastro"); });
+  $("goCadastro").addEventListener("click", function(){ progresso(36); modoAuth("cadastro"); });
   $("goLogin").addEventListener("click", function(){ modoAuth("login"); });
   $("btnEsqueci").addEventListener("click", function(){ toast("Recuperação de senha em breve."); });
   $("btnBio").addEventListener("click", function(){ toast("Face ID / biometria em breve."); });
@@ -1170,7 +1183,19 @@ svg.i.f{fill:currentColor;stroke:none}
 
   function fmtBytes(n){ return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB"; }
 
+  var diagTimer;
+  function reportarDiag(){
+    if (S.me.status.completo) return;
+    clearTimeout(diagTimer);
+    diagTimer = setTimeout(function(){
+      var n = (D.grau ? 1 : 0) + (D.anos !== "" && D.meses !== "" ? 1 : 0)
+            + (D.fez === false || (D.fez === true && D.exames.length) ? 1 : 0) + (D.cond.length ? 1 : 0);
+      progresso(70 + n * 5);
+    }, 500);
+  }
+
   function pintarDiag(){
+    reportarDiag();
     $$("#chGrau .chip").forEach(function(c){ c.classList.toggle("on", c.getAttribute("data-grau") === D.grau); });
     $("idAnos").value = D.anos; $("idMeses").value = D.meses;
     $("age").classList.toggle("set", D.anos !== "" && D.meses !== "");
@@ -1397,6 +1422,7 @@ svg.i.f{fill:currentColor;stroke:none}
       var c = S.me.consentimento;
       perms = { sistema:true, audio: !!(c && c.audio), imagem: !!(c && c.imagem), armazenamento: !!(c && c.armazenamento) };
       pintarPerms(); $("pvErr").hidden = true;
+      if (!S.me.status.completo) progresso(55);
     },
     diagnostico:  function(){ if (!S.me.status.privacidade){ toast("Aceite primeiro a Privacidade e Segurança."); return go("privacidade"); } carregarDiag(); },
     fono:         function(){ S.papel = "profissional"; textosPapel(); renderFono(); },

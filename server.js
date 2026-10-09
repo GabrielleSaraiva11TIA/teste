@@ -366,8 +366,24 @@ app.post("/api/pareamentos/:token/escaneado", limite(30, 60 * 1000), wrap(async 
     res.json({ ok: true })
 }))
 
+// Avanço antes do login (escolheu o perfil, abriu o cadastro...). Só aceita valores baixos.
+app.post("/api/pareamentos/:token/avanco", limite(60, 60 * 1000), wrap(async (req, res) => {
+    const v = Math.floor(Number(req.body.valor))
+    if (!(v >= 25 && v <= 40)) return erro(res, 400, "Valor inválido.")
+    const r = await database.query(
+        `UPDATE lumis_pareamentos
+            SET status = IF(status = 'aguardando', 'escaneado', status), progresso = GREATEST(progresso, ?)
+          WHERE token = ? AND ${ATIVO}`, [v, req.params.token])
+    if (r[0].affectedRows === 0) return erro(res, 410, "Este código expirou.")
+    res.json({ ok: true })
+}))
+
 app.put("/api/pareamentos/:token/etapa", exigirUsuario("responsavel"), wrap(async (req, res) => {
-    const valor = PROGRESSO_ETAPA[req.body.etapa]
+    let valor = PROGRESSO_ETAPA[req.body.etapa]
+    if (req.body.etapa === "progresso") {            // avanço fino durante o preenchimento
+        const v = Math.floor(Number(req.body.valor))
+        if (v >= 25 && v <= 95) valor = v
+    }
     if (!valor) return erro(res, 400, "Etapa inválida.")
     const r = await database.query(
         `UPDATE lumis_pareamentos

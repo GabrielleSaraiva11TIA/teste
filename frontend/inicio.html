@@ -340,7 +340,7 @@ body{
   var KEY_TOKEN = "lumis_device_token";   // conta da criança logada neste aparelho
   var KEY_PAR   = "lumis_pairing";        // pareamento em andamento (sobrevive a recarregar a página)
   var PROXIMA   = "pagina5.html";         // para onde ir depois de logado
-  var POLL_MS   = 1800;
+  var POLL_MS   = 1200;
 
   // Mesma origem na Vercel / node server.js. No Live Server (porta 5500 etc.) aponta para o Node na 3000.
   var API = (function(){
@@ -525,7 +525,12 @@ body{
     linha("pr1", v >= 45, v < 45);
     linha("pr2", v >= 70, v >= 45 && v < 70);
     linha("pr3", v >= 90, v >= 70 && v < 90);
-    $("badgeTxt").textContent = v >= 100 ? "Tudo pronto!" : v >= 70 ? "Quase pronto!" : v >= 45 ? "Vamos lá!" : "Celular conectado!";
+    $("badgeTxt").textContent =
+      v >= 100 ? "Tudo pronto!" :
+      v >= 90  ? "Finalizando..." :
+      v >= 70  ? "Preenchendo o histórico..." :
+      v >= 45  ? "Lendo a privacidade..." :
+      v >= 30  ? "Criando a conta..." : "Celular conectado!";
     var fim = v >= 100;
     $("st2").className = "st " + (fim ? "done" : "now");
     $("st2t").textContent = fim ? "Concluído" : "Em andamento";
