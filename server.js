@@ -339,7 +339,7 @@ app.get("/api/pareamentos/status", wrap(async (req, res) => {
     if (p.status === "concluido") {
         await q("UPDATE lumis_pareamentos SET status = 'entregue' WHERE id = ? AND status = 'concluido'", [p.id])
         const [crianca] = await q("SELECT id, nome FROM lumis_criancas WHERE id = ?", [p.crianca_id])
-        const deviceToken = assinar({ tipo: "dispositivo", cid: p.crianca_id, rid: p.responsavel_id }, "90d")
+        const deviceToken = assinar({ tipo: "dispositivo", cid: p.crianca_id || 0, rid: p.responsavel_id }, "90d")
         return res.json({ status: "concluido", progresso: 100, deviceToken, crianca })
     }
     if (p.status === "entregue") return res.json({ status: "entregue", progresso: 100 })
@@ -378,7 +378,7 @@ app.post("/api/pareamentos/:token/avanco", limite(60, 60 * 1000), wrap(async (re
     res.json({ ok: true })
 }))
 
-app.put("/api/pareamentos/:token/etapa", exigirUsuario("responsavel"), wrap(async (req, res) => {
+app.put("/api/pareamentos/:token/etapa", exigirUsuario(), wrap(async (req, res) => {
     let valor = PROGRESSO_ETAPA[req.body.etapa]
     if (req.body.etapa === "progresso") {            // avanço fino durante o preenchimento
         const v = Math.floor(Number(req.body.valor))
@@ -395,7 +395,23 @@ app.put("/api/pareamentos/:token/etapa", exigirUsuario("responsavel"), wrap(asyn
     res.json({ ok: true })
 }))
 
-app.post("/api/pareamentos/:token/concluir", exigirUsuario("responsavel"), wrap(async (req, res) => {
+app.post("/api/pareamentos/:token/concluir", exigirUsuario(), wrap(async (req, res) => {
+    // Profissional: libera o aparelho sem criança (modo profissional)
+    if (req.usuario.papel === "profissional") {
+        const [ja] = await q(
+            "SELECT id FROM lumis_pareamentos WHERE token = ? AND responsavel_id = ? AND status IN ('concluido','entregue')",
+            [req.params.token, req.usuario.id]
+        )
+        if (ja) return res.json({ ok: true, profissional: true })
+        const r = await database.query(
+            `UPDATE lumis_pareamentos
+                SET status = 'concluido', progresso = 100, responsavel_id = ?, crianca_id = NULL
+              WHERE token = ? AND ${ATIVO} AND (responsavel_id IS NULL OR responsavel_id = ?)`,
+            [req.usuario.id, req.params.token, req.usuario.id]
+        )
+        if (r[0].affectedRows === 0) return erro(res, 410, "Este código expirou ou já está em uso por outra conta.")
+        return res.json({ ok: true, profissional: true })
+    }
     const perfil = await carregarPerfil(req.usuario.id)
     if (!perfil.status.completo) return erro(res, 400, "Conclua a Privacidade e o Diagnóstico antes de liberar o aparelho.")
     const crianca = await garantirCrianca(req.usuario.id)
@@ -420,6 +436,11 @@ app.post("/api/pareamentos/:token/concluir", exigirUsuario("responsavel"), wrap(
 app.get("/api/dispositivo/me", wrap(async (req, res) => {
     let payload
     try { payload = lerToken(req, "dispositivo") } catch { return erro(res, 401, "Aparelho não autenticado.") }
+    if (!payload.cid) {
+        const [pr] = await q("SELECT nome FROM lumis_usuarios WHERE id = ? AND papel = 'profissional'", [payload.rid])
+        if (!pr) return erro(res, 401, "Conta do profissional não encontrada.")
+        return res.json({ crianca: null, profissional: pr.nome })
+    }
     const [c] = await q(
         `SELECT c.id, c.nome, u.nome AS responsavel
            FROM lumis_criancas c JOIN lumis_usuarios u ON u.id = c.responsavel_id

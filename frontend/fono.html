@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Acompanhamento fonoaudiológico | Lumis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#ffffff; --ink:#22345A; --ink2:#5B6A82; --line:#E8EEF6; --line2:#CFDCEC; --soft:#8DB6E8;
+  --blue:#3573C4; --blue-d:#2D64AA; --blue50:#F0F6FD; --blue100:#DDEBFA; --err:#B3382E;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px}
+.muted{color:var(--ink2)}
+.ic{flex:none;display:block}
+
+/* topo */
+.top{display:flex;align-items:center;gap:10px;padding:18px 0 0}
+.mark{flex:none}
+.brand{font-size:21px;font-weight:700;color:var(--blue);letter-spacing:-.01em}
+.brand-sub{font-size:14px;color:var(--ink2)}
+.hero{margin-top:20px;padding:28px 28px 30px;background:var(--blue50);border-radius:24px}
+h1{margin-top:0;font-size:clamp(1.6rem,1.2rem + 1.6vw,2rem);line-height:1.2;font-weight:600;letter-spacing:-.015em}
+.lead{margin-top:8px;color:var(--ink2);max-width:58ch}
+
+/* paciente */
+.patientbar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin:28px 0 8px}
+.patientbar .fld{margin:0;min-width:min(100%,280px)}
+.notice{margin-top:20px;padding:14px 18px;background:var(--blue50);border:1px solid var(--blue100);border-radius:16px;font-size:14.5px}
+
+/* abas */
+.tabs{display:flex;gap:8px;margin-top:20px;padding-bottom:4px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;background:#fff;border:1px solid var(--line2);border-radius:999px;color:var(--ink2);font-weight:600;font-size:15px;white-space:nowrap;cursor:pointer}
+.tab:hover{border-color:var(--blue);color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--blue50);border-color:var(--blue);color:var(--blue-d)}
+.tab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* campos */
+.fld{margin-bottom:0}
+.fld>label,.lbl{display:block;font-size:14px;font-weight:500;margin-bottom:6px}
+.req{margin-left:8px;font-size:12.5px;font-weight:500;color:var(--blue-d)}
+input[type=text],input[type=date],input[type=number],select,textarea{width:100%;min-height:42px;padding:9px 12px;background:#fff;border:1px solid var(--line2);border-radius:12px;font-size:16px;line-height:1.4}
+textarea{resize:vertical;min-height:84px}
+select{appearance:none;-webkit-appearance:none;padding-right:36px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235B6679' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue100)}
+input[aria-invalid=true],select[aria-invalid=true],textarea[aria-invalid=true]{border-color:var(--err)}
+.hint{margin-top:6px;font-size:13px;color:var(--ink2)}
+.err{margin-top:6px;font-size:13.5px;color:var(--err)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.stack{display:grid;gap:20px}
+.span2{grid-column:1/-1}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative;cursor:pointer}
+.chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.chip span{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1px solid var(--line2);border-radius:999px;font-size:14.5px;background:#fff;transition:background .15s,border-color .15s}
+.chip:hover span{border-color:var(--blue)}
+.chip input:checked+span{background:var(--blue50);border-color:var(--blue);color:var(--blue-d);font-weight:500}
+.chip input:checked+span::before{content:"";width:12px;height:12px;background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232D64AA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E")}
+.chip input:focus-visible+span{outline:2px solid var(--blue);outline-offset:2px}
+
+/* botões */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 22px;border-radius:999px;border:1px solid transparent;font-weight:700;font-size:15px;cursor:pointer;transition:background .15s,border-color .15s}
+.btn:focus-visible,.icon-btn:focus-visible,.linkbtn:focus-visible,.ses-head:focus-visible,.pill:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-d)}
+.btn-ghost{background:#fff;border-color:var(--line2);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue-d)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.linkbtn{background:none;border:0;padding:2px 0;color:var(--blue-d);font-weight:500;font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:none;border:0;border-radius:50%;color:var(--ink2);cursor:pointer}
+.icon-btn:hover{background:var(--blue50);color:var(--blue-d)}
+
+/* seções com grupos */
+#panel{padding-bottom:32px}
+.group{display:grid;grid-template-columns:220px 1fr;gap:16px 48px;padding:32px 0;border-top:1px solid var(--line)}
+.group:first-of-type{border-top:0}
+.ghead h2,.sec h2{font-size:16.5px;font-weight:700}
+.ghead h2::before,.sec h2::before{content:"";display:inline-block;width:9px;height:9px;margin-right:10px;border-radius:50%;background:var(--soft)}
+.ghead p{margin-top:6px;font-size:14px;color:var(--ink2)}
+.ptitle{padding-top:32px;font-size:20px;font-weight:600}
+.dom{display:grid;grid-template-columns:minmax(150px,1.1fr) 190px 1.4fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.dom:first-child{padding-top:0}
+.dom-l{font-size:14.5px;font-weight:500}
+.bar{position:sticky;bottom:0;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:16px 0 calc(16px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid var(--line)}
+.dirty{font-size:13.5px;color:var(--ink2)}
+
+/* vazio */
+.empty{padding:56px 0 40px;max-width:52ch}
+.empty h2{font-size:18px;font-weight:600}
+.empty p{margin-top:8px;color:var(--ink2)}
+.empty .btn{margin-top:20px}
+.pad{padding:40px 0}
+
+/* sessões */
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:32px 0 20px}
+.toolbar h2{font-size:18px;font-weight:600}
+.toolbar p{font-size:14px;color:var(--ink2);margin-top:2px}
+.ses-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.ses-list>li{border-bottom:1px solid var(--line)}
+.ses-head{display:grid;grid-template-columns:104px 1fr 24px;gap:16px;align-items:center;width:100%;padding:16px 4px;background:none;border:0;text-align:left;cursor:pointer;border-radius:14px}
+.ses-head:hover{background:var(--blue50)}
+.ses-date{font-weight:600;font-size:15px}
+.ses-sum{min-width:0}
+.ses-sum b{display:block;font-weight:500;font-size:15px}
+.ses-sum small{display:block;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ses-head .ic{color:var(--ink2);transition:transform .2s}
+.ses-head[aria-expanded=true] .ic{transform:rotate(180deg)}
+.ses-body{padding:4px 4px 24px 124px}
+.dl{display:grid;grid-template-columns:170px 1fr;gap:12px 20px;margin:0}
+.dl dt{font-size:13.5px;color:var(--ink2);padding-top:1px}
+.dl dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.ses-body .actions{margin-top:20px}
+
+/* evolução */
+.sec{padding:32px 0;border-top:1px solid var(--line)}
+.sec:first-child{border-top:0}
+.sec-head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.sec-head p{margin-top:4px;font-size:14px;color:var(--ink2);max-width:60ch}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.pill{padding:9px 16px;border:1px solid var(--line2);border-radius:999px;background:#fff;font-size:14.5px;cursor:pointer}
+.pill:hover{border-color:var(--blue)}
+.pill[aria-pressed=true]{background:var(--blue50);border-color:var(--blue);color:var(--blue-d);font-weight:500}
+.chartbox{width:100%;max-width:680px}
+.chartbox svg{width:100%;height:auto;display:block}
+.ax{font-size:12px;fill:var(--ink2);font-family:inherit}
+.grid-l{stroke:var(--line);stroke-width:1}
+.ln{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.dot{fill:#fff;stroke-width:2}
+.cap{font-size:13.5px;color:var(--ink2);margin:8px 0 20px}
+.tscroll{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:16px}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th{font-weight:500;color:var(--ink2);font-size:13.5px;white-space:nowrap}
+td small{display:block;color:var(--ink2);font-size:13px;margin-top:2px}
+.cmp th:first-child,.cmp td:first-child{position:sticky;left:0;background:#fff;min-width:170px;font-weight:500;color:var(--ink)}
+.cmp th:not(:first-child),.cmp td:not(:first-child){min-width:150px}
+.cmp .hd{display:block;color:var(--ink);font-weight:600;font-size:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:28px}
+.two h3{font-size:14.5px;font-weight:600;margin-bottom:10px}
+.two ul{list-style:none;margin:0;padding:0}
+.two li{padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.two li small{display:block;color:var(--ink2);font-size:13px}
+.two .none{color:var(--ink2);font-size:14px}
+.obs{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.obs li{display:grid;grid-template-columns:104px 1fr;gap:16px;padding:14px 4px;border-bottom:1px solid var(--line)}
+.obs time{font-weight:600;font-size:14.5px}
+.obs small{display:block;color:var(--ink2);font-size:13px;font-weight:400}
+.obs p{white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* metas */
+.goals{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:12px}
+.goal{display:grid;grid-template-columns:1fr 210px 40px;gap:10px;align-items:start}
+.goal textarea{min-height:42px;height:42px}
+
+/* diálogo */
+dialog{padding:0;border:0;border-radius:24px;width:min(680px,calc(100% - 24px));max-height:90vh;max-height:90dvh;color:var(--ink);background:#fff;box-shadow:0 12px 40px rgba(31,46,77,.16)}
+dialog[open]{display:flex}
+dialog::backdrop{background:rgba(31,46,77,.28)}
+.dform{display:flex;flex-direction:column;width:100%;min-height:0}
+.dhead{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 16px 24px;border-bottom:1px solid var(--line)}
+.dhead h2{font-size:18px;font-weight:600}
+.dbody{padding:24px;overflow-y:auto;display:grid;gap:22px}
+.dfoot{display:flex;gap:12px;padding:16px 24px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.perf{display:grid;grid-template-columns:1fr 110px 110px;gap:10px;align-items:center;padding:8px 0}
+.perf.h{padding:0 0 4px;font-size:13px;color:var(--ink2)}
+.perf-l{font-size:14.5px;font-weight:500}
+.perf-e{grid-column:1/-1;margin-top:-4px}
+
+/* aviso e rodapé */
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);max-width:calc(100% - 32px);padding:12px 20px;border-radius:999px;background:var(--ink);color:#fff;font-size:14.5px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:100}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#toast.bad{background:#fff;color:var(--err);border:1px solid #E3B8B3;box-shadow:0 6px 24px rgba(31,46,77,.12)}
+.foot{margin-top:24px;padding:24px 0 40px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.foot p+p{margin-top:6px}
+
+@media (max-width:760px){
+  .wrap{padding:0 16px}
+  .hero{padding:22px 20px 24px;border-radius:20px}
+  .patientbar .fld{flex:1 1 100%}
+  #newPatientBtn{width:100%}
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:visible}
+  .tab{justify-content:center;white-space:normal;text-align:center;line-height:1.25;padding:8px 10px;min-height:48px}
+  .bar{position:static;padding-bottom:16px}
+  .bar .btn{flex:1 1 auto}
+  .dirty{flex-basis:100%}
+  .toolbar .btn,.sec-head .btn{width:100%}
+  .empty .btn{width:100%}
+  .group{grid-template-columns:1fr;gap:16px;padding:28px 0}
+  .grid2{grid-template-columns:1fr}
+  .dom{grid-template-columns:1fr;gap:8px}
+  .two{grid-template-columns:1fr;gap:24px}
+  .ses-head{grid-template-columns:88px 1fr 24px;gap:12px}
+  .ses-body{padding:4px 4px 24px}
+  .dl{grid-template-columns:1fr;gap:2px 0}
+  .dl dd{margin-bottom:12px}
+  .goal{grid-template-columns:1fr 40px}
+  .goal select{grid-column:1;grid-row:2}
+  .goal .icon-btn{grid-column:2;grid-row:1}
+  .obs li{grid-template-columns:1fr;gap:4px}
+  dialog{width:100%;max-width:100%;margin:auto 0 0;border-radius:24px 24px 0 0;max-height:94vh;max-height:94dvh}
+  .dbody{padding:20px 16px}
+  .dhead{padding-left:16px}
+  .dfoot{padding-left:16px;padding-right:16px}
+  .perf{grid-template-columns:1fr 84px 84px;gap:8px}
+}
+input,select,textarea,.chip,.btn{scroll-margin-bottom:96px}
+*{-webkit-tap-highlight-color:rgba(53,115,196,.12)}
+button,select,label.chip,summary{touch-action:manipulation}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;list-style:none;margin:10px 0 4px;padding:0;font-size:13.5px;color:var(--ink2)}
+.legend li{display:flex;align-items:center;gap:8px}
+.ax-in{paint-order:stroke;stroke:#fff;stroke-width:3px}
+.subh{font-size:14.5px;font-weight:700;margin:0 0 10px}
+.clin{margin-bottom:28px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* modo incorporado no portal Lumis (menu fica no portal) */
+body.embed{background:transparent}
+body.embed .top,body.embed .hero,body.embed #tabs,body.embed .foot p:not(#storeNote){display:none}
+body.embed .wrap{padding-bottom:28px}
+body.embed .patientbar{margin-top:6px}
+body.embed .bar{background:#f4f9ff;padding-bottom:16px}
+@media (max-width:760px){body.embed .wrap{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <svg class="mark" width="34" height="34" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M6 13L7 4l6 4.5q3-.5 6 0L25 4l1 9q2 3 1 7-1 7-11 7T5 20q-1-4 1-7z" fill="#DDEBFA" stroke="#3573C4" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="17" r="1.7" fill="#3573C4"/><circle cx="20" cy="17" r="1.7" fill="#3573C4"/><path d="M14.5 21q1.5 1.2 3 0" stroke="#3573C4" stroke-width="1.5" stroke-linecap="round"/></svg><span class="brand">Lumis</span>
+    <span class="brand-sub">Área da fonoaudióloga</span>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Acompanhamento fonoaudiológico</h1>
+      <p class="lead">Gerencie as informações, registre as sessões e acompanhe a evolução dos seus pacientes.</p>
+    </div>
+
+    <div id="banner"></div>
+
+    <div class="patientbar">
+      <div class="fld">
+        <label for="patientSelect">Paciente</label>
+        <select id="patientSelect"></select>
+      </div>
+      <button type="button" class="btn btn-ghost" data-act="new-patient" id="newPatientBtn">+ Novo paciente</button>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="Seções do acompanhamento" id="tabs"></nav>
+    <section id="panel" role="tabpanel" tabindex="-1"></section>
+  </main>
+
+  <footer class="foot">
+    <p>Este formulário apoia o acompanhamento fonoaudiológico. Não substitui a avaliação profissional nem protocolos clínicos validados, e a interpretação clínica é sempre da fonoaudióloga.</p>
+    <p id="storeNote"></p>
+  </footer>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle"></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- constantes ---------- */
+var SKILLS=[['percepcao','Percepção sonora'],['discriminacao','Discriminação auditiva'],['reconhecimento','Reconhecimento de sons'],['vogais','Vogais'],['silabas','Sílabas'],['palavras','Palavras'],['frases','Frases'],['articulacao','Articulação']];
+var SKILL_NAME={};SKILLS.forEach(function(s){SKILL_NAME[s[0]]=s[1]});
+var DOMAINS=[['percepcao','Percepção e discriminação auditiva'],['sons','Reconhecimento de sons'],['vogais_silabas','Reconhecimento de vogais e sílabas'],['articulacao','Articulação e oralização'],['palavras_frases','Formação de palavras e frases']];
+var STATUS=[['','Não preenchido'],['nao_avaliado','Ainda não avaliado'],['nao_se_aplica','Não se aplica'],['ausente','Ainda não presente'],['emergente','Emergente'],['desenvolvimento','Em desenvolvimento'],['consolidado','Consolidado']];
+var STATUS_NAME={};STATUS.forEach(function(s){STATUS_NAME[s[0]]=s[1]});
+var RANK={ausente:1,emergente:2,desenvolvimento:3,consolidado:4};
+var TABS=[['perfil','Perfil do paciente','user'],['sessoes','Sessões e exercícios','list'],['evolucao','Evolução','trend'],['plano','Plano terapêutico','target']];
+var GOAL_STATUS=[['desenvolvimento','Em desenvolvimento'],['parcial','Parcialmente alcançada'],['alcancada','Alcançada']];
+var DESEMPENHO=[['','Não registrado'],['muita','Muita dificuldade'],['alguma','Alguma dificuldade'],['pouca','Pouca dificuldade'],['sem','Sem dificuldade']];
+var AUXILIO=[['','Não registrado'],['nenhum','Sem auxílio'],['minimo','Auxílio mínimo'],['moderado','Auxílio moderado'],['maximo','Auxílio máximo']];
+var PISTAS=[['visual','Visuais'],['auditiva','Auditivas'],['tatil','Táteis'],['nenhuma','Nenhuma']];
+var RECURSOS=[['aparelho','Aparelho auditivo'],['implante','Implante coclear'],['outro','Outro recurso'],['nenhum','Não utiliza']];
+var GRAU=[['','Não preenchido'],['nao_avaliado','Ainda não avaliado'],['nao_se_aplica','Não se aplica'],['leve','Leve'],['moderada','Moderada'],['severa','Severa'],['profunda','Profunda']];
+var TIPO=[['','Não preenchido'],['nao_avaliado','Ainda não avaliado'],['nao_se_aplica','Não se aplica'],['condutiva','Condutiva'],['sensorioneural','Sensorioneural'],['mista','Mista']];
+
+var ICON={
+  user:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.8-5.5 7-5.5s6.2 1.9 7 5.5"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+  trend:'<path d="M4 17l5-5.5 4 3L20 7"/><path d="M4 20.5h16"/>',
+  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/>',
+  chevron:'<path d="M6 9l6 6 6-6"/>',
+  close:'<path d="M6 6l12 12M18 6L6 18"/>',
+  trash:'<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/>'
+};
+function ic(n,s){s=s||18;return '<svg class="ic" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICON[n]+'</svg>'}
+
+/* ---------- estado ---------- */
+var S={db:null,col:null,uid:null,status:'loading',docs:[],pid:null,tab:'perfil',newP:false,dirty:false,skill:null,open:{},moreObs:false};
+var QP=new URLSearchParams(location.search),EMB=QP.get('embed')==='1',UID=(QP.get('u')||'').replace(/\W/g,''),SUF=UID?'.'+UID:'',PIDKEY='lumis.fono.pid'+SUF;
+if(EMB)document.body.classList.add('embed');
+try{S.pid=localStorage.getItem(PIDKEY)||null}catch(e){}
+
+/* ---------- utilidades ---------- */
+function $(s,r){return (r||document).querySelector(s)}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fmt(iso){if(!iso)return '';var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
+function fmtShort(iso){var p=iso.split('-');return p[2]+'/'+p[1]}
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function nameOf(list,v){for(var i=0;i<list.length;i++){if(list[i][0]===v)return list[i][1]}return ''}
+function opts(list,val){return list.map(function(o){return '<option value="'+esc(o[0])+'"'+(o[0]===(val||'')?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')}
+function chips(name,list,sel,label){
+  sel=sel||[];
+  return '<div class="chips" role="group" aria-label="'+esc(label)+'">'+list.map(function(o){
+    return '<label class="chip"><input type="checkbox" name="'+name+'" value="'+o[0]+'"'+(sel.indexOf(o[0])>-1?' checked':'')+'><span>'+esc(o[1])+'</span></label>'
+  }).join('')+'</div>'
+}
+function fld(id,label,control,o){
+  o=o||{};
+  return '<div class="fld '+(o.cls||'')+'"><label for="'+id+'">'+label+(o.req?'<span class="req">obrigatório</span>':'')+'</label>'+control+(o.hint?'<p class="hint">'+o.hint+'</p>':'')+'<p class="err" id="'+id+'-e" role="alert" hidden></p></div>'
+}
+function inp(id,type,val,extra){return '<input id="'+id+'" type="'+type+'" value="'+esc(val)+'" '+(extra||'')+'>'}
+function ta(id,val,rows){return '<textarea id="'+id+'" rows="'+(rows||3)+'">'+esc(val)+'</textarea>'}
+function group(title,desc,inner){return '<section class="group"><div class="ghead"><h2>'+title+'</h2>'+(desc?'<p>'+desc+'</p>':'')+'</div><div class="gbody">'+inner+'</div></section>'}
+function setErr(id,msg){
+  var e=$('#'+id+'-e'),i=$('#'+id);
+  if(e){e.textContent=msg||'';e.hidden=!msg}
+  if(i){if(msg)i.setAttribute('aria-invalid','true');else i.removeAttribute('aria-invalid')}
+}
+function clearErrs(root){$$('.err',root).forEach(function(e){e.hidden=true;e.textContent=''});$$('[aria-invalid]',root).forEach(function(i){i.removeAttribute('aria-invalid')})}
+function checked(root,name){return $$('input[name="'+name+'"]:checked',root).map(function(i){return i.value})}
+var toastT;
+function toast(msg,bad){
+  var t=$('#toast');t.textContent=msg;t.className=(bad?'bad ':'')+'on';
+  clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on')},bad?5000:3200);
+}
+function setDirty(v){S.dirty=v;var n=$('#dirtyNote');if(n)n.hidden=!v}
+
+/* ---------- dados ---------- */
+function patients(){return S.docs.filter(function(d){return d.kind==='patient'}).sort(function(a,b){return ((a.profile||{}).nome||'').localeCompare(((b.profile||{}).nome||''),'pt-BR')})}
+function cur(){if(S.newP)return null;var ps=patients();for(var i=0;i<ps.length;i++){if(ps[i]._id===S.pid)return ps[i]}return null}
+function byDate(a,b){return a.date<b.date?-1:a.date>b.date?1:((a.createdAt||0)-(b.createdAt||0))}
+function sessionsOf(p){return S.docs.filter(function(d){return d.kind==='session'&&d.patientId===p._id}).sort(byDate)}
+function assessOf(p){return S.docs.filter(function(d){return d.kind==='assessment'&&d.patientId===p._id}).sort(byDate)}
+function firstName(p){return (((p.profile||{}).nome||'').trim().split(/\s+/)[0])||'o paciente'}
+
+function isReady(){return S.status!=='unavailable'}
+function onData(){
+  var ps=patients();
+  if(!S.newP&&!ps.some(function(p){return p._id===S.pid}))S.pid=ps.length?ps[0]._id:null;
+  if(S.dirty)renderChrome();else render();
+}
+function errMsg(e){
+  var c=e&&e.code;
+  if((e&&e.name==='QuotaExceededError')||c==='quota_exceeded')return 'Limite de armazenamento atingido. Nada foi salvo.';
+  if(c==='invalid_argument'||c==='not_granted'||c==='revoked')return 'Não foi possível salvar. Verifique se o seu acesso permite editar e tente novamente.';
+  return 'Não foi possível salvar. Tente novamente.';
+}
+var readyRes;S.ready=new Promise(function(r){readyRes=r});
+function write(fn,okMsg){
+  return S.ready.then(function(){
+    if(!S.col){toast('Armazenamento indisponível. Nada foi salvo.',true);return false}
+    return Promise.resolve().then(fn).then(function(){toast(okMsg);return true},function(e){toast(errMsg(e),true);return false});
+  });
+}
+
+/* ---------- renderização geral ---------- */
+function render(){renderChrome();renderPanel();notifyTab()}
+function notifyTab(){if(EMB&&window.parent!==window){try{window.parent.postMessage({lumisTabAtual:S.tab,lumisNovo:!!S.newP},location.origin)}catch(e){}}}
+
+function renderChrome(){
+  var b=$('#banner');
+  b.innerHTML=S.status==='unavailable'?'<p class="notice">Não foi possível acessar nenhum armazenamento neste navegador. Nada é salvo nesta visualização.</p>':S.status==='local'?'<p class="notice">Seus registros estão sendo salvos somente neste aparelho e neste navegador. Limpar os dados do navegador apaga esses registros.</p>':'';
+  $('#storeNote').textContent=S.status==='ready'?'Os registros ficam salvos na sua conta e são visíveis somente para você.':S.status==='local'?'Os registros ficam salvos apenas neste aparelho.':'';
+  var ps=patients(),sel=$('#patientSelect'),html='';
+  if(S.newP)html+='<option value="__new" selected>Novo paciente</option>';
+  if(!ps.length&&!S.newP)html+='<option value="">Nenhum paciente cadastrado</option>';
+  ps.forEach(function(p){html+='<option value="'+esc(p._id)+'"'+(!S.newP&&p._id===S.pid?' selected':'')+'>'+esc((p.profile||{}).nome||'Sem nome')+'</option>'});
+  sel.innerHTML=html;sel.disabled=!ps.length;
+  $('#newPatientBtn').disabled=!isReady();
+  $('#tabs').innerHTML=TABS.map(function(t){
+    var on=S.tab===t[0];
+    return '<button type="button" role="tab" class="tab" id="tab-'+t[0]+'" aria-selected="'+on+'" aria-controls="panel" tabindex="'+(on?0:-1)+'" data-act="tab" data-tab="'+t[0]+'">'+ic(t[2],17)+t[1]+'</button>'
+  }).join('');
+}
+
+function emptyBlock(title,body,btn){
+  return '<div class="empty"><h2>'+title+'</h2><p>'+body+'</p>'+(btn||'')+'</div>';
+}
+function emptyNoPatient(){
+  return emptyBlock('Vamos começar?','Cadastre o primeiro paciente para registrar sessões e acompanhar a evolução com calma e carinho.','<button type="button" class="btn btn-primary" data-act="new-patient"'+(!isReady()?' disabled':'')+'>Cadastrar paciente</button>');
+}
+function renderPanel(){
+  var el=$('#panel');
+  el.setAttribute('aria-labelledby','tab-'+S.tab);
+  if(S.status==='loading'&&!S.newP){el.innerHTML='<p class="muted pad">Carregando registros…</p>';return}
+  if(S.status==='unavailable'){el.innerHTML=emptyBlock('Armazenamento indisponível','Este navegador não permite guardar registros. Abra a página em outro navegador para cadastrar pacientes e salvar informações.');return}
+  var p=cur();
+  if(S.tab==='perfil'){el.innerHTML=viewProfile(p);return}
+  if(!p){el.innerHTML=emptyNoPatient();return}
+  if(S.tab==='sessoes')el.innerHTML=viewSessions(p);
+  else if(S.tab==='evolucao')el.innerHTML=viewEvolution(p);
+  else el.innerHTML=viewPlan(p);
+}
+
+/* ---------- perfil ---------- */
+function viewProfile(p){
+  if(!p&&!S.newP)return emptyNoPatient();
+  var pr=(p&&p.profile)||{},as=(p&&p.assessment)||{},dom=as.dominios||{},rec=pr.recursos||[];
+  var ident='<div class="grid2">'
+    +fld('pf-nome','Nome completo da criança',inp('pf-nome','text',pr.nome,'autocomplete="off"'),{req:true,cls:'span2'})
+    +fld('pf-nasc','Data de nascimento',inp('pf-nasc','date',pr.nascimento,'max="'+todayISO()+'"'))
+    +fld('pf-inicio','Início do acompanhamento',inp('pf-inicio','date',pr.inicio))
+    +fld('pf-resp','Responsável legal',inp('pf-resp','text',pr.responsavel,'autocomplete="off"'),{cls:'span2'})
+    +'</div>';
+  var aud='<div class="grid2">'
+    +fld('pf-grau','Grau da perda auditiva','<select id="pf-grau">'+opts(GRAU,pr.grau)+'</select>')
+    +fld('pf-tipo','Tipo de perda auditiva','<select id="pf-tipo">'+opts(TIPO,pr.tipo)+'</select>')
+    +'<div class="fld span2"><span class="lbl">Recursos auditivos utilizados</span>'+chips('recursos',RECURSOS,rec,'Recursos auditivos utilizados')+'</div>'
+    +'<div class="span2" id="outro-wrap"'+(rec.indexOf('outro')>-1?'':' hidden')+'>'+fld('pf-outro','Qual outro recurso?',inp('pf-outro','text',pr.recursoOutro))+'</div>'
+    +fld('pf-info','Informações clínicas relevantes',ta('pf-info',pr.infoClinica,4),{cls:'span2',hint:'Preencha quando disponíveis.'})
+    +'</div>';
+  var doms=DOMAINS.map(function(d){
+    var v=dom[d[0]]||{};
+    return '<div class="dom"><span class="dom-l">'+d[1]+'</span>'
+      +'<select id="dom-'+d[0]+'-s" aria-label="'+esc(d[1])+', situação">'+opts(STATUS,v.status)+'</select>'
+      +'<input type="text" id="dom-'+d[0]+'-n" value="'+esc(v.nota)+'" placeholder="Observação (opcional)" aria-label="'+esc(d[1])+', observação"></div>'
+  }).join('');
+  var aval='<div>'+doms+'</div><div class="stack" style="margin-top:24px">'
+    +fld('pf-dif','Dificuldades observadas',ta('pf-dif',as.dificuldades,3))
+    +fld('pf-obj','Objetivos iniciais do acompanhamento',ta('pf-obj',as.objetivos,3))
+    +'</div>';
+  return '<form id="f-perfil" data-track novalidate>'
+    +(S.newP?'<h2 class="ptitle">Novo paciente</h2>':'')
+    +group('Identificação','Dados da criança e do responsável.',ident)
+    +group('Audição','Preencha o que estiver disponível. O restante pode ficar em branco.',aud)
+    +group('Avaliação inicial','Registre apenas o que já foi avaliado. Use “Ainda não avaliado” ou “Não se aplica” quando for o caso.',aval)
+    +'<div class="bar"><button type="submit" class="btn btn-primary">Salvar alterações</button><button type="button" class="btn btn-ghost" data-act="cancel-form">Cancelar</button><span class="dirty" id="dirtyNote" hidden>Alterações não salvas</span></div>'
+    +'</form>';
+}
+function collectProfile(f){
+  var dominios={};
+  DOMAINS.forEach(function(d){dominios[d[0]]={status:$('#dom-'+d[0]+'-s').value,nota:$('#dom-'+d[0]+'-n').value.trim()}});
+  var rec=checked(f,'recursos');
+  return {
+    profile:{nome:$('#pf-nome').value.trim(),nascimento:$('#pf-nasc').value,inicio:$('#pf-inicio').value,responsavel:$('#pf-resp').value.trim(),grau:$('#pf-grau').value,tipo:$('#pf-tipo').value,recursos:rec,recursoOutro:rec.indexOf('outro')>-1?$('#pf-outro').value.trim():'',infoClinica:$('#pf-info').value.trim()},
+    assessment:{dominios:dominios,dificuldades:$('#pf-dif').value.trim(),objetivos:$('#pf-obj').value.trim()}
+  };
+}
+function submitProfile(f){
+  clearErrs(f);
+  var v=collectProfile(f),bad=null;
+  function fail(id,msg){setErr(id,msg);if(!bad)bad=id}
+  if(!v.profile.nome)fail('pf-nome','Informe o nome completo da criança.');
+  if(v.profile.nascimento&&v.profile.nascimento>todayISO())fail('pf-nasc','A data de nascimento não pode ser futura.');
+  if(v.profile.nascimento&&v.profile.inicio&&v.profile.inicio<v.profile.nascimento)fail('pf-inicio','O início do acompanhamento não pode ser anterior ao nascimento.');
+  if(bad){$('#'+bad).focus();return}
+  var btn=$('button[type=submit]',f);btn.disabled=true;
+  var p=cur(),now=Date.now(),id;
+  write(function(){
+    if(p){id=p._id;return S.col.doc(id).update({profile:v.profile,assessment:v.assessment,updatedAt:now})}
+    id='p_'+newId();
+    return S.col.doc(id).set({kind:'patient',profile:v.profile,assessment:v.assessment,plan:{},goals:[],createdAt:now,updatedAt:now});
+  },p?'Alterações salvas':'Paciente cadastrado').then(function(ok){
+    btn.disabled=false;
+    if(!ok)return;
+    S.newP=false;S.pid=id;try{localStorage.setItem(PIDKEY,id)}catch(e){}
+    setDirty(false);render();
+  });
+}
+
+/* ---------- sessões ---------- */
+function perfSummary(s){
+  var parts=[],perf=s.perf||{};
+  SKILLS.forEach(function(k){var v=perf[k[0]];if(v&&v.t>0)parts.push(v.a+' de '+v.t)});
+  return parts;
+}
+function viewSessions(p){
+  var list=sessionsOf(p).slice().reverse();
+  var head='<div class="toolbar"><div><h2>Histórico de sessões</h2><p>'+(list.length?list.length+(list.length===1?' sessão registrada':' sessões registradas'):'Sessões de '+esc(firstName(p)))+'</p></div><button type="button" class="btn btn-primary" data-act="open-session">+ Registrar sessão</button></div>';
+  if(!list.length)return head+emptyBlock('Nenhuma sessão registrada','Use “+ Registrar sessão” para adicionar o primeiro atendimento. O histórico aparece aqui em ordem cronológica.');
+  return head+'<ul class="ses-list">'+list.map(function(s){
+    var open=!!S.open[s._id];
+    var skills=(s.skills||[]).map(function(k){return SKILL_NAME[k]}).filter(Boolean).join(', ');
+    var second=(s.atividades||s.obs||'').replace(/\s+/g,' ').trim();
+    return '<li><button type="button" class="ses-head" data-act="toggle-ses" data-id="'+esc(s._id)+'" aria-expanded="'+open+'" aria-controls="sb-'+esc(s._id)+'">'
+      +'<span class="ses-date">'+fmt(s.date)+'</span>'
+      +'<span class="ses-sum"><b>'+esc(skills||'Sem habilidade selecionada')+'</b>'+(second?'<small>'+esc(second)+'</small>':'')+'</span>'+ic('chevron')+'</button>'
+      +'<div class="ses-body" id="sb-'+esc(s._id)+'"'+(open?'':' hidden')+'>'+sessionDetail(s)+'</div></li>';
+  }).join('')+'</ul>';
+}
+function sessionDetail(s){
+  var rows=[];
+  function row(l,v){if(v)rows.push('<dt>'+l+'</dt><dd>'+v+'</dd>')}
+  row('Habilidades',esc((s.skills||[]).map(function(k){return SKILL_NAME[k]}).filter(Boolean).join(', ')));
+  row('Atividades e exercícios',esc(s.atividades));
+  row('Desempenho observado',esc(nameOf(DESEMPENHO,s.desempenho)&&s.desempenho?nameOf(DESEMPENHO,s.desempenho):''));
+  var pf=[];SKILLS.forEach(function(k){var v=(s.perf||{})[k[0]];if(v&&v.t>0)pf.push(esc(k[1])+': '+v.a+' acertos em '+v.t+' tentativas ('+Math.round(100*v.a/v.t)+'%)')});
+  row('Tentativas e acertos',pf.join('\n'));
+  row('Pistas necessárias',esc((s.pistas||[]).map(function(k){return nameOf(PISTAS,k)}).join(', ')));
+  row('Nível de auxílio',esc(s.auxilio?nameOf(AUXILIO,s.auxilio):''));
+  row('Observações clínicas',esc(s.obs));
+  row('Orientações para casa',esc(s.casa));
+  return '<dl class="dl">'+(rows.join('')||'<dt>Registro</dt><dd>Sem detalhes adicionais.</dd>')+'</dl><div class="actions"><button type="button" class="btn btn-ghost" data-act="edit-session" data-id="'+esc(s._id)+'">Editar sessão</button></div>';
+}
+
+function perfRowsHtml(skills,perf){
+  if(!skills.length)return '<p class="hint">Selecione as habilidades trabalhadas para registrar tentativas e acertos.</p>';
+  var h='<div class="perf h" aria-hidden="true"><span></span><span>Tentativas</span><span>Acertos</span></div>';
+  SKILLS.forEach(function(k){
+    if(skills.indexOf(k[0])<0)return;
+    var v=perf[k[0]]||{};
+    h+='<div class="perf" data-skill="'+k[0]+'"><span class="perf-l">'+k[1]+'</span>'
+      +'<input type="number" min="0" step="1" inputmode="numeric" data-f="t" aria-label="'+esc(k[1])+', tentativas" value="'+(v.t!=null&&v.t!==''?esc(v.t):'')+'">'
+      +'<input type="number" min="0" step="1" inputmode="numeric" data-f="a" aria-label="'+esc(k[1])+', acertos" value="'+(v.a!=null&&v.a!==''?esc(v.a):'')+'">'
+      +'<p class="err perf-e" role="alert" hidden></p></div>';
+  });
+  return h+'<p class="hint">Preencha apenas quando houver dados.</p>';
+}
+function readPerfInputs(root){
+  var out={};
+  $$('.perf[data-skill]',root).forEach(function(r){out[r.dataset.skill]={t:$('[data-f=t]',r).value,a:$('[data-f=a]',r).value}});
+  return out;
+}
+
+function openDialog(title,formId,bodyHtml,saveLabel){
+  var d=$('#dlg');
+  d.innerHTML='<form id="'+formId+'" class="dform" novalidate><div class="dhead"><h2 id="dlgTitle">'+title+'</h2><button type="button" class="icon-btn" data-act="close-dlg" aria-label="Fechar">'+ic('close')+'</button></div><div class="dbody">'+bodyHtml+'</div><div class="dfoot"><button type="submit" class="btn btn-primary">'+saveLabel+'</button><button type="button" class="btn btn-ghost" data-act="close-dlg">Cancelar</button></div></form>';
+  if(typeof d.showModal==='function')d.showModal();else d.setAttribute('open','');
+  var first=$('input:not([type=checkbox]),select,textarea',d);if(first)first.focus();
+}
+function closeDialog(){var d=$('#dlg');if(d.open&&d.close)d.close();else d.removeAttribute('open');d.innerHTML=''}
+
+function openSession(id){
+  var p=cur();if(!p)return;
+  var s=null;if(id){S.docs.forEach(function(d){if(d._id===id)s=d})}
+  s=s||{};
+  var skills=s.skills||[];
+  var body=fld('ss-data','Data da sessão',inp('ss-data','date',s.date||todayISO(),'max="'+todayISO()+'"'),{req:true})
+    +'<div class="fld"><span class="lbl">Habilidades trabalhadas</span>'+chips('skills',SKILLS,skills,'Habilidades trabalhadas')+'<p class="hint">Selecione apenas as que fizeram parte deste atendimento.</p></div>'
+    +fld('ss-ativ','Atividades e exercícios realizados',ta('ss-ativ',s.atividades,3))
+    +fld('ss-desemp','Desempenho observado','<select id="ss-desemp">'+opts(DESEMPENHO,s.desempenho)+'</select>')
+    +'<div class="fld"><span class="lbl">Tentativas e acertos por habilidade</span><div id="perf-box">'+perfRowsHtml(skills,s.perf||{})+'</div></div>'
+    +'<div class="fld"><span class="lbl">Pistas necessárias</span>'+chips('pistas',PISTAS,s.pistas||[],'Pistas necessárias')+'</div>'
+    +fld('ss-aux','Nível de auxílio durante a atividade','<select id="ss-aux">'+opts(AUXILIO,s.auxilio)+'</select>')
+    +fld('ss-obs','Observações clínicas',ta('ss-obs',s.obs,3))
+    +fld('ss-casa','Orientações ou atividades para casa',ta('ss-casa',s.casa,3));
+  openDialog(id?'Editar sessão':'Registrar sessão','f-sessao',body,'Salvar sessão');
+  $('#f-sessao').dataset.id=id||'';
+}
+function submitSession(f){
+  clearErrs(f);
+  var bad=null;function fail(id,msg){setErr(id,msg);if(!bad)bad=id}
+  var date=$('#ss-data').value;
+  if(!date)fail('ss-data','Informe a data da sessão.');
+  else if(date>todayISO())fail('ss-data','A data da sessão não pode ser futura.');
+  var skills=checked(f,'skills'),perf={},raw=readPerfInputs(f),badRow=null;
+  $$('.perf[data-skill]',f).forEach(function(r){
+    var k=r.dataset.skill,t=raw[k].t.trim(),a=raw[k].a.trim(),e=$('.perf-e',r),msg='';
+    if(t===''&&a==='')return;
+    var tn=Number(t),an=Number(a);
+    if(t===''||a==='')msg='Preencha tentativas e acertos, ou deixe os dois em branco.';
+    else if(!Number.isInteger(tn)||!Number.isInteger(an)||tn<1||an<0)msg='Use números inteiros. Tentativas deve ser maior que zero.';
+    else if(an>tn)msg='Acertos não pode ser maior que as tentativas.';
+    if(msg){e.textContent=msg;e.hidden=false;if(!badRow)badRow=$('input',r)}
+    else perf[k]={t:tn,a:an};
+  });
+  if(bad){$('#'+bad).focus();return}
+  if(badRow){badRow.focus();return}
+  var id=f.dataset.id,old=null;if(id){S.docs.forEach(function(d){if(d._id===id)old=d})}
+  var p=cur(),now=Date.now(),did=id||'s_'+newId();
+  var doc={kind:'session',patientId:p._id,date:date,skills:skills,atividades:$('#ss-ativ').value.trim(),desempenho:$('#ss-desemp').value,perf:perf,pistas:checked(f,'pistas'),auxilio:$('#ss-aux').value,obs:$('#ss-obs').value.trim(),casa:$('#ss-casa').value.trim(),createdAt:old?old.createdAt:now,updatedAt:now};
+  var btn=$('button[type=submit]',f);btn.disabled=true;
+  write(function(){return S.col.doc(did).set(doc)},'Sessão salva').then(function(ok){
+    btn.disabled=false;if(!ok)return;
+    S.open[did]=true;closeDialog();if(S.tab==='sessoes'||S.tab==='evolucao')render();
+  });
+}
+
+/* ---------- evolução ---------- */
+function rankOf(s){return RANK[s]||0}
+var PAL=['#3573C4','#22345A','#6FA6E3','#8FB7E8'];
+function sst(i){return {c:PAL[i%4],d:i<4?'':'5 4'}}
+function pickTicks(arr,max){
+  if(arr.length<=max)return arr;
+  var out=[];for(var i=0;i<max;i++)out.push(arr[Math.round(i*(arr.length-1)/(max-1))]);return out;
+}
+function drawChart(c){
+  var box=$('#panel'),W=Math.min(680,Math.max(280,(box?box.clientWidth:640))),H=W<460?220:250,L=c.inside?14:42,R=14,T=14,B=34,iw=W-L-R,ih=H-T-B;
+  function X(f){return (L+iw*f).toFixed(1)}
+  function Y(v){return T+ih*(1-(v-c.vmin)/(c.vmax-c.vmin))}
+  var g='',body='',dots='',xl='';
+  c.yt.forEach(function(t){
+    var y=Y(t.v);
+    g+='<line class="grid-l" x1="'+L+'" x2="'+(W-R)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'"/>';
+    g+=c.inside?'<text class="ax ax-in" x="'+(L+2)+'" y="'+(y-5).toFixed(1)+'">'+esc(t.l)+'</text>':'<text class="ax" x="'+(L-8)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end">'+esc(t.l)+'</text>';
+  });
+  c.series.forEach(function(sr,si){
+    var off=c.jitter?(si-(c.series.length-1)/2)*2.5:0;
+    sr.segs.forEach(function(seg){
+      if(seg.length>1)body+='<path class="ln" style="stroke:'+sr.c+'" '+(sr.d?'stroke-dasharray="'+sr.d+'" ':'')+'d="'+seg.map(function(q,k){return (k?'L':'M')+X(q.f)+' '+(Y(q.v)+off).toFixed(1)}).join(' ')+'"/>';
+      seg.forEach(function(q){dots+='<circle class="dot" style="stroke:'+sr.c+'" cx="'+X(q.f)+'" cy="'+(Y(q.v)+off).toFixed(1)+'" r="4.5"><title>'+esc(q.t)+'</title></circle>'});
+    });
+  });
+  c.xt.forEach(function(t){var an=t.f<0.08?'start':t.f>0.92?'end':'middle';xl+='<text class="ax" x="'+X(t.f)+'" y="'+(H-12)+'" text-anchor="'+an+'">'+esc(t.l)+'</text>'});
+  return '<div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(c.aria)+'">'+g+body+dots+xl+'</svg></div>';
+}
+function legend(ser){
+  return '<ul class="legend">'+ser.map(function(x){return '<li><svg width="30" height="10" aria-hidden="true"><line x1="1" x2="29" y1="5" y2="5" style="stroke:'+x.c+';stroke-width:2;stroke-linecap:round"'+(x.d?' stroke-dasharray="'+x.d+'"':'')+'/></svg>'+esc(x.n)+'</li>'}).join('')+'</ul>';
+}
+function pctChart(keys,series){
+  var ts=[],dates={};
+  keys.forEach(function(k){series[k].forEach(function(q){ts.push(Date.parse(q.date+'T12:00:00'));dates[q.date]=1})});
+  var t0=Math.min.apply(null,ts),t1=Math.max.apply(null,ts);
+  function F(q,j,n){return t1===t0?(n>1?j/(n-1):0.5):(Date.parse(q.date+'T12:00:00')-t0)/(t1-t0)}
+  var ser=keys.map(function(k){
+    var st=sst(SKILLS.map(function(x){return x[0]}).indexOf(k)),n=series[k].length;
+    return {n:SKILL_NAME[k],c:st.c,d:st.d,segs:[series[k].map(function(q,j){return {f:F(q,j,n),v:q.pct,t:SKILL_NAME[k]+', '+fmt(q.date)+': '+q.a+' de '+q.t+' ('+q.pct+'%)'}})]};
+  });
+  var has=ser.some(function(x){return x.segs[0].length>1});
+  var box=$('#panel'),narrow=((box?box.clientWidth:640)<460);
+  var ds=Object.keys(dates).sort(),xt=pickTicks(ds,narrow?3:6).map(function(d){return {f:t1===t0?0.5:(Date.parse(d+'T12:00:00')-t0)/(t1-t0),l:fmtShort(d)}});
+  return {ser:ser,has:has,cfg:{vmin:0,vmax:100,yt:[{v:0,l:'0%'},{v:50,l:'50%'},{v:100,l:'100%'}],xt:xt,series:ser,aria:'Gráfico de linhas da taxa de acertos por sessão: '+ser.map(function(x){return x.n}).join(', ')}};
+}
+function clinChart(cols){
+  var n=cols.length;if(n<2)return '';
+  var ser=[],any=false;
+  DOMAINS.forEach(function(d,i){
+    var segs=[],cu=[];
+    cols.forEach(function(c,ci){
+      var st=(c.dom[d[0]]||{}).status,r=rankOf(st);
+      if(r>0)cu.push({f:ci/(n-1),v:r,t:d[1]+', '+c.label+': '+STATUS_NAME[st]});
+      else{if(cu.length)segs.push(cu);cu=[]}
+    });
+    if(cu.length)segs.push(cu);
+    if(segs.length){var stl=sst(i);ser.push({n:d[1],c:stl.c,d:stl.d,segs:segs});if(segs.some(function(x){return x.length>1}))any=true}
+  });
+  if(!any)return '';
+  var box=$('#panel'),narrow=((box?box.clientWidth:640)<460);
+  var idx=[];for(var i=0;i<n;i++)idx.push(i);
+  var xt=pickTicks(idx,narrow?3:6).map(function(i){return {f:i/(n-1),l:cols[i].sh}});
+  var cfg={vmin:0.55,vmax:4.45,inside:true,jitter:true,yt:[{v:1,l:'Ainda não presente'},{v:2,l:'Emergente'},{v:3,l:'Em desenvolvimento'},{v:4,l:'Consolidado'}],xt:xt,series:ser,aria:'Gráfico da situação de cada habilidade ao longo das avaliações'};
+  return '<div class="clin"><h3 class="subh">Situação ao longo das avaliações</h3>'+drawChart(cfg)+legend(ser)+'<p class="cap">Mostra as situações marcadas pela fonoaudióloga em cada avaliação. Não são pontuações.</p></div>';
+}
+function viewEvolution(p){
+  var ses=sessionsOf(p),ass=assessOf(p),series={};
+  ses.forEach(function(s){Object.keys(s.perf||{}).forEach(function(k){var v=s.perf[k];if(v&&v.t>0){(series[k]=series[k]||[]).push({date:s.date,t:v.t,a:v.a,pct:Math.round(100*v.a/v.t)})}})});
+  var avail=SKILLS.map(function(k){return k[0]}).filter(function(k){return series[k]});
+
+  /* 1. resultados objetivos */
+  var s1;
+  if(!avail.length){
+    s1='<p class="muted">A evolução será exibida conforme os registros das sessões forem adicionados.</p><p class="hint">O gráfico usa as tentativas e acertos informados em cada sessão.</p>';
+  }else{
+    var multi=avail.length>1;
+    if(S.skill==='all'&&!multi)S.skill=avail[0];
+    if(S.skill!=='all'&&avail.indexOf(S.skill)<0)S.skill=multi?'all':avail[0];
+    var isAll=S.skill==='all',keys=isAll?avail:[S.skill];
+    s1='<div class="pills" role="group" aria-label="Habilidade exibida">'+(multi?'<button type="button" class="pill" data-act="skill-pick" data-skill="all" aria-pressed="'+isAll+'">Todas as habilidades</button>':'')+avail.map(function(k){return '<button type="button" class="pill" data-act="skill-pick" data-skill="'+k+'" aria-pressed="'+(k===S.skill)+'">'+SKILL_NAME[k]+'</button>'}).join('')+'</div>';
+    var pc=pctChart(keys,series);
+    if(pc.has){
+      pc.cfg.aria=pc.cfg.aria;
+      s1+=drawChart(pc.cfg)+(isAll?legend(pc.ser):'')+'<p class="cap">Taxa de acertos por sessão (acertos ÷ tentativas).</p>';
+    }else{
+      s1+='<p class="muted" style="margin-bottom:20px">'+(isAll?'Cada habilidade tem apenas 1 registro.':'Há 1 registro de '+esc(SKILL_NAME[S.skill].toLowerCase())+'.')+' O gráfico aparece a partir de dois registros da mesma habilidade.</p>';
+    }
+    var recs=[];keys.forEach(function(k){series[k].forEach(function(q){recs.push({date:q.date,k:k,t:q.t,a:q.a,pct:q.pct})})});
+    recs.sort(function(x,y){return x.date<y.date?1:x.date>y.date?-1:0});
+    s1+='<div class="tscroll"><table><thead><tr><th scope="col">Data</th>'+(isAll?'<th scope="col">Habilidade</th>':'')+'<th scope="col">Tentativas</th><th scope="col">Acertos</th><th scope="col">Taxa</th></tr></thead><tbody>'
+      +recs.map(function(q){return '<tr><td>'+fmt(q.date)+'</td>'+(isAll?'<td>'+esc(SKILL_NAME[q.k])+'</td>':'')+'<td>'+q.t+'</td><td>'+q.a+'</td><td>'+q.pct+'%</td></tr>'}).join('')+'</tbody></table></div>';
+  }
+
+  /* 2. avaliações clínicas */
+  var cols=[{sh:'Inicial',label:'Avaliação inicial',sub:(p.profile||{}).inicio?fmt(p.profile.inicio):'',dom:(p.assessment||{}).dominios||{},ini:true}];
+  ass.forEach(function(r){cols.push({sh:fmtShort(r.date),label:fmt(r.date),sub:'Reavaliação',dom:r.domains||{},id:r._id})});
+  var anyFilled=cols.some(function(c){return DOMAINS.some(function(d){return (c.dom[d[0]]||{}).status})});
+  var s2;
+  if(!anyFilled&&cols.length===1){
+    s2='<p class="muted">As avaliações aparecerão aqui. Preencha a avaliação inicial no perfil e registre reavaliações ao longo do acompanhamento.</p>';
+  }else{
+    s2='<div class="tscroll"><table class="cmp"><thead><tr><th scope="col">Habilidade</th>'+cols.map(function(c){
+      return '<th scope="col"><span class="hd">'+c.label+'</span>'+(c.sub?esc(c.sub):'')+(c.id?'<br><button type="button" class="linkbtn" data-act="edit-assess" data-id="'+esc(c.id)+'">Editar</button>':'')+'</th>'
+    }).join('')+'</tr></thead><tbody>'+DOMAINS.map(function(d){
+      return '<tr><td>'+d[1]+'</td>'+cols.map(function(c){
+        var v=c.dom[d[0]]||{};
+        return '<td>'+(v.status?esc(STATUS_NAME[v.status]):'<span class="muted">—</span>')+(v.nota?'<small>'+esc(v.nota)+'</small>':'')+'</td>'
+      }).join('')+'</tr>'
+    }).join('')+'</tbody></table></div>';
+    s2=clinChart(cols)+s2;
+    /* panorama */
+    var adv=[],work=[];
+    DOMAINS.forEach(function(d){
+      var k=d[0],ini=rankOf((cols[0].dom[k]||{}).status),lastIdx=-1;
+      for(var i=cols.length-1;i>=0;i--){if(rankOf((cols[i].dom[k]||{}).status)>0){lastIdx=i;break}}
+      if(lastIdx<0)return;
+      var ls=(cols[lastIdx].dom[k]||{}).status,lr=rankOf(ls);
+      if(lastIdx>0&&ini>0&&lr>ini)adv.push({n:d[1],f:STATUS_NAME[cols[0].dom[k].status],t:STATUS_NAME[ls]});
+      if(lr<4)work.push({n:d[1],s:STATUS_NAME[ls]});
+    });
+    s2+='<div class="two"><div><h3>Avanços registrados</h3>'
+      +(adv.length?'<ul>'+adv.map(function(a){return '<li>'+a.n+'<small>De “'+a.f+'” para “'+a.t+'”</small></li>'}).join('')+'</ul>':'<p class="none">'+(cols.length>1?'Nenhum avanço registrado entre as avaliações.':'Disponível após a primeira reavaliação.')+'</p>')
+      +'</div><div><h3>Ainda a trabalhar</h3>'
+      +(work.length?'<ul>'+work.map(function(a){return '<li>'+a.n+'<small>Última avaliação: '+a.s+'</small></li>'}).join('')+'</ul>':'<p class="none">Nenhuma habilidade com situação em aberto nas avaliações.</p>')
+      +'</div></div><p class="hint" style="margin-top:16px">Baseado nas situações marcadas pela fonoaudióloga em cada avaliação.</p>';
+  }
+
+  /* 3. observações */
+  var obs=[];
+  ses.forEach(function(s){if(s.obs)obs.push({date:s.date,c:s.createdAt||0,type:'Sessão',text:s.obs})});
+  ass.forEach(function(r){if(r.obs)obs.push({date:r.date,c:r.createdAt||0,type:'Reavaliação',text:r.obs})});
+  obs.sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:b.c-a.c});
+  var shown=S.moreObs?obs:obs.slice(0,5),s3;
+  if(!obs.length)s3='<p class="muted">As observações escritas nas sessões e reavaliações aparecerão aqui.</p>';
+  else s3='<ul class="obs">'+shown.map(function(o){return '<li><time datetime="'+o.date+'">'+fmt(o.date)+'<small>'+o.type+'</small></time><p>'+esc(o.text)+'</p></li>'}).join('')+'</ul>'
+    +(obs.length>5?'<p style="margin-top:12px"><button type="button" class="linkbtn" data-act="more-obs">'+(S.moreObs?'Mostrar menos':'Mostrar todas ('+obs.length+')')+'</button></p>':'');
+
+  return '<section class="sec"><div class="sec-head"><div><h2>Resultados nas atividades</h2><p>Dados objetivos, calculados a partir das tentativas e acertos registrados nas sessões.</p></div></div>'+s1+'</section>'
+    +'<section class="sec"><div class="sec-head"><div><h2>Avaliações clínicas</h2><p>Comparação entre a avaliação inicial e as reavaliações registradas pela fonoaudióloga.</p></div><button type="button" class="btn btn-ghost" data-act="open-assess">+ Registrar reavaliação</button></div>'+s2+'</section>'
+    +'<section class="sec"><div class="sec-head"><div><h2>Observações clínicas</h2><p>Escritas pela fonoaudióloga, separadas dos resultados das atividades.</p></div></div>'+s3+'</section>';
+}
+
+function openAssess(id){
+  var p=cur();if(!p)return;
+  var r=null;if(id){S.docs.forEach(function(d){if(d._id===id)r=d})}
+  r=r||{};var dm=r.domains||{};
+  var body=fld('rv-data','Data da reavaliação',inp('rv-data','date',r.date||todayISO(),'max="'+todayISO()+'"'),{req:true})
+    +'<div class="fld"><span class="lbl">Situação por habilidade</span><div>'+DOMAINS.map(function(d){
+      var v=dm[d[0]]||{};
+      return '<div class="dom"><span class="dom-l">'+d[1]+'</span><select id="rv-'+d[0]+'-s" aria-label="'+esc(d[1])+', situação">'+opts(STATUS,v.status)+'</select><input type="text" id="rv-'+d[0]+'-n" value="'+esc(v.nota)+'" placeholder="Observação (opcional)" aria-label="'+esc(d[1])+', observação"></div>'
+    }).join('')+'</div></div>'
+    +fld('rv-obs','Observações clínicas',ta('rv-obs',r.obs,3));
+  openDialog(id?'Editar reavaliação':'Registrar reavaliação','f-reav',body,'Salvar reavaliação');
+  $('#f-reav').dataset.id=id||'';
+}
+function submitAssess(f){
+  clearErrs(f);
+  var date=$('#rv-data').value;
+  if(!date){setErr('rv-data','Informe a data da reavaliação.');$('#rv-data').focus();return}
+  if(date>todayISO()){setErr('rv-data','A data da reavaliação não pode ser futura.');$('#rv-data').focus();return}
+  var domains={},any=false;
+  DOMAINS.forEach(function(d){var s=$('#rv-'+d[0]+'-s').value,n=$('#rv-'+d[0]+'-n').value.trim();domains[d[0]]={status:s,nota:n};if(s||n)any=true});
+  var obs=$('#rv-obs').value.trim();
+  if(!any&&!obs){setErr('rv-obs','Registre ao menos uma situação ou observação.');$('#rv-obs').focus();return}
+  var id=f.dataset.id,old=null;if(id){S.docs.forEach(function(d){if(d._id===id)old=d})}
+  var now=Date.now(),did=id||'a_'+newId(),p=cur();
+  var btn=$('button[type=submit]',f);btn.disabled=true;
+  write(function(){return S.col.doc(did).set({kind:'assessment',patientId:p._id,date:date,domains:domains,obs:obs,createdAt:old?old.createdAt:now,updatedAt:now})},'Reavaliação salva').then(function(ok){
+    btn.disabled=false;if(!ok)return;closeDialog();render();
+  });
+}
+
+/* ---------- plano terapêutico ---------- */
+function goalRow(g){
+  return '<li class="goal" data-gid="'+esc(g.id)+'"><textarea class="g-text" rows="1" aria-label="Meta" placeholder="Descreva a meta">'+esc(g.texto)+'</textarea>'
+    +'<select class="g-status" aria-label="Situação da meta">'+opts(GOAL_STATUS,g.status||'desenvolvimento')+'</select>'
+    +'<button type="button" class="icon-btn" data-act="del-goal" aria-label="Remover meta">'+ic('trash')+'</button></li>';
+}
+function viewPlan(p){
+  var pl=p.plan||{},goals=p.goals||[];
+  var passed=pl.revisao&&pl.revisao<todayISO();
+  var g1='<div class="stack">'
+    +fld('pl-obj','Objetivos terapêuticos atuais',ta('pl-obj',pl.objetivos,3))
+    +'<div class="fld"><span class="lbl">Habilidades prioritárias</span>'+chips('prior',SKILLS,pl.prioridades||[],'Habilidades prioritárias')+'</div>'
+    +'<div class="fld"><span class="lbl">Metas definidas pela profissional</span><ul class="goals" id="goals">'+goals.map(goalRow).join('')+'</ul><p class="hint" id="goals-empty"'+(goals.length?' hidden':'')+'>Nenhuma meta definida.</p><p class="err" id="goals-e" role="alert" hidden></p><button type="button" class="btn btn-ghost" data-act="add-goal" style="margin-top:12px">+ Adicionar meta</button></div>'
+    +'</div>';
+  var g2='<div class="stack">'
+    +fld('pl-estr','Estratégias e atividades planejadas',ta('pl-estr',pl.estrategias,3))
+    +fld('pl-casa','Exercícios recomendados para casa',ta('pl-casa',pl.casa,3))
+    +fld('pl-resp','Orientações aos responsáveis',ta('pl-resp',pl.responsaveis,3))
+    +'</div>';
+  var g3='<div class="stack">'
+    +fld('pl-rev','Próxima revisão do plano',inp('pl-rev','date',pl.revisao),{hint:passed?'Esta data já passou. Atualize quando o plano for revisado.':''})
+    +fld('pl-obs','Observações adicionais',ta('pl-obs',pl.obs,3))
+    +'</div>';
+  return '<form id="f-plano" data-track novalidate>'
+    +group('Objetivos e metas','A situação de cada meta é definida por você. Nada é classificado automaticamente.',g1)
+    +group('Estratégias e orientações','O que será trabalhado nas sessões, em casa e com a família.',g2)
+    +group('Revisão','',g3)
+    +'<div class="bar"><button type="submit" class="btn btn-primary">Salvar alterações</button><button type="button" class="btn btn-ghost" data-act="cancel-form">Cancelar</button><span class="dirty" id="dirtyNote" hidden>Alterações não salvas</span></div>'
+    +'</form>';
+}
+function submitPlan(f){
+  clearErrs(f);
+  var rows=$$('.goal',f),goals=[],bad=false;
+  rows.forEach(function(r){
+    var t=$('.g-text',r).value.trim(),st=$('.g-status',r).value;
+    if(!t){bad=true;return}
+    goals.push({id:r.dataset.gid,texto:t,status:st});
+  });
+  if(bad){var e=$('#goals-e');e.textContent='Escreva a meta ou remova a linha vazia.';e.hidden=false;var empty=$$('.goal .g-text',f).filter(function(x){return !x.value.trim()})[0];if(empty)empty.focus();return}
+  var plan={objetivos:$('#pl-obj').value.trim(),prioridades:checked(f,'prior'),estrategias:$('#pl-estr').value.trim(),casa:$('#pl-casa').value.trim(),responsaveis:$('#pl-resp').value.trim(),revisao:$('#pl-rev').value,obs:$('#pl-obs').value.trim()};
+  var p=cur(),btn=$('button[type=submit]',f);btn.disabled=true;
+  write(function(){return S.col.doc(p._id).update({plan:plan,goals:goals,updatedAt:Date.now()})},'Alterações salvas').then(function(ok){
+    btn.disabled=false;if(!ok)return;setDirty(false);render();
+  });
+}
+
+/* ---------- eventos ---------- */
+function guard(){if(S.dirty){toast('Salve ou cancele as alterações antes de continuar.',true);return true}return false}
+var ACT={
+  'tab':function(b){if(b.dataset.tab===S.tab)return;if(guard())return;S.tab=b.dataset.tab;render();var t=$('#tab-'+S.tab);if(t&&t.scrollIntoView)t.scrollIntoView({block:'nearest',inline:'nearest'})},
+  'new-patient':function(){if(guard())return;S.newP=true;S.tab='perfil';render();window.scrollTo({top:0})},
+  'cancel-form':function(){setDirty(false);if(S.newP)S.newP=false;render()},
+  'open-session':function(){openSession()},
+  'edit-session':function(b){openSession(b.dataset.id)},
+  'toggle-ses':function(b){var id=b.dataset.id;S.open[id]=!S.open[id];b.setAttribute('aria-expanded',S.open[id]);var body=$('#sb-'+id);if(body)body.hidden=!S.open[id]},
+  'open-assess':function(){openAssess()},
+  'edit-assess':function(b){openAssess(b.dataset.id)},
+  'close-dlg':closeDialog,
+  'skill-pick':function(b){S.skill=b.dataset.skill;renderPanel()},
+  'more-obs':function(){S.moreObs=!S.moreObs;renderPanel()},
+  'add-goal':function(b){
+    var ul=$('#goals');ul.insertAdjacentHTML('beforeend',goalRow({id:'g_'+newId(),texto:'',status:'desenvolvimento'}));
+    $('#goals-empty').hidden=true;var last=ul.lastElementChild;$('.g-text',last).focus();setDirty(true)
+  },
+  'del-goal':function(b){
+    var li=b.closest('.goal');li.remove();if(!$('#goals').children.length)$('#goals-empty').hidden=false;setDirty(true)
+  }
+};
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var fn=ACT[b.dataset.act];if(fn)fn(b,e);
+});
+document.addEventListener('submit',function(e){
+  e.preventDefault();
+  var f=e.target;
+  if(f.id==='f-perfil')submitProfile(f);
+  else if(f.id==='f-plano')submitPlan(f);
+  else if(f.id==='f-sessao')submitSession(f);
+  else if(f.id==='f-reav')submitAssess(f);
+});
+document.addEventListener('input',function(e){
+  var f=e.target.closest('form[data-track]');if(f)setDirty(true);
+});
+document.addEventListener('change',function(e){
+  var t=e.target;
+  var f=t.closest('form[data-track]');if(f)setDirty(true);
+  if(t.id==='patientSelect'){
+    if(guard()){renderChrome();return}
+    if(t.value==='__new')return;
+    S.newP=false;S.pid=t.value||null;try{localStorage.setItem(PIDKEY,S.pid||'')}catch(x){}
+    render();return;
+  }
+  if(t.name==='recursos'){
+    var form=t.closest('form');
+    if(t.checked&&t.value==='nenhum')$$('input[name=recursos]',form).forEach(function(i){if(i.value!=='nenhum')i.checked=false});
+    else if(t.checked)$$('input[name=recursos]',form).forEach(function(i){if(i.value==='nenhum')i.checked=false});
+    var o=$('#outro-wrap');if(o)o.hidden=!$('input[name=recursos][value=outro]',form).checked;
+  }
+  if(t.name==='pistas'){
+    var fm=t.closest('form');
+    if(t.checked&&t.value==='nenhuma')$$('input[name=pistas]',fm).forEach(function(i){if(i.value!=='nenhuma')i.checked=false});
+    else if(t.checked)$$('input[name=pistas]',fm).forEach(function(i){if(i.value==='nenhuma')i.checked=false});
+  }
+  if(t.name==='skills'){
+    var fs=t.closest('form'),old=readPerfInputs(fs),sel=checked(fs,'skills'),perf={};
+    Object.keys(old).forEach(function(k){perf[k]=old[k]});
+    $('#perf-box').innerHTML=perfRowsHtml(sel,perf);
+  }
+});
+window.addEventListener('message',function(e){
+  if(e.origin!==location.origin)return;
+  var d=e.data||{};
+  if(d.lumisTab){var b=$('#tab-'+d.lumisTab);if(b)b.click();else notifyTab()}
+  if(d.lumisNovoPaciente){var n=$('#newPatientBtn');if(n)n.click()}
+});
+$('#tabs').addEventListener('keydown',function(e){
+  if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+  var tabs=$$('.tab'),i=tabs.indexOf(document.activeElement);if(i<0)return;
+  var n=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];n.focus();n.click();e.preventDefault();
+});
+var rzT;window.addEventListener('resize',function(){clearTimeout(rzT);rzT=setTimeout(function(){if(S.tab==='evolucao'&&!S.dirty&&!$('#dlg').open&&S.status!=='loading')renderPanel()},200)});
+$('#dlg').addEventListener('close',function(){$('#dlg').innerHTML=''});
+
+/* ---------- inicialização ---------- */
+var LSKEY='lumis.fono.local.v1'+SUF;
+function localStore(){
+  var data={};
+  try{data=JSON.parse(localStorage.getItem(LSKEY)||'{}')||{}}catch(e){data={}}
+  function clone(v){return JSON.parse(JSON.stringify(v))}
+  function persist(){localStorage.setItem(LSKEY,JSON.stringify(data))}
+  function emit(){S.docs=Object.keys(data).map(function(k){var c=clone(data[k]);c._id=k;return c});onData()}
+  return {emit:emit,doc:function(id){return {
+    set:function(d){var prev=data[id];data[id]=clone(d);try{persist()}catch(e){if(prev)data[id]=prev;else delete data[id];return Promise.reject(e)}emit();return Promise.resolve()},
+    update:function(d){
+      if(!data[id])return Promise.reject({code:'invalid_argument'});
+      var prev=clone(data[id]);for(var k in d)data[id][k]=clone(d[k]);
+      try{persist()}catch(e){data[id]=prev;return Promise.reject(e)}
+      emit();return Promise.resolve();
+    }
+  }}}
+}
+function useLocal(){
+  try{localStorage.setItem('lumis.fono.t','1');localStorage.removeItem('lumis.fono.t')}catch(e){S.status='unavailable';S.col=null;readyRes();render();return}
+  var ls=localStore();S.db=null;S.col=ls;S.status='local';readyRes();ls.emit();
+}
+render();
+(function init(){
+  var mode=null;
+  function fallback(){if(mode)return;mode='local';clearTimeout(timer);useLocal()}
+  var timer=setTimeout(fallback,3000);
+  if(!window.claude||!window.claude.use){fallback();return}
+  Promise.all([window.claude.use('db'),window.claude.use('user')]).then(function(r){
+    if(mode)return;
+    var db=r[0],user=r[1];
+    if(!db||!user||typeof user.id!=='function'){fallback();return}
+    return user.id().then(function(id){
+      if(mode)return;
+      if(!id){fallback();return}
+      S.db=db;S.uid=id;var col=db.collection('data/users/'+id);
+      col.onSnapshot(function(snap){
+        if(mode==='local')return;
+        if(!mode){mode='db';clearTimeout(timer);S.col=col;readyRes()}
+        S.docs=snap.docs.map(function(d){var o=d.data()||{};var c={};for(var k in o)c[k]=o[k];c._id=d.id;return c});
+        S.status='ready';onData();
+      },function(){if(mode==='db'){return}fallback()});
+    });
+  }).catch(fallback);
+})();
+})();
+</script>
+</body>
+</html>

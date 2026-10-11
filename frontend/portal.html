@@ -284,6 +284,22 @@ svg.i.f{fill:currentColor;stroke:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 .done-actions{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:24px}
 
+/* ---------- área da fonoaudióloga ---------- */
+.fa:not([hidden]){display:flex;flex-direction:column;height:100dvh;padding-bottom:0}
+.fa .gh{margin-bottom:12px}
+.fa-frame{flex:1;min-height:0;width:100%;border:0;background:transparent;display:block}
+.fa-nav{display:flex;gap:8px;margin-bottom:10px}
+.fa-nav button{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--ink2);font:inherit;font-weight:700;font-size:14.5px;cursor:pointer}
+.fa-nav button svg{width:20px;height:20px;flex:none}
+.fa-nav button[aria-current=page]{background:var(--blue);border-color:var(--blue);color:#fff}
+@media (max-width:760px){
+  .fa:not([hidden]){padding:max(10px,env(safe-area-inset-top)) 0 calc(68px + env(safe-area-inset-bottom))}
+  .fa .gh{padding:0 16px}
+  .fa-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;margin:0;gap:0;background:#fff;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(40,90,190,.10)}
+  .fa-nav button{flex:1;min-width:0;flex-direction:column;justify-content:center;gap:2px;min-height:52px;padding:4px 2px;border:0;border-radius:14px;background:transparent;font-size:11.5px;line-height:1.1}
+  .fa-nav button[aria-current=page]{background:var(--soft);color:var(--blue)}
+}
+
 /* ---------- visão geral ---------- */
 .gh{display:flex;align-items:center;gap:12px;margin-bottom:22px}
 .gh .av{width:52px;height:52px;border-radius:18px;background:#cdeafd;color:var(--blue);display:grid;place-items:center;flex:none}
@@ -714,7 +730,7 @@ svg.i.f{fill:currentColor;stroke:none}
         <p class="lead" id="prontoLead">Cadastro concluído com carinho. Agora é só brincar!</p>
       </div>
       <div class="steps-done">
-        <div class="sd"><span class="b"><svg class="i"><use href="#i-check"/></svg></span><div><b class="t">Cadastro concluído</b><span class="d">Privacidade e diagnóstico salvos.</span></div></div>
+        <div class="sd"><span class="b"><svg class="i"><use href="#i-check"/></svg></span><div><b class="t" id="sdCadTitulo">Cadastro concluído</b><span class="d" id="sdCadTexto">Privacidade e diagnóstico salvos.</span></div></div>
         <div class="sd work" id="sdAparelho"><span class="b"><svg class="i"><use href="#i-check"/></svg></span><div><b class="t" id="sdTitulo">Liberando o Lumis</b><span class="d" id="sdTexto">Conectando ao aparelho da criança...</span></div></div>
       </div>
       <div class="done-actions">
@@ -722,6 +738,23 @@ svg.i.f{fill:currentColor;stroke:none}
         <button class="btn soft" type="button" id="prontoCodigo" hidden><svg class="i"><use href="#i-link"/></svg>Digitar código do aparelho</button>
         <button class="logout" type="button" data-logout style="margin-top:6px"><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
       </div>
+    </section>
+
+    <!-- ===================== ÁREA DA FONOAUDIÓLOGA ===================== -->
+    <section class="view wide fa" id="v-fonoapp" hidden>
+      <div class="gh">
+        <span class="av"><svg class="i"><use href="#i-clinic"/></svg></span>
+        <div class="who"><small id="faConn" class="off"><i></i><span id="faConnTxt">Sem aparelho</span></small><b>Área da fonoaudióloga</b></div>
+        <button class="ib me" type="button" aria-label="Conta e opções" id="faMais"><svg class="i"><use href="#i-user"/></svg></button>
+      </div>
+      <nav class="fa-nav" id="faNav" aria-label="Menu da fonoaudióloga">
+        <button type="button" data-ft="perfil" aria-current="page"><svg class="i"><use href="#i-users"/></svg><span>Paciente</span></button>
+        <button type="button" data-ft="sessoes"><svg class="i"><use href="#i-calendar"/></svg><span>Sessões</span></button>
+        <button type="button" data-ft="evolucao"><svg class="i"><use href="#i-trend"/></svg><span>Evolução</span></button>
+        <button type="button" data-ft="plano"><svg class="i"><use href="#i-target"/></svg><span>Plano</span></button>
+        <button type="button" id="faMenuBtn"><svg class="i"><use href="#i-wave"/></svg><span>Mais</span></button>
+      </nav>
+      <iframe class="fa-frame" id="faFrame" title="Acompanhamento fonoaudiológico"></iframe>
     </section>
 
     <!-- ===================== VISÃO GERAL ===================== -->
@@ -809,6 +842,22 @@ svg.i.f{fill:currentColor;stroke:none}
     <div class="field"><svg class="i"><use href="#i-link"/></svg><input id="codigoInput" type="text" maxlength="10" autocapitalize="characters" autocomplete="off" placeholder="LUMIS-0000"></div>
     <p class="ferr" id="codigoErr" hidden></p>
     <div class="row"><button class="btn ghost" type="button" data-close style="flex:1">Fechar</button><button class="btn" type="button" id="codigoOk" style="flex:1.4">Conectar</button></div>
+  </div>
+</div>
+
+<!-- Menu da fonoaudióloga -->
+<div class="sheet-bg" id="sheetFonoConta" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shFcT">
+    <h2 id="shFcT">Minha conta</h2>
+    <p id="faQuem"></p>
+    <div class="row" style="flex-direction:column">
+      <button class="btn soft" type="button" id="faNovo"><svg class="i"><use href="#i-users"/></svg>Cadastrar novo paciente</button>
+      <button class="btn soft" type="button" id="faAparelho"><svg class="i"><use href="#i-link"/></svg><span id="faAparelhoTxt">Conectar aparelho do Lumis</span></button>
+      <button class="btn soft" type="button" id="faStatus"><svg class="i"><use href="#i-watch"/></svg>Status do aparelho</button>
+      <button class="btn soft" type="button" data-soon><svg class="i"><use href="#i-doc"/></svg>Relatórios (em breve)</button>
+      <button class="btn ghost" type="button" id="faSair"><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
+    </div>
+    <div class="row"><button class="btn ghost" type="button" data-close style="flex:1">Fechar</button></div>
   </div>
 </div>
 
@@ -914,14 +963,14 @@ svg.i.f{fill:currentColor;stroke:none}
      NAVEGAÇÃO
      ============================================================ */
   var views = $$(".view");
-  var PRECISA_LOGIN = { menu:1, privacidade:1, diagnostico:1, fono:1, pronto:1, geral:1 };
+  var PRECISA_LOGIN = { menu:1, privacidade:1, diagnostico:1, fono:1, fonoapp:1, pronto:1, geral:1 };
   var current = null;
 
   function go(name, opts){
     opts = opts || {};
     if (PRECISA_LOGIN[name] && !S.me) name = "perfil";
     views.forEach(function(v){ v.hidden = v.id !== "v-" + name; });
-    document.body.classList.toggle("wide", name === "geral");
+    document.body.classList.toggle("wide", name === "geral" || name === "fonoapp");
     var v = $("v-" + name); if (v){ v.scrollTop = 0; }
     window.scrollTo(0, 0);
     current = name;
@@ -945,6 +994,7 @@ svg.i.f{fill:currentColor;stroke:none}
   }
   function sair(expirou){
     S.token = null; S.me = null; S.linked = false; lsSet(K_TOKEN, null);
+    faUser = null; try{ $("faFrame").removeAttribute("src"); }catch(e){}
     if (!expirou) limparPar();
     if (expirou) toast("Sua sessão expirou. Entre novamente.");
     go("perfil");
@@ -954,7 +1004,7 @@ svg.i.f{fill:currentColor;stroke:none}
   function rotear(){
     var me = S.me;
     if (!me) return go("perfil");
-    if (me.usuario.papel === "profissional") return go("fono");
+    if (me.usuario.papel === "profissional"){ if (S.par) return finalizar(); return go("fonoapp"); }
     if (me.status.completo){ if (S.par) return finalizar(); return go("geral"); }
     go("menu");
   }
@@ -965,7 +1015,7 @@ svg.i.f{fill:currentColor;stroke:none}
   function limparPar(){ S.par = null; ssSet(K_PAR, null); atualizarConexao(); }
 
   async function etapa(nome){
-    if (!S.par || !S.me || S.me.usuario.papel !== "responsavel") return;
+    if (!S.par || !S.me) return;
     try{ await api("/api/pareamentos/" + S.par + "/etapa", { method:"PUT", body:{ etapa:nome } }); }
     catch(e){ if (e.status === 410){ limparPar(); toast(e.message, 5000); } }
   }
@@ -974,7 +1024,7 @@ svg.i.f{fill:currentColor;stroke:none}
   function progresso(v){
     if (!S.par || v <= ultimoAvanco) return;
     ultimoAvanco = v;
-    var logado = S.me && S.me.usuario.papel === "responsavel";
+    var logado = !!S.me;
     var p = logado
       ? api("/api/pareamentos/" + S.par + "/etapa", { method:"PUT", body:{ etapa:"progresso", valor:v } })
       : (v <= 40 ? api("/api/pareamentos/" + S.par + "/avanco", { method:"POST", auth:false, body:{ valor:v } }) : Promise.resolve());
@@ -982,8 +1032,9 @@ svg.i.f{fill:currentColor;stroke:none}
   }
 
   async function sincronizarProgresso(){
-    if (!S.par || !S.me || S.me.usuario.papel !== "responsavel") return;
+    if (!S.par || !S.me) return;
     await etapa("cadastro");
+    if (S.me.usuario.papel === "profissional") return;
     if (S.me.status.privacidade) await etapa("privacidade");
     if (S.me.status.diagnostico) await etapa("diagnostico");
   }
@@ -995,6 +1046,8 @@ svg.i.f{fill:currentColor;stroke:none}
     $("pairNote").hidden = !on;
     var g = $("ghConn"); g.classList.toggle("off", !S.linked);
     $("ghConnTxt").textContent = S.linked ? "Lumis conectado" : "Lumis sem aparelho";
+    $("faConn").classList.toggle("off", !S.linked);
+    $("faConnTxt").textContent = S.linked ? "Lumis conectado" : "Sem aparelho";
   }
 
   function abrirCodigo(){ $("codigoErr").hidden = true; $("codigoInput").value = ""; $("sheetCodigo").hidden = false; setTimeout(function(){ $("codigoInput").focus(); }, 50); }
@@ -1014,6 +1067,9 @@ svg.i.f{fill:currentColor;stroke:none}
         if (S.me && S.me.usuario.papel === "responsavel"){
           await sincronizarProgresso();
           if (S.me.status.completo && current === "pronto") finalizar();
+        } else if (S.me && S.me.usuario.papel === "profissional"){
+          await sincronizarProgresso();
+          finalizar();
         }
       }catch(e){ err.textContent = e.message; err.hidden = false; }
     });
@@ -1391,12 +1447,21 @@ svg.i.f{fill:currentColor;stroke:none}
     el.querySelector("svg use").setAttribute("href", tipo === "ok" ? "#i-check" : "#i-link");
     $("prontoCodigo").hidden = tipo === "ok" || tipo === "carregando";
     $("prontoLead").textContent = tipo === "ok"
-      ? "O Lumis já está abrindo no aparelho da criança. Agora é só brincar!"
+      ? (ehProf() ? "O Lumis já está abrindo no aparelho. Bom trabalho!" : "O Lumis já está abrindo no aparelho da criança. Agora é só brincar!")
       : "Cadastro concluído com carinho.";
   }
 
+  function ehProf(){ return !!(S.me && S.me.usuario.papel === "profissional"); }
   async function finalizar(){
     go("pronto");
+    var prof = ehProf();
+    $("sdCadTitulo").textContent = prof ? "Conta profissional pronta" : "Cadastro concluído";
+    $("sdCadTexto").textContent = prof ? "Seus pacientes e sessões ficam na Área da fonoaudióloga." : "Privacidade e diagnóstico salvos.";
+    $("prontoGeral").querySelector("span").textContent = prof ? "Ir para a Área da fonoaudióloga" : "Ir para a Visão Geral";
+    if (!S.par && S.linked){
+      estadoAparelho("ok", ehProf() ? "O aparelho foi liberado em modo profissional." : "A conta da criança já está logada no aparelho.");
+      return;
+    }
     if (!S.par){
       estadoAparelho("aviso", "Escaneie o QR Code na tela do aparelho ou digite o código dele.");
       return;
@@ -1405,14 +1470,44 @@ svg.i.f{fill:currentColor;stroke:none}
     try{
       await api("/api/pareamentos/" + S.par + "/concluir", { method:"POST" });
       limparPar(); S.linked = true; atualizarConexao();
-      estadoAparelho("ok", "A conta da criança já está logada no aparelho.");
+      estadoAparelho("ok", ehProf() ? "O aparelho foi liberado em modo profissional." : "A conta da criança já está logada no aparelho.");
       if (navigator.vibrate) try{ navigator.vibrate([80, 60, 80]); }catch(e){}
     }catch(e){
       if (e.status === 410){ limparPar(); estadoAparelho("aviso", "O código do aparelho expirou. Digite o código atual da tela."); }
       else estadoAparelho("aviso", e.message);
     }
   }
-  $("prontoGeral").addEventListener("click", function(){ go("geral"); });
+  $("prontoGeral").addEventListener("click", function(){ go(ehProf() ? "fonoapp" : "geral"); });
+
+  /* ============================================================
+     ÁREA DA FONOAUDIÓLOGA (menu do celular + fono.html incorporado)
+     ============================================================ */
+  var faUser = null;
+  function faFrame(){ return $("faFrame"); }
+  function faEnviar(msg){ try{ faFrame().contentWindow.postMessage(msg, location.origin); }catch(e){} }
+  function faMarcar(tab){
+    $$("#faNav [data-ft]").forEach(function(b){
+      if (b.getAttribute("data-ft") === tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+    });
+  }
+  $$("#faNav [data-ft]").forEach(function(b){
+    b.addEventListener("click", function(){ var t = b.getAttribute("data-ft"); faMarcar(t); faEnviar({ lumisTab:t }); });
+  });
+  window.addEventListener("message", function(e){
+    if (e.origin !== location.origin || !e.data || !e.data.lumisTabAtual) return;
+    faMarcar(e.data.lumisTabAtual);
+  });
+  function faAbrirMenu(){
+    $("faQuem").textContent = S.me ? (S.me.usuario.nome + " · " + S.me.usuario.email) : "";
+    $("faAparelhoTxt").textContent = S.linked ? "Reconectar aparelho do Lumis" : "Conectar aparelho do Lumis";
+    $("sheetFonoConta").hidden = false;
+  }
+  $("faMais").addEventListener("click", faAbrirMenu);
+  $("faMenuBtn").addEventListener("click", faAbrirMenu);
+  $("faNovo").addEventListener("click", function(){ $("sheetFonoConta").hidden = true; faEnviar({ lumisNovoPaciente:true }); });
+  $("faAparelho").addEventListener("click", function(){ $("sheetFonoConta").hidden = true; abrirCodigo(); });
+  $("faStatus").addEventListener("click", function(){ $("sheetFonoConta").hidden = true; finalizar(); });
+  $("faSair").addEventListener("click", function(){ $("sheetFonoConta").hidden = true; sair(false); });
 
   /* ============================================================
      O QUE MOSTRAR AO ENTRAR EM CADA TELA
@@ -1429,7 +1524,14 @@ svg.i.f{fill:currentColor;stroke:none}
     },
     diagnostico:  function(){ if (!S.me.status.privacidade){ toast("Aceite primeiro a Privacidade e Segurança."); return go("privacidade"); } carregarDiag(); },
     fono:         function(){ S.papel = "profissional"; textosPapel(); renderFono(); },
-    geral:        function(){ atualizarConexao(); }
+    geral:        function(){ atualizarConexao(); },
+    fonoapp:      function(){
+      S.papel = "profissional"; atualizarConexao();
+      if (faUser !== S.me.usuario.id){
+        faUser = S.me.usuario.id; faMarcar("perfil");
+        faFrame().src = "fono.html?embed=1&u=" + encodeURIComponent(S.me.usuario.id);
+      }
+    }
   };
 
   /* ============================================================
