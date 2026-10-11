@@ -264,6 +264,24 @@
     .disc { transition: none; }
   }
 </style>
+<script>
+/* O mapa só abre com a conta da criança logada (token gravado pela tela do QR Code depois do pareamento). */
+(function(){
+  var KEY = "lumis_device_token", token = null;
+  try{ token = localStorage.getItem(KEY); }catch(e){}
+  var h = location.hostname, p = location.port;
+  var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
+  function voltar(){ location.replace("frontend/inicio.html"); }
+  if (!token){ voltar(); return; }
+  fetch(API + "/api/dispositivo/me", { headers:{ authorization:"Bearer " + token } })
+    .then(function(r){
+      if (r.status === 401){ try{ localStorage.removeItem(KEY); }catch(e){} voltar(); return null; }
+      return r.ok ? r.json() : null;
+    })
+    .then(function(d){ if (d){ window.LUMIS_CRIANCA = d.crianca; window.LUMIS_RESPONSAVEL = d.responsavel; } })
+    .catch(function(){ /* sem internet: continua com a sessão salva */ });
+})();
+</script>
 </head>
 <body>
 <div class="scroller">
@@ -300,15 +318,17 @@
 <script>
   // Edite aqui: nomes, posições (em pixels da imagem 1698x926) e quais ilhas estão liberadas.
   const ISLANDS = [
-    { id: 1, nome: "Ssss", x: 300,  y: 372, liberada: true  },
+    { id: 1, nome: "Ssss", x: 300,  y: 372, liberada: true, url: "frontend/atividade-001.html" },
     { id: 2, nome: "Mmmm", x: 729,  y: 274, liberada: false },
     { id: 3, nome: "Brrr", x: 1090, y: 208, liberada: false },
     { id: 4, nome: "Shhh", x: 1466, y: 97,  liberada: false }
   ];
 
   // Conecte aqui a abertura das fases da ilha (ex.: navegar para a tela de fases).
+  // Cada ilha abre a sua atividade. Para ligar as próximas, é só preencher o "url" em ISLANDS.
   window.abrirIlha = window.abrirIlha || function (ilha) {
     document.dispatchEvent(new CustomEvent("ilha:abrir", { detail: ilha }));
+    if (ilha.url) setTimeout(function () { window.location.href = ilha.url; }, 700);
   };
 
   const W = 1698, H = 926;

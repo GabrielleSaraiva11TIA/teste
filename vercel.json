@@ -1,4 +1,7 @@
 {
+  "redirects": [
+    { "source": "/", "destination": "/frontend/inicio.html", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" }
   ],

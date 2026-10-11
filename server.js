@@ -433,7 +433,7 @@ app.get("/api/dispositivo/me", wrap(async (req, res) => {
 // ============================================================
 if (!NA_VERCEL) {
     app.use("/frontend", express.static(path.join(__dirname, "frontend")))
-    app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")))
+    app.get("/", (req, res) => res.redirect("/frontend/inicio.html"))
 }
 
 app.use("/api", (req, res) => erro(res, 404, "Rota não encontrada."))
