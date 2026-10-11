@@ -152,7 +152,7 @@
 
   .cta-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:calc(var(--u)*.55);margin-top:calc(var(--u)*.2)}
   .cta{
-    appearance:none;border:0;cursor:pointer;font:inherit;text-decoration:none;
+    appearance:none;border:0;cursor:pointer;font:inherit;
     display:inline-flex;align-items:center;gap:calc(var(--u)*.9);
     min-height:calc(var(--u)*3.4);padding:0 calc(var(--u)*1.7);
     border-radius:999px;color:#fff;font-size:calc(var(--u)*1.1);font-weight:800;
@@ -303,10 +303,10 @@
       </div>
 
       <div class="cta-wrap">
-        <a class="cta" id="startBtn" href="../mapa.html">
+        <button class="cta" id="startBtn" type="button">
           Vamos juntos!
           <svg class="sp" viewBox="0 0 24 24"><use href="#i-spark"/></svg>
-        </a>
+        </button>
         <span class="hint">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.500l5 5L20 6.500"/></svg>
           Toque para começar nossa aventura agora
