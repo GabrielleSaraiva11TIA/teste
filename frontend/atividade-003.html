@@ -90,7 +90,7 @@ svg{display:block}
 .quiz > p{margin:0 0 4px;font-size:12px;color:var(--muted)}
 .opt-wrap{display:flex;flex-direction:column;gap:7px}
 .opt{width:100%;background:var(--blue-soft);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:13px;text-align:left;border:2px solid transparent;transition:transform .15s,border-color .25s,background .25s,box-shadow .25s}
-.opt:hover:not([disabled]){transform:translateY(-1px);box-shadow:0 6px 16px rgba(36,87,230,.12)}
+.opt:hover:not([data-locked="true"]){transform:translateY(-1px);box-shadow:0 6px 16px rgba(36,87,230,.12)}
 .opt .ico{width:34px;height:34px;flex:none;border-radius:10px;background:#fff;display:grid;place-items:center;color:var(--blue)}
 .opt .tx{flex:1;min-width:0}
 .opt .n{font-size:10px;font-weight:600;color:var(--blue);display:flex;gap:7px;align-items:center}
@@ -99,7 +99,7 @@ svg{display:block}
 .opt .ss{font-size:10.5px;color:var(--muted)}
 .opt .go{width:32px;height:32px;flex:none;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--blue);border:0}
 .opt .st{font-size:9.5px;font-weight:600;border-radius:999px;padding:1px 8px;display:none;align-items:center;gap:4px}
-.opt[disabled]{cursor:default}
+.opt[data-locked="true"]{cursor:default}
 .opt.ok{background:#fff;border-color:var(--teal);box-shadow:0 0 0 3px rgba(42,166,160,.12)}
 .opt.ok .st{display:inline-flex;background:#e6f7ee;color:var(--green-ink)}
 .opt.ok .go{background:var(--green);color:#fff}
@@ -117,6 +117,24 @@ svg{display:block}
 
 /* final lumis toast inside bubble */
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* resultado: acertou + avançar (igual à atividade 1) */
+[hidden]{display:none!important}
+.result{margin-top:4px;padding:14px 16px;border-radius:22px;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+.result--success{background:linear-gradient(135deg,#0b4fd1,#2f78ff);color:#fff;box-shadow:0 10px 24px rgba(11,79,209,.35)}
+.result__icon{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:#3cc4ff;color:#0b2a73}
+.result__icon svg{width:26px;height:26px}
+.result__tag{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 10px;border-radius:99px;margin-bottom:3px;background:rgba(255,255,255,.2)}
+.result h3{margin:0;font-size:19px;line-height:1.15}
+.result p{margin:3px 0 0;font-size:12px;line-height:1.35;opacity:.95}
+.result__btn{grid-column:1 / -1;background:#fff;color:var(--blue);font-weight:700;font-size:14px;padding:12px 18px;border-radius:14px;box-shadow:0 4px 0 rgba(6,46,143,.35);transition:transform .12s,filter .2s}
+.result__btn:hover{filter:brightness(1.05)}
+.result__btn:active{transform:translateY(2px)}
+.result__btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:60}
+.confetti span{position:absolute;top:-14px;width:9px;height:14px;border-radius:2px;animation:confetti-fall 1.9s ease-in forwards}
+@keyframes confetti-fall{to{transform:translate(var(--dx),105vh) rotate(540deg)}}
 
 @media (max-width:900px){
   .main{grid-template-columns:1fr}
@@ -136,7 +154,7 @@ svg{display:block}
 
   <div class="row2">
     <button class="chip" type="button" onclick="location.href='../mapa.html'">← Voltar para o mapa</button>
-    <span class="chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="#0d3b8e"><path d="M12 2.500l2.900 6 6.600.9-4.800 4.600 1.200 6.500L12 17.300l-5.900 3.200 1.200-6.500L2.500 9.400l6.600-.9z"/></svg>125&nbsp; estrelas</span>
+    <span class="chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="#0d3b8e"><path d="M12 2.500l2.900 6 6.600.9-4.800 4.600 1.200 6.500L12 17.300l-5.900 3.200 1.200-6.500L2.500 9.400l6.600-.9z"/></svg><span id="starN">125</span>&nbsp; estrelas</span>
   </div>
 
   <!-- PROGRESSO -->
@@ -237,6 +255,19 @@ svg{display:block}
         </button>
         <div class="fb warn" id="fb2" role="status"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg><span>Lá no fundo da boca a língua faz outros sons (como /k/ ou /g/). Para fazer o ventinho do <em>Ssss</em>, ela fica bem na frente! Tente novamente.</span></div>
       </div>
+
+      <!-- ACERTOU: comemoração + avançar -->
+      <div class="result result--success" id="resultSuccess" role="status" aria-live="polite" hidden>
+        <div class="result__icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8 6.8 19.6l1-5.8L3.5 9.7l5.9-.9L12 3.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <span class="result__tag">🔖 Você descobriu onde fica a língua!</span>
+          <h3>Encontrou com perfeição! ⭐</h3>
+          <p>Você ganhou +1 estrela para a sua coleção!</p>
+        </div>
+        <button class="result__btn" id="btnNext" type="button" data-next="atividade-004.html">Avançar para o próximo passo →</button>
+      </div>
     </section>
   </main>
 </div>
@@ -314,10 +345,11 @@ function markOption(i){
 async function choose(i){
   if (locked) return;
   locked = true; clearTimeout(askTimer);
-  opts.forEach(o => o.disabled = true);
+  opts.forEach(o => o.setAttribute('data-locked','true'));
   const my = ++runId;
   opts.forEach((o,k)=>{ if(k!==i) o.classList.add('dim'); });
   markOption(i);
+  if (i === CORRECT) celebrar();
   await wait(1400); if (my!==runId) return;
   setBubble('“Vamos descobrir!”');
   await wait(2200); if (my!==runId) return;
@@ -332,11 +364,61 @@ opts.forEach(o => o.addEventListener('click', e => {
 
 function resetQuiz(){
   runId++; locked = false;
-  opts.forEach(o=>{ o.disabled=false; o.className='opt'; o.querySelector('[data-go]').innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 11V6a2 2 0 014 0v5M12 10a2 2 0 014 0v4a6 6 0 01-6 6 6 6 0 01-5-3l-2-4a2 2 0 013-2l1 1"/></svg>'; });
+  resultSuccess.hidden = true;
+  opts.forEach(o=>{ o.removeAttribute('data-locked'); o.className='opt'; o.querySelector('[data-go]').innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 11V6a2 2 0 014 0v5M12 10a2 2 0 014 0v4a6 6 0 01-6 6 6 6 0 01-5-3l-2-4a2 2 0 013-2l1 1"/></svg>'; });
   fbs.forEach(f=>f.classList.remove('show'));
   btnRepetir.hidden = true;
   setBubble('“Qual você acha que é?”', SUB_ORIGINAL);
 }
+
+/* ---------- acertou: comemoração (confete + som + vibração + estrela) e botão avançar ---------- */
+const resultSuccess = $('#resultSuccess'), btnNext = $('#btnNext'), starN = $('#starN');
+let ganhouEstrela = false, audioCtx = null;
+function celebrar(){
+  resultSuccess.hidden = false;
+  if (!ganhouEstrela){ ganhouEstrela = true; starN.textContent = String(Number(starN.textContent) + 1); }
+  if (navigator.vibrate) navigator.vibrate([100,50,100,50,220]);
+  somSucesso();
+  confete();
+  setTimeout(() => resultSuccess.scrollIntoView({ behavior:'smooth', block:'nearest' }), 150);
+}
+function somSucesso(){
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const t = audioCtx.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, k) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain(), st = t + k * 0.12;
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, st);
+      g.gain.exponentialRampToValueAtTime(0.3, st + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, st + 0.45);
+      o.connect(g).connect(audioCtx.destination); o.start(st); o.stop(st + 0.5);
+    });
+  } catch(e){}
+}
+function confete(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cores = ['#ffd54a','#2f78ff','#36c6ff','#ff8fb1','#7be495'];
+  const wrap = document.createElement('div');
+  wrap.className = 'confetti'; wrap.setAttribute('aria-hidden','true');
+  for (let k = 0; k < 28; k++){
+    const sp = document.createElement('span');
+    sp.style.left = Math.random() * 100 + '%';
+    sp.style.background = cores[k % cores.length];
+    sp.style.animationDelay = Math.random() * 0.4 + 's';
+    sp.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px');
+    wrap.appendChild(sp);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 2600);
+}
+// avançar: vai para o endereço em data-next (atividade 4)
+btnNext.addEventListener('click', () => {
+  window.dispatchEvent(new CustomEvent('atividade003:avancar'));
+  const dest = btnNext.dataset.next;
+  if (dest) window.location.href = dest;
+});
 
 /* ---------- botões ---------- */
 btnBoca.addEventListener('click', tocarVideo);                         // toca no próprio quadrado
