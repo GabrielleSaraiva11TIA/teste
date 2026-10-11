@@ -318,7 +318,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
           <h3>Detetive Incrível! Você descobriu tudo! 🔎 🎉</h3>
           <p>Você percebeu que os dentinhos da segunda pista estavam diferentes! Só a Pista Original está certa!</p>
         </div>
-        <button class="next" type="button">Próxima Etapa: O Grande Tesouro <span>→</span></button>
+        <button class="next" type="button" id="btnNext" data-next="atividade-008.html">Próxima Etapa: O Grande Tesouro <span>→</span></button>
       </div>
     </div>
 
@@ -428,6 +428,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   }
   c1.addEventListener('click', errada(c1));
   c3.addEventListener('click', errada(c3));
+
+  // avançar: vai para o endereço em data-next (atividade 8)
+  document.getElementById('btnNext').addEventListener('click', function(){
+    var dest=this.dataset.next;
+    if(dest) window.location.href=dest;
+  });
 
   document.getElementById('btnGot').addEventListener('click', function(){
     reset(); toast.classList.remove('show');

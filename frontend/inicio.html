@@ -582,6 +582,7 @@ body{
     // Esta tela SEMPRE começa pelo QR Code: uma conta da criança antiga que ficou salva
     // neste aparelho é descartada. A pagina5 só abre depois de um novo pareamento concluído.
     store(KEY_TOKEN, null);
+    store("lumis_progresso", null);      // progresso do mapa também recomeça do zero
     iniciarPareamento();
   }
   iniciar();

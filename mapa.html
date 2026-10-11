@@ -324,6 +324,14 @@
     { id: 4, nome: "Shhh", x: 1466, y: 97,  liberada: false }
   ];
 
+  // Regra: a próxima ilha só é liberada quando a anterior foi concluída até o final.
+  // A atividade final de cada ilha grava o id dela em localStorage "lumis_progresso" ({ ilhas: [1, ...] }).
+  (function aplicarProgresso() {
+    let feitas = [];
+    try { feitas = (JSON.parse(localStorage.getItem("lumis_progresso") || "{}").ilhas) || []; } catch (e) {}
+    ISLANDS.forEach((ilha, i) => { ilha.liberada = i === 0 || feitas.includes(ISLANDS[i - 1].id); });
+  })();
+
   // Conecte aqui a abertura das fases da ilha (ex.: navegar para a tela de fases).
   // Cada ilha abre a sua atividade. Para ligar as próximas, é só preencher o "url" em ISLANDS.
   window.abrirIlha = window.abrirIlha || function (ilha) {
