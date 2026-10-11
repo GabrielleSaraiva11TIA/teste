@@ -234,6 +234,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 
 /* ---- estados da escolha ---- */
 .sound-card { position: relative; }
+.sound-card.is-selected { background: #eef3ff; box-shadow: 0 0 0 3px var(--blue-500), var(--shadow); }
+.sound-card.is-selected .sound-card__icon { background: #cfe6ff; }
+.sound-card.is-selected .sound-card__cta { background: var(--blue-600); color: #fff; }
 .sound-card.is-correct {
   background: #eef3ff; transform: none;
   box-shadow: 0 0 0 2px var(--blue-600), var(--shadow);
@@ -453,32 +456,32 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 
       <!--
         Como funciona cada cartão:
-        • ícone e "Toque para ouvir"  -> vibra / toca o som (data-action="play")
+        • ícone e "Toque para sentir"  -> seleciona a opção; depois toque em "Sentir na pulseira" (data-action="play")
         • nome (Tambor, Vento, Sino)  -> pergunta "Quer escolher essa opção?" (data-action="choose")
       -->
       <div class="cards" id="cards">
         <div class="sound-card" data-sound="tambor" data-label="Tambor! ">
-          <button class="sound-card__icon" type="button" data-action="play" aria-label="Ouvir o Tambor">
+          <button class="sound-card__icon" type="button" data-action="play" aria-label="Selecionar o Tambor">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 8c5 2 9 8 14 8M19 8c-5 2-9 8-14 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
           </button>
           <button class="sound-card__name" type="button" data-action="choose">Tambor</button>
-          <button class="sound-card__cta" type="button" data-action="play">☝ Toque para ouvir</button>
+          <button class="sound-card__cta" type="button" data-action="play">☝ Toque para sentir</button>
         </div>
 
         <div class="sound-card" data-sound="vento" data-label="Vento!">
-          <button class="sound-card__icon" type="button" data-action="play" aria-label="Ouvir o Vento">
+          <button class="sound-card__icon" type="button" data-action="play" aria-label="Selecionar o Vento">
             <svg viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
           <button class="sound-card__name" type="button" data-action="choose">Vento</button>
-          <button class="sound-card__cta" type="button" data-action="play">☝ Toque para ouvir</button>
+          <button class="sound-card__cta" type="button" data-action="play">☝ Toque para sentir</button>
         </div>
 
         <div class="sound-card" data-sound="sino" data-label="Sino!">
-          <button class="sound-card__icon" type="button" data-action="play" aria-label="Ouvir o Sino">
+          <button class="sound-card__icon" type="button" data-action="play" aria-label="Selecionar o Sino">
             <svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6Zm-2 15a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
           <button class="sound-card__name" type="button" data-action="choose">Sino</button>
-          <button class="sound-card__cta" type="button" data-action="play">☝ Toque para ouvir</button>
+          <button class="sound-card__cta" type="button" data-action="play">☝ Toque para sentir</button>
         </div>
       </div>
 
@@ -554,12 +557,33 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   let feelTimer = null;
   let bubbleTimer = null;
   let firstFeelRewarded = false;
+  let selectedCard = null;     // opção (Tambor / Vento / Sino) marcada para sentir na pulseira
+  let feelTicks = [];          // sons repetidos durante a vibração
+
+  // padrão de vibração de cada opção (cada uma é diferente para dar para distinguir)
+  const FEEL_PATTERNS = {
+    tambor: [220, 280, 220, 280, 220, 280, 220, 280, 220],        // batidas fortes e espaçadas
+    vento:  VIBRATION_PATTERN,                                     // brisa contínua e suave
+    sino:   [60, 70, 60, 70, 60, 420, 60, 70, 60, 70, 60, 420, 60], // toques curtinhos em grupos
+  };
+  const FEEL_NAMES = { tambor: "Tambor", vento: "Vento", sino: "Sino" };
+  const FEEL_BUBBLE = { tambor: "Tambor! 🥁", vento: "Vento! 🍃", sino: "Sino! 🔔" };
+  const FEEL_CHIP = { tambor: "Vibrando pulseira: Tum... tum...", vento: "Vibrando pulseira: Sssss...", sino: "Vibrando pulseira: Ding... ding..." };
 
   // =====================================================
   //  1) SENTIR NA PULSEIRA
   // =====================================================
   function startFeeling() {
     if (feeling) return;
+
+    // precisa escolher uma das 3 opções antes de sentir
+    if (!selectedCard) {
+      stateText.textContent = "Toque numa opção primeiro 👇";
+      showBubble("Escolha uma opção!");
+      cardsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+    const kind = selectedCard.dataset.sound;
     feeling = true;
 
     // visual do botão
@@ -569,22 +593,27 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 
     // chip de estado -> "Vibrando pulseira: Sssss... 📳"
     stateChip.classList.add("is-vibrating");
-    stateText.textContent = "Vibrando pulseira: Sssss...";
+    stateText.textContent = FEEL_CHIP[kind] || "Vibrando pulseira...";
     stateEmoji.hidden = false;
 
     // faixa superior "Pulseira Ativa"
     bandStatus.classList.add("is-active");
     bandTag.firstChild.textContent = "Vibrando ";
 
-    // palco: brilho azul + balão "Vento! 🍃"
-    bubbleText.textContent = "Vento! 🍃";
+    // palco: brilho azul + balão com o nome da opção
+    bubbleText.textContent = FEEL_BUBBLE[kind] || "Vibrando!";
     stage.classList.add("is-feeling");
 
-    // vibração real (celulares Android / navegadores compatíveis)
-    if ("vibrate" in navigator) navigator.vibrate(VIBRATION_PATTERN);
+    // vibração real (celulares Android / navegadores compatíveis): padrão da opção escolhida
+    if ("vibrate" in navigator) navigator.vibrate(FEEL_PATTERNS[kind] || VIBRATION_PATTERN);
 
-    // som suave de vento
-    playSound("vento", VIBRATION_MS / 1000);
+    // som da opção escolhida
+    if (kind === "vento") {
+      playSound("vento", VIBRATION_MS / 1000);
+    } else {
+      const every = kind === "tambor" ? 500 : 1100;
+      for (let t = 0; t < VIBRATION_MS; t += every) feelTicks.push(setTimeout(() => playSound(kind), t));
+    }
 
     // recompensa na primeira vez
     if (!firstFeelRewarded) {
@@ -597,6 +626,8 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 
   function stopFeeling() {
     clearTimeout(feelTimer);
+    feelTicks.forEach(clearTimeout);
+    feelTicks = [];
     feeling = false;
 
     btnFeel.classList.remove("is-pressed");
@@ -604,7 +635,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
     btnFeelText.textContent = "Sentir na pulseira";
 
     stateChip.classList.remove("is-vibrating");
-    stateText.textContent = "Pronto para ouvir!";
+    stateText.textContent = selectedCard ? "Selecionado: " + FEEL_NAMES[selectedCard.dataset.sound] : "Pronto para ouvir!";
     stateEmoji.hidden = true;
 
     bandStatus.classList.remove("is-active");
@@ -669,7 +700,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
     bubbleTimer = setTimeout(() => stage.classList.remove("is-bubble"), 1600);
   }
 
-  // ouvir / sentir a vibração de uma opção
+  // seleciona uma opção: depois é só tocar em "Sentir na pulseira" para sentir a vibração dela
   function playCard(card) {
     const kind = card.dataset.sound;
 
@@ -677,18 +708,26 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
     touches += 1;
     counterEl.textContent = `👆 ${touches} ${touches === 1 ? "toque" : "toques"}`;
 
-    // feedback visual no cartão
+    // se estava vibrando outra opção, para antes de trocar
+    if (feeling) stopFeeling();
+
+    // marca só este cartão como selecionado
+    soundCards.forEach((c) => {
+      const on = c === card;
+      c.classList.toggle("is-selected", on);
+      const cta = c.querySelector(".sound-card__cta");
+      if (cta && !c.classList.contains("is-correct")) cta.textContent = on ? "✓ Selecionado" : "☝ Toque para sentir";
+    });
+    selectedCard = card;
+
+    // feedback visual no cartão + balão no mascote + chip de estado
     card.classList.add("is-playing");
     setTimeout(() => card.classList.remove("is-playing"), 350);
-
-    // balão no mascote
     showBubble(card.dataset.label);
+    stateText.textContent = "Selecionado: " + FEEL_NAMES[kind];
 
-    // vibração curta + som
-    if ("vibrate" in navigator) {
-      navigator.vibrate(kind === "tambor" ? [90] : kind === "sino" ? [40, 40, 40] : [120, 60, 120]);
-    }
-    playSound(kind, 1.4);
+    // toque curtinho de confirmação no celular
+    if ("vibrate" in navigator) navigator.vibrate(30);
   }
 
   // clique nos cartões: ícone / "Toque para ouvir" -> ouvir | nome -> escolher
