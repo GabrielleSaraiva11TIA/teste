@@ -190,7 +190,7 @@
 
   <!-- Topo -->
   <header class="topbar">
-    <button class="pill" id="btnBack">← Voltar para a Missão</button>
+    <button class="pill" id="btnBack">← Voltar para o mapa</button>
     <div class="pill">☆ <span id="stars">125</span> estrelas</div>
   </header>
 
@@ -348,7 +348,7 @@ const CONFIG = {
 
   // Ganchos para integrar com o resto do LUMIS
   onContinue: () => { console.log("→ ir para a etapa 3 (Eco)"); },
-  onBack: () => { console.log("← voltar para a Missão"); },
+  onBack: () => { window.location.href = "../mapa.html"; },
   // Se existir a API real da pulseira, ela é usada no lugar do navigator.vibrate
   bracelet: window.LumisBracelet || null
 };
