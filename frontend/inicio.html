@@ -579,13 +579,10 @@ body{
   /* ===== Início: já está logado? ===== */
   function iniciar(){
     if (qs.get("reset") === "1"){ store(KEY_TOKEN, null); store(KEY_PAR, null); history.replaceState(null, "", location.pathname); }
-    var token = store(KEY_TOKEN);
-    if (!token){ iniciarPareamento(); return; }
-    api("/api/dispositivo/me", { headers:{ authorization:"Bearer " + token } }).then(function(r){
-      if (r.status === 200){ location.replace(PROXIMA); return; }
-      if (r.status === 401){ store(KEY_TOKEN, null); iniciarPareamento(); return; }
-      location.replace(PROXIMA);                  // erro do servidor: confia na sessão salva
-    }).catch(function(){ location.replace(PROXIMA); });   // sem internet: mantém logado
+    // Esta tela SEMPRE começa pelo QR Code: uma conta da criança antiga que ficou salva
+    // neste aparelho é descartada. A pagina5 só abre depois de um novo pareamento concluído.
+    store(KEY_TOKEN, null);
+    iniciarPareamento();
   }
   iniciar();
 })();
