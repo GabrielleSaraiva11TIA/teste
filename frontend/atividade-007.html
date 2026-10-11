@@ -129,16 +129,25 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .msg{display:none;margin-top:14px}
 .msg.show{display:block;animation:pop .35s ease}
 @keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
-.ok{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:2px solid #b8ecc9;border-radius:22px;padding:15px 16px;background:linear-gradient(100deg,#f1fdf5,#eef6ff)}
-.ok .ic{width:48px;height:48px;border-radius:14px;background:#22c55e;display:grid;place-items:center;font-size:24px;flex:none;box-shadow:0 6px 12px rgba(34,197,94,.3)}
+.ok{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:0;border-radius:22px;padding:15px 18px;background:linear-gradient(135deg,#0b4fd1,#2f78ff);color:#fff;box-shadow:0 10px 24px rgba(11,79,209,.35)}
+.ok .ic{width:52px;height:52px;border-radius:16px;background:#3cc4ff;color:#0b2a73;display:grid;place-items:center;flex:none}
+.ok .ic svg{width:28px;height:28px}
 .ok .tx{flex:1;min-width:200px}
 .ok .badges{display:flex;gap:10px;align-items:center;margin-bottom:4px;flex-wrap:wrap}
-.ok .b1{background:#d7f7e2;color:var(--green);font-size:10px;font-weight:900;padding:3px 9px;border-radius:99px;letter-spacing:.4px}
-.ok .b2{color:var(--green);font-size:11px;font-weight:900}
-.ok h3{font-size:16px;font-weight:900;color:#1f3a5f;margin-bottom:2px}
-.ok p{font-size:12.5px;font-weight:700;color:#5a6a88;line-height:1.4}
-.next{background:var(--blue);color:#fff;border-radius:14px;font-size:13.5px;font-weight:900;padding:13px 18px;display:flex;gap:8px;align-items:center;justify-content:center;box-shadow:0 8px 16px rgba(37,99,235,.3);transition:.15s;width:100%}
-.next:hover{background:var(--blue-d);transform:translateY(-1px)}
+.ok .b1{background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:900;padding:3px 10px;border-radius:99px;letter-spacing:.4px}
+.ok .b2{color:#fff;font-size:11px;font-weight:900}
+.ok h3{font-size:19px;font-weight:900;color:#fff;margin-bottom:2px;line-height:1.15}
+.ok p{font-size:12.5px;font-weight:700;color:#fff;opacity:.95;line-height:1.4}
+.next{background:#fff;color:var(--blue-d);border-radius:14px;font-size:13.5px;font-weight:900;padding:13px 18px;display:flex;gap:8px;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(6,46,143,.35);transition:.15s;width:100%}
+.next:hover{filter:brightness(1.05)}
+.next:active{transform:translateY(2px)}
+.next:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
+/* confete (igual às outras atividades) */
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:60}
+.confetti span{position:absolute;top:-14px;width:9px;height:14px;border-radius:2px;animation:confetti-fall 1.9s ease-in forwards}
+@keyframes confetti-fall{to{transform:translate(var(--dx),105vh) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}}
 .again{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:2px solid #fbe09a;border-radius:22px;padding:14px 16px;background:#fffbea}
 .again .ic{width:42px;height:42px;border-radius:50%;background:#ffb25a;display:grid;place-items:center;font-size:21px;flex:none}
 .again .tx{flex:1;min-width:180px}
@@ -200,7 +209,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   <!-- barra superior -->
   <div class="topbar">
     <button class="pill back" type="button" onclick="location.href='../mapa.html'">← Voltar para o mapa</button>
-    <div class="pill stars"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.4" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg> 125 estrelas</div>
+    <div class="pill stars"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.4" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg> <span id="starN">125</span> estrelas</div>
   </div>
 
   <!-- CABEÇALHO -->
@@ -303,7 +312,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
     <div class="msg" id="msgOk" role="status">
       <div class="ok">
-        <div class="ic">⭐</div>
+        <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8 6.8 19.6l1-5.8L3.5 9.7l5.9-.9L12 3.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
         <div class="tx">
           <div class="badges"><span class="b1">MISTÉRIO RESOLVIDO!</span><span class="b2">+3 estrelas ganhas!</span></div>
           <h3>Detetive Incrível! Você descobriu tudo! 🔎 🎉</h3>
@@ -362,10 +371,50 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   document.getElementById('btnTocar').addEventListener('click', function(){ mexer('faceB'); });
   document.getElementById('btnSentirB').addEventListener('click', function(){ mexer('faceB'); });
 
+  // comemoração: confete + som + vibração + estrelas (igual às outras atividades)
+  var ganhou=false, audioCtx=null, starN=document.getElementById('starN');
+  function somSucesso(){
+    try{
+      audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+      if(audioCtx.state==='suspended') audioCtx.resume();
+      var t=audioCtx.currentTime;
+      [523.25,659.25,783.99,1046.5].forEach(function(f,k){
+        var o=audioCtx.createOscillator(), g=audioCtx.createGain(), st=t+k*0.12;
+        o.type='triangle'; o.frequency.value=f;
+        g.gain.setValueAtTime(0.0001,st);
+        g.gain.exponentialRampToValueAtTime(0.3,st+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,st+0.45);
+        o.connect(g); g.connect(audioCtx.destination); o.start(st); o.stop(st+0.5);
+      });
+    }catch(e){}
+  }
+  function confete(){
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var cores=['#ffd54a','#2f78ff','#36c6ff','#ff8fb1','#7be495'];
+    var wrap=document.createElement('div'); wrap.className='confetti'; wrap.setAttribute('aria-hidden','true');
+    for(var k=0;k<28;k++){
+      var sp=document.createElement('span');
+      sp.style.left=Math.random()*100+'%';
+      sp.style.background=cores[k%cores.length];
+      sp.style.animationDelay=Math.random()*0.4+'s';
+      sp.style.setProperty('--dx',(Math.random()*160-80)+'px');
+      wrap.appendChild(sp);
+    }
+    document.body.appendChild(wrap);
+    setTimeout(function(){wrap.remove()},2600);
+  }
+  function comemorar(){
+    if(!ganhou){ ganhou=true; starN.textContent=String(Number(starN.textContent)+3); }
+    vibrar([100,50,100,50,220]);
+    somSucesso();
+    confete();
+  }
+
   // Resposta correta
   c2.addEventListener('click', function(){
     reset(); c2.classList.add('sel'); ok.classList.add('show');
     toast.classList.remove('show'); mexerAmbos();
+    comemorar();
     ok.scrollIntoView({behavior:'smooth', block:'nearest'});
   });
   // Respostas incorretas (mesma mensagem)
