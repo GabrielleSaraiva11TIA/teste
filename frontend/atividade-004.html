@@ -801,7 +801,7 @@ button:disabled { cursor: not-allowed; }
     // ruído/eco desligados: senão o navegador "limpa" o sssss achando que é barulho
     const audio = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
     const tries = [
-      { audio, video: { facingMode: "user", width: { ideal: 960 }, height: { ideal: 720 } } },
+      { audio, video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } },
       { audio },
       { video: { facingMode: "user" } },
     ];
@@ -913,7 +913,7 @@ button:disabled { cursor: not-allowed; }
         runningMode: "VIDEO",
         numFaces: 1,
       });
-      try { landmarker = await make("GPU"); } catch (e) { landmarker = await make("CPU"); }
+      landmarker = await make("CPU");
       lipIdx = [...new Set(FaceLandmarker.FACE_LANDMARKS_LIPS.flatMap((c) => [c.start, c.end]))];
       lmState = "ready";
     } catch (e) {
