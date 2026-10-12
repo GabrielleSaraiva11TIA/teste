@@ -552,6 +552,30 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   const VIBRATION_MS = 3500;                        // duração do estado "vibrando"
   const VIBRATION_PATTERN = [180, 90, 180, 90, 180, 90, 180, 90, 180]; // padrão "brisa"
 
+  // ---------- Conexão com a pulseira (Python) ----------
+  // A página pode estar na internet; o Python roda no próprio Raspberry.
+  // "localhost" = o próprio aparelho onde a página está aberta.
+  // Se o Python estiver desligado, usa a vibração do celular como reserva.
+  const API = "http://localhost:5001";
+
+  function enviar(url, dados) {
+    return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados) })
+      .then((r) => r.json());
+  }
+  function vibrarLocal(p) {
+    try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {}
+  }
+  // padrao: "tambor" | "sino" | "vento" | "comemorar" | "toque" | "sss" | "p"
+  // reserva: padrão do celular (usado só se a pulseira não responder)
+  function vibrarPulseira(padrao, reserva) {
+    return enviar(API + "/api/pulseira/vibrar", { padrao: padrao }).catch(() => {
+      vibrarLocal(reserva || [60]);
+    });
+  }
+  function pararPulseira() {
+    return enviar(API + "/api/pulseira/parar", {}).catch(() => {});
+  }
+
   let touches = 1;            // começa em 1, como na imagem
   let feeling = false;
   let feelTimer = null;
@@ -604,8 +628,8 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
     bubbleText.textContent = FEEL_BUBBLE[kind] || "Vibrando!";
     stage.classList.add("is-feeling");
 
-    // vibração real (celulares Android / navegadores compatíveis): padrão da opção escolhida
-    if ("vibrate" in navigator) navigator.vibrate(FEEL_PATTERNS[kind] || VIBRATION_PATTERN);
+    // vibração na pulseira: padrão da opção escolhida (tambor / vento / sino)
+    vibrarPulseira(kind, FEEL_PATTERNS[kind] || VIBRATION_PATTERN);
 
     // som da opção escolhida
     if (kind === "vento") {
@@ -642,7 +666,8 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
     bandTag.firstChild.textContent = "Vibração pronto ";
 
     stage.classList.remove("is-feeling");
-    if ("vibrate" in navigator) navigator.vibrate(0);
+    pararPulseira();
+    vibrarLocal(0);
   }
 
   btnFeel.addEventListener("click", () => (feeling ? stopFeeling() : startFeeling()));
@@ -787,7 +812,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 
     resultSuccess.hidden = false;
     showBubble("Isso mesmo! ⭐");
-    if ("vibrate" in navigator) navigator.vibrate([100, 50, 100, 50, 220]);
+    vibrarPulseira("comemorar", [100, 50, 100, 50, 220]);
     playSound("sucesso");
     confetti();
 
@@ -809,7 +834,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
     resultRetry.hidden = false;
 
     showBubble("Tenta de novo! 💪");
-    if ("vibrate" in navigator) navigator.vibrate([60]);
+    vibrarPulseira("toque", [60]);
     playSound("tentar");
 
     resultRetry.scrollIntoView({ behavior: "smooth", block: "nearest" });

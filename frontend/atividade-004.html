@@ -897,6 +897,8 @@ button:disabled { cursor: not-allowed; }
   let landmarker = null, lipIdx = null;
   let frameOk = null;                   // null = ainda não sei | true | false
   let frameHint = "", frameHist = [], lastFrameCheck = 0, detectErrors = 0;
+  // diagnóstico (aparece na tela com ?debug=1, ou sozinho se o detector não responder)
+  const dbg = { calls: 0, ok: 0, faces: 0, lastMs: 0, err: "", skip: "", readyAt: 0, mouthW: 0, guideW: 0 };
 
   // só dá para exigir o enquadramento se o detector estiver pronto (ou no modo de teste)
   const framingKnown = () => (DEMO ? true : lmState === "ready" && hasCam);
@@ -917,8 +919,10 @@ button:disabled { cursor: not-allowed; }
       landmarker = await make("CPU");
       lipIdx = [...new Set(FaceLandmarker.FACE_LANDMARKS_LIPS.flatMap((c) => [c.start, c.end]))];
       lmState = "ready";
+      dbg.readyAt = performance.now();
     } catch (e) {
       console.error("[Lumis] falha ao carregar o detector de rosto:", e);
+      dbg.err = "load: " + (e && (e.message || e));
       lmState = "failed";               // sem internet / bloqueado: a atividade segue sem exigir o enquadramento
     }
     paintFraming();
@@ -969,13 +973,24 @@ button:disabled { cursor: not-allowed; }
   }
 
   function detectFraming(now) {
-    if (camVideo.readyState < 2 || !camVideo.videoWidth) return;
+    if (camVideo.readyState < 2 || !camVideo.videoWidth) {
+      dbg.skip = "video sem imagem (readyState=" + camVideo.readyState + ")";
+      if (camVideo.paused) camVideo.play().catch(() => {});
+      return;
+    }
+    dbg.skip = "";
     let res;
+    const t0 = performance.now();
+    dbg.calls++;
     try {
       res = landmarker.detectForVideo(camVideo, now);
       detectErrors = 0;
+      dbg.ok++;
+      dbg.lastMs = Math.round(performance.now() - t0);
+      if (lmState === "failed") { lmState = "ready"; paintFraming(); }   // se voltou a funcionar, volta ao normal
     } catch (e) {
       console.error("[Lumis] detectForVideo falhou:", e);
+      dbg.err = "detect: " + (e && (e.message || e));
       if (++detectErrors >= 5) { lmState = "failed"; paintFraming(); }   // não fica preso em "Procurando..."
       return;
     }
@@ -985,9 +1000,11 @@ button:disabled { cursor: not-allowed; }
     if (!lm) {
       r = { ok: false, hint: "Não achei seu rostinho 🔍" };
     } else {
+      dbg.faces++;
       const cam = camera.getBoundingClientRect(), g = guideBox.getBoundingClientRect();
-      if (!cam.width) return;
+      if (!cam.width) { dbg.skip = "área da câmera sem largura"; return; }
       const m = lipsBox(lm, lipIdx, cam.width, cam.height, camVideo.videoWidth, camVideo.videoHeight);
+      dbg.mouthW = Math.round(m.x1 - m.x0); dbg.guideW = Math.round(g.width);
       r = judgeBox(m, { x: g.left - cam.left, y: g.top - cam.top, w: g.width, h: g.height });
     }
 
@@ -1052,6 +1069,11 @@ button:disabled { cursor: not-allowed; }
       ratio = m.ratio;
       // aprende o barulho do ambiente enquanto ninguém está fazendo o som
       if (!listening && above < 6) ambientDb += (m.db - ambientDb) * 0.03;
+    }
+
+    // detector pronto mas nunca respondeu: avisa na tela em vez de ficar mudo
+    if (lmState === "ready" && hasCam && !dbg.ok && dbg.readyAt && now - dbg.readyAt > 12000) {
+      lmState = "failed"; paintFraming();
     }
 
     // confere se a boca está no quadrado (10x por segundo)
@@ -1370,6 +1392,26 @@ button:disabled { cursor: not-allowed; }
     seg.hidden = false;
   }
 })();
+
+  // ---------- painel de diagnóstico na tela (para o Raspberry, sem console) ----------
+  (function () {
+    const box = document.createElement("div");
+    box.style.cssText = "position:fixed;left:4px;right:4px;bottom:4px;z-index:99999;background:rgba(0,0,0,.85);color:#9f9;font:11px/1.35 monospace;padding:6px 8px;border-radius:8px;white-space:pre-wrap;pointer-events:none;display:none";
+    document.body.appendChild(box);
+    const forced = params.has("debug");
+    setInterval(() => {
+      const stuck = lmState === "failed" || (lmState === "ready" && hasCam && !dbg.ok && dbg.readyAt && performance.now() - dbg.readyAt > 6000);
+      if (!forced && !stuck) { box.style.display = "none"; return; }
+      box.style.display = "block";
+      box.textContent =
+        "DIAGNOSTICO  detector=" + lmState + "  camera=" + hasCam + "  mic=" + hasMic + "\n" +
+        "video: ready=" + camVideo.readyState + " " + camVideo.videoWidth + "x" + camVideo.videoHeight + " paused=" + camVideo.paused + "\n" +
+        "deteccoes: chamadas=" + dbg.calls + " ok=" + dbg.ok + " com rosto=" + dbg.faces + " ultima=" + dbg.lastMs + "ms\n" +
+        "boca=" + dbg.mouthW + "px  quadrado=" + dbg.guideW + "px  frameOk=" + frameOk + "\n" +
+        (dbg.skip ? "pulou: " + dbg.skip + "\n" : "") + (dbg.err ? "ERRO: " + dbg.err + "\n" : "") +
+        navigator.userAgent.slice(-80);
+    }, 500);
+  })();
 </script>
 </body>
 </html>
