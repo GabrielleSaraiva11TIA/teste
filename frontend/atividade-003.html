@@ -293,6 +293,60 @@ const SUB_ORIGINAL = bSub.innerHTML;
 const wait = ms => new Promise(r => setTimeout(r, ms));
 let locked = false, runId = 0, pulseTimer = null, askTimer = null;
 
+/* ============================================================
+   PULSEIRA (Python no Raspberry — pulseira.py)
+   ============================================================ */
+// A página pode estar na internet; o Python roda no próprio Raspberry ("localhost" = o aparelho onde a página está aberta).
+// Se o Python estiver desligado, o celular vibra como reserva.
+var API = "http://localhost:5001";
+function enviar(url, dados) {
+  return fetch(url, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(dados) })
+    .then(function(r){ return r.json(); });
+}
+function vibrarPulseira(padrao) {
+  return enviar(API + "/api/pulseira/vibrar", {padrao: padrao})
+    .catch(function(){
+      if (padrao === "sss")           vibrarLocal([120,80,120,80,120]);
+      else if (padrao === "p")        vibrarLocal([120]);
+      else if (padrao === "comemorar") vibrarLocal([100,60,100,60,100,60,200]);
+      else if (padrao === "toque")    vibrarLocal([80,50,80]);
+      else if (padrao === "tambor")   vibrarLocal([150,80,150]);
+      else if (padrao === "sino")     vibrarLocal([200]);
+      else if (padrao === "vento")    vibrarLocal([40,30,40,30,40,30,40,30,40]);
+      else                            vibrarLocal([60]);
+    });
+}
+function pararPulseira() {
+  return enviar(API + "/api/pulseira/parar", {}).catch(function(){});
+}
+function vibrarLocal(p) {
+  try { if (navigator.vibrate) navigator.vibrate(p); } catch(e) {}
+}
+
+const DURACAO_BOTAO_MS = 6000;             // mesmo tempo da faixa "Vibração tátil no pulso"
+// Trechos do vídeo em que a boca faz o "Sss" (em segundos). Ajuste se trocar o vídeo.
+const SEGMENTOS_SSS = [[1.7, 5.2], [8.2, 10.6]];
+
+/* ---------- pulseira junto com o vídeo ---------- */
+let sssTimers = [], sssAtivo = false;
+function sincronizarComVideo(){
+  pararSincronia();
+  const t = video.currentTime;
+  SEGMENTOS_SSS.forEach(([ini, fim]) => {
+    if (fim <= t) return;
+    const espera = Math.max(0, ini - t) * 1000;
+    sssTimers.push(setTimeout(() => { sssAtivo = true; vibrarPulseira("sss"); }, espera));
+  });
+}
+function pararSincronia(){
+  sssTimers.forEach(clearTimeout); sssTimers = [];
+  if (sssAtivo){ sssAtivo = false; pararPulseira(); }
+}
+video.addEventListener('playing', sincronizarComVideo);
+video.addEventListener('pause', pararSincronia);
+video.addEventListener('seeking', pararSincronia);
+video.addEventListener('ended', pararSincronia);
+
 /* ---------- vídeo: elemento <video> real, carregado pausado ---------- */
 (function carregarVideo(){
   video.muted = false; video.controls = false; video.autoplay = false; video.loop = false;
@@ -377,7 +431,7 @@ let ganhouEstrela = false, audioCtx = null;
 function celebrar(){
   resultSuccess.hidden = false;
   if (!ganhouEstrela){ ganhouEstrela = true; starN.textContent = String(Number(starN.textContent) + 1); }
-  if (navigator.vibrate) navigator.vibrate([100,50,100,50,220]);
+  vibrarPulseira("comemorar");
   somSucesso();
   confete();
   setTimeout(() => resultSuccess.scrollIntoView({ behavior:'smooth', block:'nearest' }), 150);
@@ -436,8 +490,10 @@ btnPulso.addEventListener('click', ()=>{
   btnPulso.setAttribute('aria-pressed', on);
   clearTimeout(pulseTimer);
   if (on){
-    if (navigator.vibrate) navigator.vibrate([120,80,120,80,120]);
-    pulseTimer = setTimeout(()=>{ pulseBar.classList.remove('on'); btnPulso.classList.remove('on'); btnPulso.setAttribute('aria-pressed','false'); }, 6000);
+    vibrarPulseira("sss");          // "Sss" na pulseira
+    pulseTimer = setTimeout(()=>{ pulseBar.classList.remove('on'); btnPulso.classList.remove('on'); btnPulso.setAttribute('aria-pressed','false'); }, DURACAO_BOTAO_MS);
+  } else {
+    pararPulseira();                                       // apertou de novo: para
   }
 });
 </script>
