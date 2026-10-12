@@ -183,6 +183,11 @@
     .footer .left{justify-content:center}
   }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* confete de comemoração (igual às outras atividades) */
+  .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:60}
+  .confetti span{position:absolute;top:-14px;width:9px;height:14px;border-radius:2px;animation:confetti-fall 1.9s ease-in forwards}
+  @keyframes confetti-fall{to{transform:translate(var(--dx),105vh) rotate(540deg)}}
 </style>
 </head>
 <body>
@@ -347,7 +352,7 @@ const CONFIG = {
   customDetector: window.LumisFaceDetector || null,
 
   // Ganchos para integrar com o resto do LUMIS
-  onContinue: () => { console.log("→ ir para a etapa 3 (Eco)"); },
+  onContinue: () => { window.location.href = "atividade-003.html"; },   // vai para a etapa 3 (Eco)
   onBack: () => { window.location.href = "../mapa.html"; },
   // Se existir a API real da pulseira, ela é usada no lugar do navigator.vibrate
   bracelet: window.LumisBracelet || null
@@ -528,6 +533,7 @@ function showFramed(manual){
     if (phase !== 'mirror') return;
     setFeedback('😊','Muito bem! Você está tentando com bastante atenção! 🌟',
                 'Cada repetição no seu ritmo ajuda o Lumis a entender seu jeitinho.', true);
+    comemorarAcerto();
   }, CONFIG.reflectionSeconds * 1000);
 }
 function showGuideAgain(){
@@ -599,6 +605,7 @@ function goObserve(){
   $('panelMirror').classList.add('dim');
   $('instructionText').textContent = 'Primeiro, observe o movimento! Depois, faça igualzinho no espelho.';
   $('btnNext').textContent = 'Agora quero ver você! →';
+  $('btnNext').hidden = false;
   setFeedback('🐱','Vamos olhar a boquinha com atenção.','Cada movimento tem o seu tempo. Sem pressa!', false);
   closeCamera();
   playDemo();
@@ -610,11 +617,54 @@ async function goMirror(){
   $('panelMirror').classList.remove('dim'); $('panelMirror').classList.add('focus');
   $('panelDemo').classList.remove('focus');
   $('instructionText').textContent = 'Agora é a sua vez! Olhe a sua boca no espelho e faça igualzinho.';
-  $('btnNext').textContent = 'Muito bem! Vamos continuar →';
+  $('btnNext').hidden = true;      // só aparece depois que a criança acerta (comemoração)
   setFeedback('👀','Olhe a sua boquinha no espelho.','Faça o movimento devagar, no seu ritmo.', false);
   $('camPlaceholder').classList.add('hidden');      // o aviso some assim que o Passo 2 começa
   clearTimeout(reflectionTimer);
-  if (await openCamera() && phase === 'mirror') startFraming();   // o "Muito bem!" aparece depois de enquadrar
+  if (await openCamera()){
+    if (phase === 'mirror') startFraming();   // a comemoração e o botão "continuar" aparecem depois de enquadrar
+  } else if (phase === 'mirror'){
+    $('btnNext').textContent = 'Muito bem! Vamos continuar →'; $('btnNext').hidden = false;   // sem câmera: pode seguir mesmo assim
+  }
+}
+
+/* ---------- Comemoração (confete + som + vibração) e avanço ---------- */
+function confete(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cores = ['#ffd54a','#2f78ff','#36c6ff','#ff8fb1','#7be495'];
+  const wrap = document.createElement('div');
+  wrap.className = 'confetti'; wrap.setAttribute('aria-hidden','true');
+  for (let i = 0; i < 28; i++){
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100 + '%';
+    s.style.background = cores[i % cores.length];
+    s.style.animationDelay = Math.random()*0.4 + 's';
+    s.style.setProperty('--dx', (Math.random()*160 - 80) + 'px');
+    wrap.appendChild(s);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(()=>wrap.remove(), 2600);
+}
+function somSucesso(){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    const ac = new AC(), t = ac.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i)=>{
+      const o = ac.createOscillator(), g = ac.createGain(), st = t + i*0.12;
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, st);
+      g.gain.exponentialRampToValueAtTime(0.3, st + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, st + 0.45);
+      o.connect(g).connect(ac.destination); o.start(st); o.stop(st + 0.5);
+    });
+  }catch(e){}
+}
+// acertou o exercício: comemora e libera o botão "Vamos continuar"
+function comemorarAcerto(){
+  confete(); somSucesso();
+  if (navigator.vibrate) navigator.vibrate([100,50,100,50,220]);
+  $('btnNext').textContent = 'Muito bem! Vamos continuar →';
+  $('btnNext').hidden = false;
 }
 
 /* ---------- Eventos ---------- */
