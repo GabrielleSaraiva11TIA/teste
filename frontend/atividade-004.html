@@ -374,6 +374,124 @@ button:disabled { cursor: not-allowed; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 </style>
+<style id="lumis-tutorial-css">
+/* ============================================================
+   TUTORIAL GUIADO — estilos (todas as classes começam com "lt-")
+   ============================================================ */
+/* Cores do tutorial (combinam com o azul desta atividade) */
+:root { --lt-blue: #0b4fd1; --lt-deep: #0a3bb0; --lt-soft: #e3edff; --lt-ink: #0b1f4d; --lt-muted: #5b6b92; }
+
+html.lt-on, html.lt-on body { overflow: hidden; }
+html.lt-on .page { padding-bottom: 55vh; }
+
+.lt-shield { position: fixed; inset: 0; z-index: 10000; background: transparent; }
+
+.lt-spot {
+  position: fixed; z-index: 10001; pointer-events: none;
+  border-radius: 28px;
+  box-shadow: 0 0 0 9999px rgba(11, 20, 66, 0.62);
+  transition: top .38s ease, left .38s ease, width .38s ease, height .38s ease, border-radius .38s ease;
+}
+.lt-spot::after {
+  content: ""; position: absolute; inset: -4px; border-radius: inherit;
+  border: 3px solid #fff;
+  animation: lt-pulse 1.7s ease-in-out infinite;
+}
+@keyframes lt-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.02); } }
+
+.lt-tip {
+  position: fixed; z-index: 10002;
+  width: min(340px, calc(100vw - 24px));
+  background: #fff; color: var(--lt-ink);
+  border-radius: 22px; padding: 16px 18px;
+  box-shadow: 0 18px 44px rgba(8, 16, 60, 0.38);
+  font-size: 14px; line-height: 1.4;
+}
+.lt-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.lt-count {
+  font-size: 12px; font-weight: 600; color: var(--lt-deep);
+  background: var(--lt-soft); padding: 4px 10px; border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+.lt-dots { display: flex; gap: 5px; }
+.lt-dots i { width: 7px; height: 7px; border-radius: 99px; background: #cfd8f7; }
+.lt-dots i.on { width: 20px; background: var(--lt-blue); }
+.lt-title { margin: 0 0 6px; font-size: 17px; font-weight: 700; line-height: 1.25; text-wrap: balance; }
+.lt-text { margin: 0; font-size: 14.5px; line-height: 1.5; color: #2c3868; }
+.lt-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.lt-legend span {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 999px; background: #f2f5ff;
+}
+.lt-legend b { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.lt-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+.lt-btn {
+  font: inherit; font-weight: 600; font-size: 14px; cursor: pointer;
+  border: 0; border-radius: 999px; padding: 10px 20px;
+}
+.lt-btn.primary { background: var(--lt-blue); color: #fff; margin-left: auto; }
+.lt-btn.primary:hover { background: var(--lt-deep); }
+.lt-btn.ghost { background: transparent; color: var(--lt-deep); padding-inline: 12px; }
+.lt-btn.ghost:hover { background: #e8eeff; }
+.lt-extra {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-top: 12px; padding-top: 10px; border-top: 1px solid #e6ebfb;
+}
+.lt-link {
+  font: inherit; font-weight: 500; font-size: 12.5px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: 0; border-radius: 999px; padding: 6px 10px;
+  color: var(--lt-muted);
+}
+.lt-link:hover { background: #e8eeff; color: var(--lt-deep); }
+.lt-link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lt-btn:focus-visible, .lt-link:focus-visible, .lt-go:focus-visible, .lt-fin-link:focus-visible, .lt-redo:focus-visible {
+  outline: 3px solid #ffb64d; outline-offset: 2px;
+}
+
+.lt-arrow { position: absolute; width: 24px; height: 24px; pointer-events: none; }
+.lt-arrow svg { width: 24px; height: 24px; display: block; animation: lt-nudge 1s ease-in-out infinite; filter: drop-shadow(0 2px 3px rgba(8,16,60,.35)); }
+@keyframes lt-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.lt-tip.pl-bottom .lt-arrow { top: -29px; transform: none; }
+.lt-tip.pl-top .lt-arrow { bottom: -29px; transform: rotate(180deg); }
+.lt-tip.pl-right .lt-arrow { left: -29px; transform: rotate(-90deg); }
+.lt-tip.pl-left .lt-arrow { right: -29px; transform: rotate(90deg); }
+
+.lt-finale {
+  position: fixed; z-index: 10002; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(380px, calc(100vw - 32px));
+  background: #fff; border-radius: 28px; padding: 28px 24px 20px; text-align: center;
+  box-shadow: 0 22px 54px rgba(8, 16, 60, 0.4);
+}
+.lt-badge {
+  width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px;
+  background: var(--lt-soft); color: var(--lt-blue); display: grid; place-items: center;
+}
+.lt-badge svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lt-finale h3 { margin: 0 0 8px; font-size: 22px; font-weight: 700; text-wrap: balance; }
+.lt-finale p { margin: 0 0 18px; color: #2c3868; line-height: 1.5; font-size: 14.5px; }
+.lt-go {
+  font: inherit; font-weight: 700; font-size: 17px; cursor: pointer;
+  width: 100%; border: 0; border-radius: 999px; padding: 14px 24px;
+  background: var(--lt-blue); color: #fff;
+}
+.lt-go:hover { background: var(--lt-deep); }
+.lt-fin-links { display: flex; justify-content: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.lt-fin-link {
+  font: inherit; font-weight: 600; font-size: 14px; cursor: pointer;
+  background: none; border: 0; color: var(--lt-deep); padding: 8px 12px; border-radius: 999px;
+}
+.lt-fin-link:hover { background: #e8eeff; }
+
+.lt-redo svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.lt-redo:hover { background: #eef3ff; }
+
+/* Esta página tem 3 botões no topo: deixa quebrar linha em telas estreitas */
+.subbar { flex-wrap: wrap; }
+.lt-redo { font-family: inherit; }
+
+</style>
 </head>
 <body>
 
@@ -1437,6 +1555,260 @@ button:disabled { cursor: not-allowed; }
   }
 })();
 </script>
+
+<!-- ============================================================
+     TUTORIAL GUIADO — elementos (ficam escondidos até o tutorial começar)
+     ============================================================ -->
+<div class="lt-shield" id="ltShield" hidden></div>
+<div class="lt-spot" id="ltSpot" hidden></div>
+
+<div class="lt-tip" id="ltTip" role="dialog" aria-live="polite" aria-label="Tutorial" hidden>
+  <div class="lt-arrow" id="ltArrow"><svg viewBox="0 0 24 24"><path d="M12 2 21.5 13H15v8.5H9V13H2.5Z" fill="#fff" stroke="#0b4fd1" stroke-width="2" stroke-linejoin="round"/></svg></div>
+  <div id="ltBody"></div>
+</div>
+
+<div class="lt-finale" id="ltFinale" role="dialog" aria-label="Fim do tutorial" hidden>
+  <div class="lt-badge"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.400 2.900 1-6.100L3.200 9.500l6.100-.9z"/></svg></div>
+  <h3>Agora você já sabe como tudo funciona!</h3>
+  <p>Olhe o Lumis com calma, sinta a pulseira e depois faça igualzinho no espelho. Sem pressa!</p>
+  <button class="lt-go" id="ltGo" type="button">Vamos lá!</button>
+  <div class="lt-fin-links">
+    <button class="lt-fin-link" id="ltFinBack" type="button">Voltar</button>
+    <button class="lt-fin-link" id="ltFinRepeat" type="button">Repetir tutorial</button>
+  </div>
+</div>
+
+
+<script id="lumis-tutorial-js">
+/* ============================================================
+   TUTORIAL GUIADO — só explica a interface; não executa nada da fase.
+   Tudo roda dentro desta função, sem mexer nas variáveis da atividade.
+   ============================================================ */
+(function () {
+  // true  = o tutorial abre sozinho só na primeira visita do aparelho
+  // false = abre toda vez que a página é carregada
+  var SO_NA_PRIMEIRA_VEZ = false;
+  var CHAVE_VISTO = 'lumis_tutorial_atividade004_visto';
+
+  var q = function (s) { return document.querySelector(s); };
+  var root = document.documentElement;
+  var shield = q('#ltShield'), spot = q('#ltSpot'), tip = q('#ltTip'), tBody = q('#ltBody'),
+      tArrow = q('#ltArrow'), finale = q('#ltFinale');
+
+  // Botão "Repetir tutorial": entra na linha de cima da página, entre "Voltar para a Missão" e as estrelas
+  var redo = document.createElement('button');
+  redo.id = 'ltRedo'; redo.type = 'button'; redo.className = 'btn-back lt-redo'; redo.hidden = true;
+  redo.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Repetir tutorial';
+  var linhaTopo = q('.subbar');
+  if (linhaTopo) linhaTopo.insertBefore(redo, linhaTopo.lastElementChild);
+  else document.body.appendChild(redo);
+  var PAD = 8, GAP = 30, M = 12;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Cada etapa aponta para elementos reais da atividade (sels = lista; o destaque cobre todos juntos)
+  var STEPS = [
+    { sels: ['.steps'], pref: ['bottom', 'top'], align: 'center', r: 999,
+      title: 'As etapas',
+      text: 'Aqui estão as etapas: 1. Primeiro o Lumis, 2. Agora você (espelho) e 3. Feedback carinhoso. Você começa pela primeira.' },
+    { sels: ['.lesson__who', '.coach-bubble'], pref: ['right', 'bottom', 'top', 'left'], align: 'center', r: 20,
+      title: 'O Lumis mostra primeiro',
+      text: 'O Lumis vai na frente. Toque em “Sssss...” para ver a boca dele fazendo o som.' },
+    { sels: ['#demo'], pref: ['right', 'bottom', 'top', 'left'], align: 'center', r: 20,
+      title: 'Olhe a boca',
+      text: 'Aqui aparece o vídeo da boca fazendo o Sss. Toque no vídeo para começar ou parar.' },
+    { sels: ['#tactile'], pref: ['right', 'top', 'bottom', 'left'], align: 'center', r: 18,
+      title: 'Pista na pulseira',
+      text: 'Quando a boca faz o Sss, a pulseira vibra e estas barrinhas se mexem. Assim você vê e sente o som.' },
+    { sels: ['.observe h2', '.obs-list'], pref: ['left', 'bottom', 'top', 'right'], align: 'center', r: 20,
+      title: 'O que observar',
+      text: 'Três dicas para ficar de olho: o sorriso aberto, os dentes pertinho e o arzinho suave saindo.' },
+    { sels: ['.observe__actions'], pref: ['left', 'bottom', 'top', 'right'], align: 'center', r: 20,
+      title: 'Sentir de novo ou minha vez',
+      text: 'O botão claro mostra o vídeo e a vibração de novo, quantas vezes você quiser. Quando estiver pronto, toque em “Agora é a minha vez!”.' },
+    { sels: ['#btnMyTurn'], pref: ['left', 'top', 'bottom', 'right'], align: 'center', r: 14,
+      title: 'Agora é a minha vez!',
+      text: 'Este botão abre o espelho: a câmera mostra você e o quadrado tracejado indica onde colocar a boca. Se o aparelho pedir câmera e microfone, peça ajuda a um adulto.' }
+  ];
+
+  var cur = 0, active = false;
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function rectOf(step) {
+    var l = 1e9, t = 1e9, r = -1e9, b = -1e9;
+    var lista = (step.narrowSels && root.clientWidth < 520) ? step.narrowSels : step.sels;
+    lista.forEach(function (s) {
+      document.querySelectorAll(s).forEach(function (el) {
+        var c = el.getBoundingClientRect();
+        l = Math.min(l, c.left); t = Math.min(t, c.top); r = Math.max(r, c.right); b = Math.max(b, c.bottom);
+      });
+    });
+    return { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t };
+  }
+
+  function geom(pl, r, tw, th, vw, vh, align, dy) {
+    var left, top, fits, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    if (pl === 'bottom' || pl === 'top') {
+      left = clamp(cx - tw / 2, M, vw - tw - M);
+      top = pl === 'bottom' ? r.bottom + PAD + GAP : r.top - PAD - GAP - th;
+      fits = top >= M && top + th <= vh - M;
+    } else {
+      left = pl === 'right' ? r.right + PAD + GAP : r.left - PAD - GAP - tw;
+      var t;
+      if (align === 'end') t = r.bottom + PAD - th;
+      else if (align === 'start') t = r.top - PAD;
+      else t = cy - th / 2;
+      top = clamp(t + (dy || 0), M, vh - th - M);
+      fits = left >= M && left + tw <= vw - M;
+    }
+    return { pl: pl, left: left, top: top, fits: fits, cx: cx, cy: cy };
+  }
+
+  function setSpot(l, t, w, h, rad, instant) {
+    if (instant) spot.style.transition = 'none';
+    spot.style.left = l + 'px'; spot.style.top = t + 'px';
+    spot.style.width = w + 'px'; spot.style.height = h + 'px';
+    spot.style.borderRadius = rad + 'px';
+    if (instant) { void spot.offsetWidth; spot.style.transition = ''; }
+  }
+
+  function render(i, instant) {
+    var s = STEPS[i];
+    finale.hidden = true;
+    tip.hidden = false;
+
+    var dots = '';
+    for (var k = 0; k < STEPS.length; k++) dots += '<i' + (k === i ? ' class="on"' : '') + '></i>';
+    tBody.innerHTML =
+      '<div class="lt-top"><span class="lt-count">' + (i + 1) + ' de ' + STEPS.length + '</span><span class="lt-dots" aria-hidden="true">' + dots + '</span></div>' +
+      '<h3 class="lt-title">' + s.title + '</h3>' +
+      '<p class="lt-text">' + s.text + '</p>' + (s.extra || '') +
+      '<div class="lt-nav">' +
+        (i > 0 ? '<button class="lt-btn ghost" id="ltBack" type="button">Voltar</button>' : '') +
+        '<button class="lt-btn primary" id="ltNext" type="button">Próximo</button>' +
+      '</div>' +
+      '<div class="lt-extra">' +
+        '<button class="lt-link" id="ltSkip" type="button"><svg viewBox="0 0 24 24"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></svg>Pular tutorial</button>' +
+        (i > 0 ? '<button class="lt-link" id="ltRepeat" type="button"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Repetir tutorial</button>' : '') +
+      '</div>';
+
+    var vw = root.clientWidth, vh = window.innerHeight;
+    var r = rectOf(s);
+    if (vw < 720 || r.top < M + PAD || r.bottom > vh - M - PAD) {
+      var y = window.scrollY + r.top - Math.max(M + PAD, (vh - r.height) / 2);
+      window.scrollTo(0, Math.max(0, y));
+      r = rectOf(s);
+    }
+    var tw = tip.offsetWidth, th = tip.offsetHeight, chosen = null, n;
+    for (n = 0; n < s.pref.length; n++) {
+      var g = geom(s.pref[n], r, tw, th, vw, vh, s.align, s.dy);
+      if (g.fits) { chosen = g; break; }
+    }
+    if (!chosen) {
+      var need = (r.bottom + PAD + GAP + th + M) - vh;
+      var allow = r.top - PAD - M;
+      var d = Math.max(0, Math.min(need, allow));
+      if (d > 0) { window.scrollBy(0, d); r = rectOf(s); }
+      var gb = geom('bottom', r, tw, th, vw, vh, s.align, s.dy);
+      var gt = geom('top', r, tw, th, vw, vh, s.align, s.dy);
+      chosen = gb.fits ? gb : (gt.fits ? gt : gb);
+      chosen.top = clamp(chosen.top, M, vh - th - M);
+    }
+
+    setSpot(r.left - PAD, r.top - PAD, r.width + PAD * 2, r.height + PAD * 2,
+            Math.min(s.r + PAD, (r.height + PAD * 2) / 2), instant);
+
+    tip.style.left = chosen.left + 'px';
+    tip.style.top = chosen.top + 'px';
+    tip.className = 'lt-tip pl-' + chosen.pl;
+    tArrow.style.left = tArrow.style.top = '';
+    if (chosen.pl === 'top' || chosen.pl === 'bottom') {
+      tArrow.style.left = (clamp(chosen.cx - chosen.left, 30, tw - 30) - 12) + 'px';
+    } else {
+      tArrow.style.top = (clamp(chosen.cy - chosen.top, 30, th - 30) - 12) + 'px';
+    }
+
+    if (!reduce && tip.animate) {
+      tip.animate([{ opacity: 0, translate: '0 6px' }, { opacity: 1, translate: '0 0' }], { duration: 220, easing: 'ease-out' });
+    }
+    var nb = q('#ltNext'); if (nb) nb.focus({ preventScroll: true, focusVisible: false });
+  }
+
+  function showFinale() {
+    cur = STEPS.length;
+    tip.hidden = true;
+    setSpot(root.clientWidth / 2, window.innerHeight / 2, 0, 0, 0, false);
+    finale.hidden = false;
+    q('#ltGo').focus({ preventScroll: true, focusVisible: false });
+  }
+
+  function go(i) {
+    if (i >= STEPS.length) { showFinale(); return; }
+    cur = Math.max(0, i);
+    render(cur, false);
+  }
+
+  function marcarVisto() {
+    try { localStorage.setItem(CHAVE_VISTO, '1'); } catch (e) {}
+  }
+
+  function start() {
+    active = true; cur = 0;
+    redo.hidden = true;
+    root.classList.add('lt-on');
+    window.scrollTo(0, 0);
+    shield.hidden = false; spot.hidden = false;
+    render(0, true);
+  }
+
+  // Encerra o tutorial e deixa a criança na atividade, pronta para responder
+  function finish() {
+    marcarVisto();
+    active = false;
+    shield.hidden = true; spot.hidden = true; tip.hidden = true; finale.hidden = true;
+    root.classList.remove('lt-on');
+    redo.hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  tip.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'ltNext') go(cur + 1);
+    if (b.id === 'ltBack') go(cur - 1);
+    if (b.id === 'ltSkip') finish();
+    if (b.id === 'ltRepeat') start();
+  });
+  q('#ltGo').addEventListener('click', finish);
+  q('#ltFinBack').addEventListener('click', function () { go(STEPS.length - 1); });
+  q('#ltFinRepeat').addEventListener('click', start);
+  redo.addEventListener('click', start);
+
+  document.addEventListener('keydown', function (e) {
+    if (!active) return;
+    if (e.key === 'ArrowRight' && cur < STEPS.length) go(cur + 1);
+    if (e.key === 'ArrowLeft' && cur > 0) go(cur - 1);
+  });
+
+  var rt;
+  window.addEventListener('resize', function () {
+    if (!active) return;
+    clearTimeout(rt);
+    rt = setTimeout(function () { if (cur >= STEPS.length) showFinale(); else render(cur, true); }, 80);
+  });
+
+  function jaViu() {
+    try { return localStorage.getItem(CHAVE_VISTO) === '1'; } catch (e) { return false; }
+  }
+  function boot() {
+    if (SO_NA_PRIMEIRA_VEZ && jaViu()) { redo.hidden = false; return; }
+    start();
+  }
+  if (document.fonts && document.fonts.ready) {
+    Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 1200); })]).then(boot);
+  } else { boot(); }
+})();
+
+</script>
 <!-- Reconectar o aparelho do Lumis: gera um código novo, a fono digita no celular -->
 <style>
 .lumis-dock{position:fixed;left:12px;bottom:12px;z-index:2147483000;display:flex;gap:8px}
@@ -1535,7 +1907,7 @@ button:disabled { cursor: not-allowed; }
 
   $("lumisRecBtn").addEventListener("click", function(){ bg.classList.add("on"); criar(); });
   function sairAparelho(){
-    try{ localStorage.removeItem("lumis_device_token"); localStorage.removeItem("lumis_fila_tent"); }catch(e){}
+    try{ localStorage.removeItem("lumis_device_token"); localStorage.removeItem("lumis_fila_tent"); localStorage.removeItem("lumis_crianca_ativa"); }catch(e){}
     location.replace(location.pathname.indexOf("/frontend/") > -1 ? "inicio.html?reset=1" : "frontend/inicio.html?reset=1");
   }
   $("lumisRecSair").addEventListener("click", pedirSair);
@@ -1586,6 +1958,122 @@ button:disabled { cursor: not-allowed; }
     var f = fila(); f.push({ atividade:"a" + m[1], resultado:resultado, t:Date.now(), k:t.slice(-16) }); guarda(f); enviar();
   };
   enviar(); window.addEventListener("online", enviar);
+})();
+</script>
+<!-- Criança do aparelho: círculo (menina/menino) ao lado das estrelas; ao tocar, mostra os dados cadastrados pelo responsável -->
+<style>
+.lumis-kid-wrap{display:inline-flex;align-items:center;gap:8px;flex:none}
+.lumis-kid{appearance:none;cursor:pointer;width:38px;height:38px;border-radius:50%;padding:0;border:2px solid #fff;display:grid;place-items:center;overflow:hidden;background:#eef2fb;box-shadow:0 4px 14px rgba(20,60,160,.18);flex:none}
+.lumis-kid:active{transform:scale(.96)}
+.lumis-kid svg{width:100%;height:100%;display:block}
+.lumis-kid.menina{background:#ffe0ec}.lumis-kid.menino{background:#dbe8ff}
+.lumis-kid-fixed{position:fixed;top:14px;right:14px;z-index:2147483000}
+.lumis-kid-bg{position:fixed;inset:0;z-index:2147483003;display:none;place-items:center;padding:16px;background:rgba(11,31,77,.5);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lumis-kid-bg.on{display:grid}
+.lumis-kid-box{width:min(100%,360px);max-height:90vh;overflow:auto;background:#fff;color:#0b1f4d;border-radius:22px;padding:20px 18px 16px;box-shadow:0 20px 50px rgba(11,31,77,.35)}
+.lumis-kid-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.lumis-kid-top .lumis-kid{width:56px;height:56px;box-shadow:none;border-color:#e5eeff;cursor:default}
+.lumis-kid-top h3{margin:0;font-size:20px;line-height:1.2}
+.lumis-kid-top small{display:block;font-size:13px;color:#5b6b92;margin-top:2px}
+.lumis-kid-box dl{margin:0 0 14px;display:grid;gap:8px}
+.lumis-kid-box dt{font-size:12px;font-weight:700;color:#5b6b92;text-transform:uppercase;letter-spacing:.04em}
+.lumis-kid-box dd{margin:0;font-size:15px;font-weight:600}
+.lumis-kid-box p{margin:0 0 14px;font-size:14px;line-height:1.4;color:#5b6b92}
+.lumis-kid-box button.fechar{appearance:none;border:0;cursor:pointer;width:100%;border-radius:12px;padding:12px;font:700 15px system-ui,sans-serif;background:#e5eeff;color:#0b4fd1}
+</style>
+<div class="lumis-kid-bg" id="lumisKidBg">
+  <div class="lumis-kid-box" role="dialog" aria-modal="true" aria-labelledby="lumisKidNome">
+    <div class="lumis-kid-top"><span class="lumis-kid" id="lumisKidGrande" aria-hidden="true"></span><div><h3 id="lumisKidNome">Criança</h3><small id="lumisKidSub"></small></div></div>
+    <div id="lumisKidCorpo"></div>
+    <button type="button" class="fechar" id="lumisKidFechar">Fechar</button>
+  </div>
+</div>
+<script>
+(function(){
+  var h = location.hostname, p = location.port;
+  var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
+  var $ = function(i){ return document.getElementById(i); };
+  var ROSTO = '<circle cx="16" cy="17.5" r="8" fill="#ffd9c2"/><circle cx="13" cy="18.2" r="1" fill="#2b1b12"/><circle cx="19" cy="18.2" r="1" fill="#2b1b12"/><path d="M13.6 21.4q2.4 2 4.8 0" stroke="#c0564a" fill="none" stroke-width="1.2" stroke-linecap="round"/>';
+  var ICONES = {
+    menina: '<svg viewBox="0 0 32 32" aria-hidden="true">' + ROSTO + '<path d="M8 16.5c0-6 3.6-9.5 8-9.5s8 3.500 8 9.500c-2-3-4.800-4.200-8-4.200s-6 1.200-8 4.200z" fill="#7a3b1e"/><circle cx="7.300" cy="16" r="3" fill="#7a3b1e"/><circle cx="24.700" cy="16" r="3" fill="#7a3b1e"/><path d="M14 8.200l2 1.300 2-1.300-.4 3-1.600-.8-1.600.8z" fill="#e0457b"/></svg>',
+    menino: '<svg viewBox="0 0 32 32" aria-hidden="true">' + ROSTO + '<path d="M8 16c-.6-5.500 3-9 8-9s8.600 3.500 8 9c-1.200-2.200-3-3.600-5-3.800-2-.8-6-.8-8 .8-1.200.4-2.200 1.400-3 3z" fill="#3b2a1e"/></svg>',
+    nenhum: '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="12" r="5" fill="#9db0d6"/><path d="M6 27c1-6 5.500-8.500 10-8.500S25 21 26 27z" fill="#9db0d6"/></svg>'
+  };
+  var SEL = ['#pillEstrelas', '.row2 > .chip:last-child', '.topbar > .pill.stars', '.topbar > .pill:last-child', '.subbar .stars', '.stars'];
+  var info = null, badge = null, KEY = "lumis_crianca_ativa";
+  function tok(){ try{ return localStorage.getItem("lumis_device_token"); }catch(e){ return null; } }
+  function sexoDe(i){ return i && i.crianca ? (i.crianca.sexo === "menina" || i.crianca.sexo === "menino" ? i.crianca.sexo : "nenhum") : "nenhum"; }
+
+  function montar(){
+    badge = document.createElement("button"); badge.type = "button"; badge.className = "lumis-kid";
+    var alvo = null, i;
+    for (i = 0; i < SEL.length && !alvo; i++){ try{ alvo = document.querySelector(SEL[i]); }catch(e){} }
+    if (alvo && alvo.parentNode){
+      var wrap = document.createElement("span"); wrap.className = "lumis-kid-wrap";
+      alvo.parentNode.insertBefore(wrap, alvo); wrap.appendChild(alvo); wrap.appendChild(badge);
+    } else { badge.className += " lumis-kid-fixed"; document.body.appendChild(badge); }
+    badge.addEventListener("click", abrir);
+    pintar();
+  }
+  function pintar(){
+    if (!badge) return;
+    var s = sexoDe(info), nome = info && info.crianca && info.crianca.nome;
+    badge.className = badge.className.replace(/\b(menina|menino)\b/g, "").trim() + (s !== "nenhum" ? " " + s : "");
+    badge.innerHTML = ICONES[s];
+    badge.setAttribute("aria-label", nome ? "Informações de " + nome : "Informações da criança");
+    badge.title = nome || "Criança do aparelho";
+  }
+
+  function sincronizarMapa(){
+    var id = String(info && info.crianca ? info.crianca.id : 0), antes = null, t = tok();
+    try{ antes = localStorage.getItem(KEY); localStorage.setItem(KEY, id); }catch(e){}
+    if (antes === null || antes === id || !t) return;
+    // outra criança passou a jogar neste aparelho: o mapa acompanha o progresso dela
+    fetch(API + "/api/dispositivo/progresso", { headers:{ authorization:"Bearer " + t } })
+      .then(function(r){ return r.ok ? r.json() : { ilhas: [] }; })
+      .then(function(d){
+        try{ localStorage.setItem("lumis_progresso", JSON.stringify({ ilhas: d.ilhas || [] })); }catch(e){}
+        if (/mapa\.html$/.test(location.pathname)) location.reload();
+      }).catch(function(){});
+  }
+
+  function carregar(){
+    var t = tok(); if (!t) return Promise.resolve();
+    return fetch(API + "/api/dispositivo/me", { headers:{ authorization:"Bearer " + t } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ if (d){ info = d; pintar(); sincronizarMapa(); } })
+      .catch(function(){});
+  }
+
+  function linha(t, v){ return v ? "<dt>" + t + "</dt><dd>" + String(v).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }) + "</dd>" : ""; }
+  function desenhar(){
+    var c = info && info.crianca, corpo = $("lumisKidCorpo");
+    $("lumisKidGrande").className = "lumis-kid " + (sexoDe(info) !== "nenhum" ? sexoDe(info) : "");
+    $("lumisKidGrande").innerHTML = ICONES[sexoDe(info)];
+    if (!c){
+      $("lumisKidNome").textContent = "Nenhuma criança escolhida";
+      $("lumisKidSub").textContent = info && info.profissional ? "Conta de " + info.profissional : "";
+      corpo.innerHTML = "<p>" + (info && info.profissional
+        ? "No celular, abra a lista de pacientes, escolha a criança e toque em <b>Usar no aparelho do Lumis</b>. Enquanto isso, o progresso não é registrado."
+        : "Ainda não há dados da criança neste aparelho.") + "</p>";
+      return;
+    }
+    $("lumisKidNome").textContent = c.nome || "Criança";
+    $("lumisKidSub").textContent = c.sexo === "menina" ? "Menina" : c.sexo === "menino" ? "Menino" : "";
+    var idade = c.idadeAnos == null ? "" : c.idadeAnos + (c.idadeAnos === 1 ? " ano" : " anos") + (c.idadeMeses ? " e " + c.idadeMeses + (c.idadeMeses === 1 ? " mês" : " meses") : "");
+    corpo.innerHTML = "<dl>" + linha("Perda auditiva", c.grau) + linha("Idade no diagnóstico", idade) + linha("Causa", c.causa) +
+      linha("Exames realizados", (c.exames || []).join(", ")) + linha("Condições associadas", (c.condicoes || []).join(", ")) +
+      linha("Responsável", info.responsavel) + "</dl>";
+    if (!corpo.innerHTML.replace(/<\/?dl>/g, "")) corpo.innerHTML = "<p>O responsável ainda não preencheu os dados da criança.</p>";
+  }
+  function abrir(){ desenhar(); $("lumisKidBg").classList.add("on"); carregar().then(desenhar); }
+  $("lumisKidFechar").addEventListener("click", function(){ $("lumisKidBg").classList.remove("on"); });
+  $("lumisKidBg").addEventListener("click", function(e){ if (e.target === $("lumisKidBg")) $("lumisKidBg").classList.remove("on"); });
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", montar); else montar();
+  carregar();
+  setInterval(carregar, 15000);
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) carregar(); });
 })();
 </script>
 </body>
