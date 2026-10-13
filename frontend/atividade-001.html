@@ -1210,13 +1210,13 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   function sincronizarMapa(){
     var id = String(info && info.crianca ? info.crianca.id : 0), antes = null, t = tok();
     try{ antes = localStorage.getItem(KEY); localStorage.setItem(KEY, id); }catch(e){}
-    if (antes === null || antes === id || !t) return;
+    if (antes === null || antes === id || !t || id === "0") return;
     // outra criança passou a jogar neste aparelho: o mapa acompanha o progresso dela
     fetch(API + "/api/dispositivo/progresso", { headers:{ authorization:"Bearer " + t } })
       .then(function(r){ return r.ok ? r.json() : { ilhas: [] }; })
       .then(function(d){
         try{ localStorage.setItem("lumis_progresso", JSON.stringify({ ilhas: d.ilhas || [] })); }catch(e){}
-        if (/mapa\.html$/.test(location.pathname)) location.reload();
+        if (/mapa\.html$/.test(location.pathname)) location.reload(); else location.href = "../mapa.html";
       }).catch(function(){});
   }
 
@@ -1237,7 +1237,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
       $("lumisKidNome").textContent = "Nenhuma criança escolhida";
       $("lumisKidSub").textContent = info && info.profissional ? "Conta de " + info.profissional : "";
       corpo.innerHTML = "<p>" + (info && info.profissional
-        ? "No celular, abra a lista de pacientes, escolha a criança e toque em <b>Usar no aparelho do Lumis</b>. Enquanto isso, o progresso não é registrado."
+        ? "No celular, abra a lista de pacientes, escolha a criança e toque em <b>Usar no aparelho do Lumis</b>. O progresso já está sendo contado e passa para a criança escolhida."
         : "Ainda não há dados da criança neste aparelho.") + "</p>";
       return;
     }
@@ -1255,7 +1255,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", montar); else montar();
   carregar();
-  setInterval(carregar, 15000);
+  setInterval(carregar, 4000);
   document.addEventListener("visibilitychange", function(){ if (!document.hidden) carregar(); });
 })();
 </script>

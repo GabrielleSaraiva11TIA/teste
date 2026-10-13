@@ -366,14 +366,17 @@ app.post("/api/dispositivo/tentativas", limite(120, 60 * 1000), wrap(async (req,
     let payload
     try { payload = lerToken(req, "dispositivo") } catch { return erro(res, 401, "Aparelho não autenticado.") }
     const cid = await criancaDoAparelho(payload)
-    if (!cid) return res.json({ ok: true, ignorado: true })       // aparelho da fono sem criança escolhida
+    // aparelho da fono sem criança escolhida: guarda o progresso, que passa para a criança quando ela for escolhida
+    const pend = cid ? 0 : (payload.pid || await pareamentoDaFono(payload.rid))
+    if (!cid && !pend) return res.json({ ok: true, ignorado: true })
     const lista = Array.isArray(req.body.eventos) ? req.body.eventos : [req.body]
     const validos = lista.slice(0, 50).filter(e => e && ATIVIDADES[e.atividade] && ["acerto", "erro"].includes(e.resultado))
     for (const e of validos) {
         const quando = Number(e.t) > 0 && Date.now() - Number(e.t) < 14 * 86400000 && Number(e.t) <= Date.now()
             ? new Date(Number(e.t)) : new Date()
-        await q("INSERT INTO lumis_tentativas (crianca_id, atividade, resultado, criado_em) VALUES (?, ?, ?, ?)",
-            [cid, e.atividade, e.resultado, quando.toISOString().slice(0, 19).replace("T", " ")])
+        const dh = quando.toISOString().slice(0, 19).replace("T", " ")
+        if (cid) await q("INSERT INTO lumis_tentativas (crianca_id, atividade, resultado, criado_em) VALUES (?, ?, ?, ?)", [cid, e.atividade, e.resultado, dh])
+        else await q("INSERT INTO lumis_tentativas_pend (pareamento_id, atividade, resultado, criado_em) VALUES (?, ?, ?, ?)", [pend, e.atividade, e.resultado, dh])
     }
     res.json({ ok: true, gravados: validos.length })
 }))
@@ -383,7 +386,12 @@ app.get("/api/dispositivo/progresso", wrap(async (req, res) => {
     let payload
     try { payload = lerToken(req, "dispositivo") } catch { return erro(res, 401, "Aparelho não autenticado.") }
     const cid = await criancaDoAparelho(payload)
-    if (!cid) return res.json({ ilhas: [] })
+    if (!cid) {
+        const pid = payload.pid || await pareamentoDaFono(payload.rid)
+        if (!pid) return res.json({ ilhas: [] })
+        const [p] = await q("SELECT COUNT(*) AS n FROM lumis_tentativas_pend WHERE pareamento_id = ? AND atividade = 'a8' AND resultado = 'acerto'", [pid])
+        return res.json({ ilhas: Number(p.n) > 0 ? [1] : [] })
+    }
     const [r] = await q("SELECT COUNT(*) AS n FROM lumis_tentativas WHERE crianca_id = ? AND atividade = 'a8' AND resultado = 'acerto'", [cid])
     res.json({ ilhas: Number(r.n) > 0 ? [1] : [] })
 }))
@@ -728,7 +736,11 @@ app.put("/api/profissional/aparelho", exigirUsuario("profissional"), limite(60, 
     const pid = await pareamentoDaFono(req.usuario.id)
     if (!pid) return erro(res, 409, "Conecte o aparelho do Lumis primeiro (menu da conta > Conectar aparelho).")
     await q("INSERT INTO lumis_aparelho_ativo (pareamento_id, crianca_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE crianca_id = VALUES(crianca_id)", [pid, v.crianca_id])
-    res.json({ ok: true })
+    // o que já foi jogado antes de escolher a criança passa para ela
+    const [mv] = await q("SELECT COUNT(*) AS n FROM lumis_tentativas_pend WHERE pareamento_id = ?", [pid])
+    await q("INSERT INTO lumis_tentativas (crianca_id, atividade, resultado, criado_em) SELECT ?, atividade, resultado, criado_em FROM lumis_tentativas_pend WHERE pareamento_id = ?", [v.crianca_id, pid])
+    await q("DELETE FROM lumis_tentativas_pend WHERE pareamento_id = ?", [pid])
+    res.json({ ok: true, aproveitadas: Number(mv.n) })
 }))
 
 app.delete("/api/profissional/aparelho", exigirUsuario("profissional"), wrap(async (req, res) => {

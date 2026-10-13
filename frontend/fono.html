@@ -27,6 +27,15 @@ h1,h2,h3,p{margin:0}
 .apbar{margin:10px 0 2px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
 .apbar small{color:var(--ink2);font-size:13px}
 .apbar.on{background:#e3f6ea;color:#14633a;border-radius:12px;padding:10px 12px;font-size:14px}
+.apconf-bg{position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:16px;background:rgba(20,32,60,.45)}
+.apconf-bg.on{display:grid}
+.apconf{width:min(100%,340px);background:#fff;border-radius:22px;padding:22px 18px 16px;text-align:center;box-shadow:0 18px 50px rgba(20,32,60,.3)}
+.apconf h3{margin:0 0 6px;font-size:19px;color:var(--ink)}
+.apconf p{margin:0 0 16px;font-size:14.5px;line-height:1.4;color:var(--ink2)}
+.apconf .acts{display:flex;gap:10px}
+.apconf .acts button{flex:1;appearance:none;border:0;cursor:pointer;border-radius:12px;padding:12px 10px;font:700 15px inherit;font-family:inherit}
+.apconf .nao{background:var(--blue50);color:var(--blue-d)}
+.apconf .sim{background:var(--blue);color:#fff}
 .aptag{display:inline-block;margin-left:8px;background:#e3f6ea;color:#14633a;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700;vertical-align:middle}
 
 .vinc{font-size:13.5px;line-height:1.4;padding:10px 12px;border-radius:12px;background:#eef2fb;color:var(--ink2);margin:0}
@@ -494,7 +503,7 @@ function paintAparelho(p){
   var on=S.ap&&S.ap.pacienteId===p._id;
   el.innerHTML=on
     ?'<div class="apbar on"><span>No aparelho agora: <b>'+esc(firstName(p))+'</b> está jogando.</span><button type="button" class="linkbtn" data-act="ap-stop">Parar</button></div>'
-    :'<div class="apbar"><button type="button" class="btn btn-primary" data-act="ap-use">Usar no aparelho do Lumis</button><small>O aparelho passa a registrar o progresso de '+esc(firstName(p))+'.</small></div>';
+    :'<div class="apbar"><button type="button" class="btn btn-primary" data-act="ap-use">Usar no aparelho do Lumis</button><small>Abre o mapa no aparelho com a conta de '+esc(firstName(p))+'.</small></div>';
 }
 
 /* ---------- desempenho real nas atividades (vem do banco) ---------- */
@@ -1033,10 +1042,18 @@ function submitPlan(f){
 function guard(){if(S.dirty){toast('Salve ou cancele as alterações antes de continuar.',true);return true}return false}
 var ACT={
   'ap-use':function(b){
-    var p=cur();if(!p)return;b.disabled=true;
-    apiReq('PUT','/api/profissional/aparelho',{pacienteId:p._id}).then(function(){
-      S.ap={conectado:true,pacienteId:p._id};paintAparelho(p);toast('Aparelho pronto: '+firstName(p)+' já pode jogar.');
-    },function(e){b.disabled=false;toast((e&&e.msg)||'Não foi possível usar o aparelho agora.',true)});
+    var p=cur();if(!p)return;
+    var bg=$('#apConf');if(!bg){bg=document.createElement('div');bg.id='apConf';bg.className='apconf-bg';document.body.appendChild(bg)}
+    bg.innerHTML='<div class="apconf" role="alertdialog" aria-modal="true"><h3>Selecionar '+esc(firstName(p))+'?</h3><p>Deseja selecionar '+esc(firstName(p))+' para ver o progresso? O que já foi jogado no aparelho passa para a conta dela e o mapa abre com ela.</p><div class="acts"><button type="button" class="nao" id="apNao">Não</button><button type="button" class="sim" id="apSim">Sim</button></div></div>';
+    bg.classList.add('on');
+    function fechar(){bg.classList.remove('on')}
+    $('#apNao').onclick=fechar;bg.onclick=function(e){if(e.target===bg)fechar()};
+    $('#apSim').onclick=function(){
+      this.disabled=true;
+      apiReq('PUT','/api/profissional/aparelho',{pacienteId:p._id}).then(function(){
+        fechar();S.ap={conectado:true,pacienteId:p._id};paintAparelho(p);toast(firstName(p)+' selecionada. O mapa abre no aparelho com a conta dela.');
+      },function(e){fechar();toast((e&&e.msg)||'Não foi possível usar o aparelho agora.',true)});
+    };
   },
   'ap-stop':function(){
     var p=cur();apiReq('DELETE','/api/profissional/aparelho').then(function(){S.ap={conectado:true,pacienteId:null};paintAparelho(p);toast('Aparelho liberado.')},function(){toast('Não foi possível liberar o aparelho.',true)});

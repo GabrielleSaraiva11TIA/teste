@@ -154,3 +154,16 @@ CREATE TABLE IF NOT EXISTS lumis_aparelho_ativo (
   CONSTRAINT fk_lumis_apativo_crianca FOREIGN KEY (crianca_id)
     REFERENCES lumis_criancas(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Progresso feito no aparelho da fono antes de ela escolher a criança.
+-- Quando ela escolhe, estas linhas passam para a criança (lumis_tentativas).
+CREATE TABLE IF NOT EXISTS lumis_tentativas_pend (
+  id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  pareamento_id  INT UNSIGNED NOT NULL,
+  atividade      VARCHAR(8) NOT NULL,
+  resultado      ENUM('acerto','erro') NOT NULL,
+  criado_em      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY ix_lumis_pend_pareamento (pareamento_id),
+  CONSTRAINT fk_lumis_pend_pareamento FOREIGN KEY (pareamento_id)
+    REFERENCES lumis_pareamentos(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
