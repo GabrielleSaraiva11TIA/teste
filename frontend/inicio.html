@@ -482,6 +482,10 @@ body{
         concluido = true;
         store(KEY_TOKEN, d.deviceToken);
         store(KEY_PAR, null);
+        // o mapa continua de onde a criança parou (as ilhas concluídas ficam guardadas na conta)
+        api("/api/dispositivo/progresso", { headers:{ authorization:"Bearer " + d.deviceToken } }).then(function(r){
+          if (r.status === 200 && r.data && r.data.ilhas && r.data.ilhas.length) store("lumis_progresso", JSON.stringify({ ilhas: r.data.ilhas }));
+        }).catch(function(){});
         mostrarCarregando(); setProgresso(100);
         return;
       }
@@ -597,6 +601,7 @@ body{
     // neste aparelho é descartada. A pagina5 só abre depois de um novo pareamento concluído.
     store(KEY_TOKEN, null);
     store("lumis_progresso", null);      // progresso do mapa também recomeça do zero
+    store("lumis_crianca_ativa", null);
     iniciarPareamento();
   }
   iniciar();

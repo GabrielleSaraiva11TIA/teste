@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS lumis_consentimentos (
 CREATE TABLE IF NOT EXISTS lumis_criancas (
   id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   responsavel_id  INT UNSIGNED NOT NULL,
-  nome            VARCHAR(100) NULL,               -- ainda não existe no formulário
+  nome            VARCHAR(100) NULL,               -- nome da criança (cadastro do responsável)
+  sexo            VARCHAR(10) NULL,                -- 'menina' ou 'menino' (símbolo no aparelho)
   criado_em       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY ix_lumis_criancas_resp (responsavel_id),
   CONSTRAINT fk_lumis_crianca_resp FOREIGN KEY (responsavel_id)
@@ -140,4 +141,16 @@ CREATE TABLE IF NOT EXISTS lumis_vinculos (
   KEY ix_lumis_vinc_email (email_responsavel),
   CONSTRAINT fk_lumis_vinc_prof FOREIGN KEY (profissional_id)
     REFERENCES lumis_usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Aparelho ligado pela fonoaudióloga: qual criança está jogando agora.
+-- A fono escolhe o paciente no celular e o aparelho passa a registrar o desempenho dessa criança.
+CREATE TABLE IF NOT EXISTS lumis_aparelho_ativo (
+  pareamento_id  INT UNSIGNED PRIMARY KEY,
+  crianca_id     INT UNSIGNED NOT NULL,
+  atualizado_em  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_lumis_apativo_pareamento FOREIGN KEY (pareamento_id)
+    REFERENCES lumis_pareamentos(id) ON DELETE CASCADE,
+  CONSTRAINT fk_lumis_apativo_crianca FOREIGN KEY (crianca_id)
+    REFERENCES lumis_criancas(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

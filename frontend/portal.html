@@ -610,6 +610,18 @@ svg.i.f{fill:currentColor;stroke:none}
 
       <div class="dg-callout"><span class="ic"><svg class="i"><use href="#i-heart"/></svg></span><div><b>Cuidado acolhedor e confidencial</b><span>Todas as respostas são sigilosas e ajudam a calibrar as atividades lúdicas do Lumis com carinho e precisão médica.</span></div></div>
 
+      <!-- 0 · sobre a criança -->
+      <div class="q" id="q0">
+        <div class="q-head"><h3>Sobre a criança</h3><div class="tools"><span class="q-badge">Obrigatório</span></div></div>
+        <p class="q-sub">O nome e o símbolo aparecem no aparelho do Lumis, ao lado das estrelas.</p>
+        <div class="field" style="margin-top:12px"><svg class="i"><use href="#i-smile"/></svg><input id="dgNome" type="text" maxlength="100" autocomplete="off" placeholder="Nome da criança" aria-label="Nome da criança"></div>
+        <div class="chips" id="chSexo" style="margin-top:12px">
+          <button type="button" class="chip" data-sexo="menina">Menina</button>
+          <button type="button" class="chip" data-sexo="menino">Menino</button>
+        </div>
+        <p class="ferr" hidden></p>
+      </div>
+
       <!-- 1 -->
       <div class="q" id="q1">
         <div class="q-head"><h3>1. A criança possui diagnóstico de perda auditiva?</h3><div class="tools"><svg class="i"><use href="#i-ear"/></svg><button type="button" class="edit" data-edit="q1">Editar</button></div></div>
@@ -758,7 +770,7 @@ svg.i.f{fill:currentColor;stroke:none}
         <button class="ib" type="button" aria-label="Notificações" data-soon><svg class="i"><use href="#i-bell"/></svg></button>
         <button class="ib me" type="button" aria-label="Menu do Responsável" id="geralMenu"><svg class="i"><use href="#i-user"/></svg></button>
       </div>
-      <h1 class="h1">Como está a jornada?</h1>
+      <h1 class="h1" id="gTitulo">Como está a jornada?</h1>
       <p class="lead" style="margin-top:6px">Acompanhe com carinho cada pequena grande conquista</p>
       <span class="demo-tag" id="gAviso" hidden></span>
       <div id="gVinc"></div>
@@ -1241,7 +1253,7 @@ svg.i.f{fill:currentColor;stroke:none}
   /* ============================================================
      DIAGNÓSTICO E HISTÓRICO CLÍNICO
      ============================================================ */
-  var D = { grau:null, anos:"", meses:"", causa:"", fez:null, exames:[], laudo:null, cond:[], outra:"" };
+  var D = { nome:"", sexo:null, grau:null, anos:"", meses:"", causa:"", fez:null, exames:[], laudo:null, cond:[], outra:"" };
   var EXAME_IDS = ["audiometria","bera","eoa","impedanciometria"];
 
   (function popularIdade(){
@@ -1266,6 +1278,8 @@ svg.i.f{fill:currentColor;stroke:none}
   function pintarDiag(){
     reportarDiag();
     $$("#chGrau .chip").forEach(function(c){ c.classList.toggle("on", c.getAttribute("data-grau") === D.grau); });
+    $$("#chSexo .chip").forEach(function(c){ c.classList.toggle("on", c.getAttribute("data-sexo") === D.sexo); });
+    $("dgNome").value = D.nome;
     $("idAnos").value = D.anos; $("idMeses").value = D.meses;
     $("age").classList.toggle("set", D.anos !== "" && D.meses !== "");
     $("dgCausa").value = D.causa;
@@ -1295,7 +1309,8 @@ svg.i.f{fill:currentColor;stroke:none}
 
   function carregarDiag(){
     var d = S.me.diagnostico;
-    D = { grau:null, anos:"", meses:"", causa:"", fez:null, exames:[], laudo:null, cond:[], outra:"" };
+    D = { nome:"", sexo:null, grau:null, anos:"", meses:"", causa:"", fez:null, exames:[], laudo:null, cond:[], outra:"" };
+    var kid = S.me.crianca; if (kid){ D.nome = kid.nome || ""; D.sexo = kid.sexo || null; }
     if (d){
       D.grau = d.grau; D.anos = String(d.idadeAnos); D.meses = String(d.idadeMeses); D.causa = d.causa;
       D.fez = d.fezExames; D.exames = d.exames.slice(); D.laudo = d.laudo; D.cond = d.condicoes.slice(); D.outra = d.outraCondicao;
@@ -1304,6 +1319,8 @@ svg.i.f{fill:currentColor;stroke:none}
   }
 
   $$("#chGrau .chip").forEach(function(c){ c.addEventListener("click", function(){ D.grau = c.getAttribute("data-grau"); pintarDiag(); setErr(c, ""); }); });
+  $$("#chSexo .chip").forEach(function(c){ c.addEventListener("click", function(){ D.sexo = c.getAttribute("data-sexo"); pintarDiag(); setErr(c, ""); }); });
+  $("dgNome").addEventListener("input", function(){ D.nome = this.value; if (D.nome.trim().length >= 2) setErr(this, ""); });
   $("idAnos").addEventListener("change", function(){ D.anos = this.value; pintarDiag(); if (D.anos !== "" && D.meses !== "") setErr(this, ""); });
   $("idMeses").addEventListener("change", function(){ D.meses = this.value; pintarDiag(); if (D.anos !== "" && D.meses !== "") setErr(this, ""); });
   $("dgCausa").addEventListener("input", function(){ D.causa = this.value; });
@@ -1354,6 +1371,8 @@ svg.i.f{fill:currentColor;stroke:none}
     var erros = [];
     function falha(el, msg){ setErr(el, msg); erros.push(el); }
     limparErros($("v-diagnostico"));
+    if (D.nome.trim().length < 2) falha($("dgNome"), "Informe o nome da criança.");
+    else if (!D.sexo) falha($("chSexo"), "Escolha menina ou menino.");
     if (!D.grau) falha($("chGrau"), "Selecione o grau do diagnóstico.");
     if (D.anos === "" || D.meses === "") falha($("idAnos"), "Informe a idade do diagnóstico (anos e meses).");
     if (D.fez === null) falha($("segExames"), "Informe se já foram realizados exames auditivos.");
@@ -1373,6 +1392,7 @@ svg.i.f{fill:currentColor;stroke:none}
       try{
         var eraCompleto = S.me.status.completo;
         await api("/api/responsavel/diagnostico", { method:"PUT", body:{
+          nome:D.nome.trim(), sexo:D.sexo,
           grau:D.grau, idadeAnos:Number(D.anos), idadeMeses:Number(D.meses), causa:D.causa.trim(),
           fezExames:D.fez, exames:D.fez ? D.exames : [], laudo:D.fez ? D.laudo : null,
           condicoes:D.cond, outraCondicao:D.outra.trim()
@@ -1522,7 +1542,8 @@ svg.i.f{fill:currentColor;stroke:none}
   function pl(n, um, varios){ return n + " " + (n === 1 ? um : varios); }
 
   function desenharGeral(d){
-    var t = d.total;
+    var t = d.total, kid = S.me && S.me.crianca && S.me.crianca.nome;
+    $("gTitulo").textContent = kid ? "Como está a jornada de " + kid + "?" : "Como está a jornada?";
     $("gAviso").hidden = t.tentativas > 0;
     $("gAviso").textContent = "Ainda não há atividades registradas. Quando a criança jogar no Lumis, os números aparecem aqui.";
     $("gSeq").textContent = pl(d.sequencia, "dia seguido de prática", "dias seguidos de prática");

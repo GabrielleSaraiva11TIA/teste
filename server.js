@@ -55,6 +55,9 @@ async function migrar() {
         .split("\n").filter(l => !l.trim().startsWith("--")).join("\n")
         .split(";").map(c => c.trim()).filter(Boolean)
     for (const comando of comandos) await database.query(comando)
+    // bancos criados antes desta versão: acrescenta a coluna "sexo" (ignora se já existe)
+    try { await database.query("ALTER TABLE lumis_criancas ADD COLUMN sexo VARCHAR(10) NULL") }
+    catch (e) { if (e.errno !== 1060) console.warn("Migração (sexo) ignorada:", e.message) }
 }
 const pronto = migrar().catch(e => console.warn("Migração ignorada:", e.message))
 app.use((req, res, next) => { pronto.then(() => next()) })
@@ -139,7 +142,7 @@ async function carregarPerfil(id) {
     }
 
     const [c] = await q("SELECT sistema, audio, imagem, armazenamento FROM lumis_consentimentos WHERE usuario_id = ?", [id])
-    const [crianca] = await q("SELECT id, nome FROM lumis_criancas WHERE responsavel_id = ? ORDER BY id LIMIT 1", [id])
+    const [crianca] = await q("SELECT id, nome, sexo FROM lumis_criancas WHERE responsavel_id = ? ORDER BY id LIMIT 1", [id])
     const [dg] = crianca ? await q("SELECT * FROM lumis_diagnosticos WHERE crianca_id = ?", [crianca.id]) : []
     const privacidade = !!(c && c.sistema)
     const [aparelho] = await q(
@@ -255,6 +258,15 @@ app.put("/api/responsavel/diagnostico", exigirUsuario("responsavel"), wrap(async
     const laudo = fezExames && b.laudo && typeof b.laudo === "object" ? b.laudo : null
     const crianca = await garantirCrianca(req.usuario.id)
 
+    // nome e menina/menino da criança (aparecem no aparelho)
+    if (b.sexo !== undefined && b.sexo !== null && b.sexo !== "" && !["menina", "menino"].includes(b.sexo))
+        return erro(res, 400, "Escolha menina ou menino.")
+    const nomeCrianca = texto(b.nome, 100)
+    if (nomeCrianca || b.sexo) {
+        await q("UPDATE lumis_criancas SET nome = COALESCE(?, nome), sexo = COALESCE(?, sexo) WHERE id = ?",
+            [nomeCrianca || null, ["menina", "menino"].includes(b.sexo) ? b.sexo : null, crianca.id])
+    }
+
     await q(
         `INSERT INTO lumis_diagnosticos
            (crianca_id, grau, idade_meses, causa, fez_exames, exames, laudo_nome, laudo_tamanho, laudo_tipo, condicoes, outra_condicao)
@@ -353,16 +365,27 @@ const dataDoBanco = s => new Date(String(s).replace(" ", "T") + "Z")
 app.post("/api/dispositivo/tentativas", limite(120, 60 * 1000), wrap(async (req, res) => {
     let payload
     try { payload = lerToken(req, "dispositivo") } catch { return erro(res, 401, "Aparelho não autenticado.") }
-    if (!payload.cid) return res.json({ ok: true, ignorado: true })       // aparelho da fono: não há criança
+    const cid = await criancaDoAparelho(payload)
+    if (!cid) return res.json({ ok: true, ignorado: true })       // aparelho da fono sem criança escolhida
     const lista = Array.isArray(req.body.eventos) ? req.body.eventos : [req.body]
     const validos = lista.slice(0, 50).filter(e => e && ATIVIDADES[e.atividade] && ["acerto", "erro"].includes(e.resultado))
     for (const e of validos) {
         const quando = Number(e.t) > 0 && Date.now() - Number(e.t) < 14 * 86400000 && Number(e.t) <= Date.now()
             ? new Date(Number(e.t)) : new Date()
         await q("INSERT INTO lumis_tentativas (crianca_id, atividade, resultado, criado_em) VALUES (?, ?, ?, ?)",
-            [payload.cid, e.atividade, e.resultado, quando.toISOString().slice(0, 19).replace("T", " ")])
+            [cid, e.atividade, e.resultado, quando.toISOString().slice(0, 19).replace("T", " ")])
     }
     res.json({ ok: true, gravados: validos.length })
+}))
+
+// Mapa: ilhas já concluídas pela criança (para o mapa continuar de onde parou quando o mesmo responsável reconecta)
+app.get("/api/dispositivo/progresso", wrap(async (req, res) => {
+    let payload
+    try { payload = lerToken(req, "dispositivo") } catch { return erro(res, 401, "Aparelho não autenticado.") }
+    const cid = await criancaDoAparelho(payload)
+    if (!cid) return res.json({ ilhas: [] })
+    const [r] = await q("SELECT COUNT(*) AS n FROM lumis_tentativas WHERE crianca_id = ? AND atividade = 'a8' AND resultado = 'acerto'", [cid])
+    res.json({ ilhas: Number(r.n) > 0 ? [1] : [] })
 }))
 
 async function resumoDesempenho(criancaId) {
@@ -532,7 +555,7 @@ app.get("/api/pareamentos/status", wrap(async (req, res) => {
     if (p.status === "concluido") {
         await q("UPDATE lumis_pareamentos SET status = 'entregue' WHERE id = ? AND status = 'concluido'", [p.id])
         const [crianca] = await q("SELECT id, nome FROM lumis_criancas WHERE id = ?", [p.crianca_id])
-        const deviceToken = assinar({ tipo: "dispositivo", cid: p.crianca_id || 0, rid: p.responsavel_id }, "90d")
+        const deviceToken = assinar({ tipo: "dispositivo", cid: p.crianca_id || 0, rid: p.responsavel_id, pid: p.id }, "90d")
         return res.json({ status: "concluido", progresso: 100, deviceToken, crianca })
     }
     if (p.status === "entregue") return res.json({ status: "entregue", progresso: 100 })
@@ -626,20 +649,92 @@ app.post("/api/pareamentos/:token/concluir", exigirUsuario(), wrap(async (req, r
 }))
 
 // Aparelho já logado: quem é a criança desta sessão?
+// Criança que está jogando neste aparelho:
+//  - aparelho do responsável: a criança dele (cid no token)
+//  - aparelho da fono: a criança que ela escolheu no celular (só vale com o vínculo aceito)
+async function criancaDoAparelho(payload) {
+    if (payload.cid) return payload.cid
+    // aparelhos conectados antes desta versão não têm "pid" no token: usa o pareamento mais recente da fono
+    const pid = payload.pid || await pareamentoDaFono(payload.rid)
+    if (!pid) return 0
+    const [a] = await q(
+        `SELECT a.crianca_id FROM lumis_aparelho_ativo a
+           JOIN lumis_pareamentos p ON p.id = a.pareamento_id AND p.responsavel_id = ?
+           JOIN lumis_vinculos v ON v.crianca_id = a.crianca_id AND v.profissional_id = p.responsavel_id AND v.status = 'aceito'
+          WHERE a.pareamento_id = ?`, [payload.rid, pid])
+    return a ? a.crianca_id : 0
+}
+
+const ROTULO_GRAU = { leve: "Leve", moderada: "Moderada", severa: "Severa", profunda: "Profunda", investigacao: "Em investigação" }
+const ROTULO_EXAME = { audiometria: "Audiometria infantil", bera: "BERA / PEATE", eoa: "EOA (otoemissões)", impedanciometria: "Impedanciometria" }
+const ROTULO_COND = { nenhuma: "Nenhuma", tea: "TEA (espectro autista)", motor: "Desenvolvimento motor", tdah: "TDAH", outra: "Outra" }
+
+// Aparelho já logado: quem é a criança desta sessão?
 app.get("/api/dispositivo/me", wrap(async (req, res) => {
     let payload
     try { payload = lerToken(req, "dispositivo") } catch { return erro(res, 401, "Aparelho não autenticado.") }
-    if (!payload.cid) {
+    const porProfissional = !payload.cid
+    let profissional = null
+    if (porProfissional) {
         const [pr] = await q("SELECT nome FROM lumis_usuarios WHERE id = ? AND papel = 'profissional'", [payload.rid])
         if (!pr) return erro(res, 401, "Conta do profissional não encontrada.")
-        return res.json({ crianca: null, profissional: pr.nome })
+        profissional = pr.nome
     }
+    const cid = await criancaDoAparelho(payload)
+    if (!cid) return res.json({ crianca: null, profissional })
     const [c] = await q(
-        `SELECT c.id, c.nome, u.nome AS responsavel
+        `SELECT c.id, c.nome, c.sexo, u.nome AS responsavel
            FROM lumis_criancas c JOIN lumis_usuarios u ON u.id = c.responsavel_id
-          WHERE c.id = ?`, [payload.cid])
+          WHERE c.id = ?`, [cid])
     if (!c) return erro(res, 401, "Conta da criança não encontrada.")
-    res.json({ crianca: { id: c.id, nome: c.nome }, responsavel: c.responsavel })
+    const [dg] = await q("SELECT * FROM lumis_diagnosticos WHERE crianca_id = ?", [cid])
+    const d = diagnosticoParaApi(dg)
+    res.json({
+        crianca: {
+            id: c.id, nome: c.nome, sexo: c.sexo,
+            idadeAnos: d ? d.idadeAnos : null, idadeMeses: d ? d.idadeMeses : null,
+            grau: d ? ROTULO_GRAU[d.grau] : null, causa: d ? d.causa : "",
+            exames: d && d.fezExames ? d.exames.map(x => ROTULO_EXAME[x]).filter(Boolean) : [],
+            condicoes: d ? d.condicoes.map(x => (x === "outra" && d.outraCondicao) ? d.outraCondicao : ROTULO_COND[x]).filter(Boolean) : []
+        },
+        responsavel: c.responsavel,
+        profissional
+    })
+}))
+
+// ---------- fono: escolhe a criança que vai jogar no aparelho ----------
+async function pareamentoDaFono(profissionalId) {
+    const [p] = await q(
+        `SELECT id FROM lumis_pareamentos
+          WHERE responsavel_id = ? AND crianca_id IS NULL AND status IN ('concluido','entregue')
+          ORDER BY id DESC LIMIT 1`, [profissionalId])
+    return p ? p.id : null
+}
+
+app.get("/api/profissional/aparelho", exigirUsuario("profissional"), wrap(async (req, res) => {
+    const pid = await pareamentoDaFono(req.usuario.id)
+    if (!pid) return res.json({ conectado: false, pacienteId: null })
+    const [a] = await q(
+        `SELECT v.paciente_id FROM lumis_aparelho_ativo a
+           JOIN lumis_vinculos v ON v.crianca_id = a.crianca_id AND v.profissional_id = ? AND v.status = 'aceito'
+          WHERE a.pareamento_id = ? LIMIT 1`, [req.usuario.id, pid])
+    res.json({ conectado: true, pacienteId: a ? a.paciente_id : null })
+}))
+
+app.put("/api/profissional/aparelho", exigirUsuario("profissional"), limite(60, 60 * 1000), wrap(async (req, res) => {
+    const pacienteId = String(req.body.pacienteId || "")
+    const [v] = await q("SELECT crianca_id, status FROM lumis_vinculos WHERE profissional_id = ? AND paciente_id = ?", [req.usuario.id, pacienteId])
+    if (!v || v.status !== "aceito" || !v.crianca_id) return erro(res, 403, "O responsável ainda não aceitou o acompanhamento deste paciente.")
+    const pid = await pareamentoDaFono(req.usuario.id)
+    if (!pid) return erro(res, 409, "Conecte o aparelho do Lumis primeiro (menu da conta > Conectar aparelho).")
+    await q("INSERT INTO lumis_aparelho_ativo (pareamento_id, crianca_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE crianca_id = VALUES(crianca_id)", [pid, v.crianca_id])
+    res.json({ ok: true })
+}))
+
+app.delete("/api/profissional/aparelho", exigirUsuario("profissional"), wrap(async (req, res) => {
+    const pid = await pareamentoDaFono(req.usuario.id)
+    if (pid) await q("DELETE FROM lumis_aparelho_ativo WHERE pareamento_id = ?", [pid])
+    res.json({ ok: true })
 }))
 
 // ============================================================

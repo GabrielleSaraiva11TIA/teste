@@ -24,6 +24,11 @@ h1,h2,h3,p{margin:0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .wrap{max-width:960px;margin:0 auto;padding:0 24px}
 .muted{color:var(--ink2)}
+.apbar{margin:10px 0 2px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.apbar small{color:var(--ink2);font-size:13px}
+.apbar.on{background:#e3f6ea;color:#14633a;border-radius:12px;padding:10px 12px;font-size:14px}
+.aptag{display:inline-block;margin-left:8px;background:#e3f6ea;color:#14633a;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700;vertical-align:middle}
+
 .vinc{font-size:13.5px;line-height:1.4;padding:10px 12px;border-radius:12px;background:#eef2fb;color:var(--ink2);margin:0}
 .vinc-ok{background:#e3f6ea;color:#14633a}.vinc-wait{background:#fff4d6;color:#7a5200}.vinc-bad{background:#fde6e3;color:#a02a1e}
 .appnote{background:#f3f6fd;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px;color:var(--ink2)}
@@ -426,8 +431,9 @@ function renderChrome(){
   var pb=$('#pbar'),inP=S.view==='paciente'||S.newP,p=cur();
   if(inP){
     var nm=S.newP?'Novo paciente':((p&&(p.profile||{}).nome)||'Paciente');
-    pb.innerHTML='<div class="pbar"><button type="button" class="back" data-act="back-list">'+ic('back',18)+'Pacientes</button><div class="pname"><b>'+esc(nm)+'</b>'+(p?'<small>'+esc(ageText(p))+'</small>':'')+'</div></div>';
+    pb.innerHTML='<div class="pbar"><button type="button" class="back" data-act="back-list">'+ic('back',18)+'Pacientes</button><div class="pname"><b>'+esc(nm)+'</b>'+(p?'<small>'+esc(ageText(p))+'</small>':'')+'</div></div><div id="apbar"></div>';
   }else pb.innerHTML='';
+  loadAparelho();paintAparelho(inP?p:null);
   var tb=$('#tabs');tb.hidden=!inP||S.newP;
   tb.innerHTML=TABS.map(function(t){
     var on=S.tab===t[0];
@@ -465,6 +471,32 @@ function renderPanel(){
 }
 
 
+
+/* ---------- aparelho do Lumis: a fono escolhe quem vai jogar ---------- */
+S.ap=null;var apT=0;
+function loadAparelho(force){
+  if(!EMB||S.status!=='ready')return;
+  if(!force&&Date.now()-apT<15000)return;
+  apT=Date.now();
+  apiReq('GET','/api/profissional/aparelho').then(function(d){
+    var old=JSON.stringify(S.ap);S.ap=d;
+    if(old!==JSON.stringify(d)){
+      paintAparelho(cur());
+      if(S.view==='lista'&&!S.newP&&!S.dirty&&!$('#dlg').open)renderPanel();
+    }
+  },function(){});
+}
+function paintAparelho(p){
+  var el=$('#apbar');if(!el)return;
+  if(!EMB||S.status!=='ready'||!p||S.newP){el.innerHTML='';return}
+  var c=S.app[p._id],d=c&&c.d;
+  if(!d||d.vinculo!=='aceito'){el.innerHTML='';return}
+  var on=S.ap&&S.ap.pacienteId===p._id;
+  el.innerHTML=on
+    ?'<div class="apbar on"><span>No aparelho agora: <b>'+esc(firstName(p))+'</b> está jogando.</span><button type="button" class="linkbtn" data-act="ap-stop">Parar</button></div>'
+    :'<div class="apbar"><button type="button" class="btn btn-primary" data-act="ap-use">Usar no aparelho do Lumis</button><small>O aparelho passa a registrar o progresso de '+esc(firstName(p))+'.</small></div>';
+}
+
 /* ---------- desempenho real nas atividades (vem do banco) ---------- */
 S.app={};var appBusy={};
 function vincLabel(d){
@@ -499,6 +531,7 @@ function appChanged(id,changed){
 }
 function paintApp(p){
   var v=$('#vincStatus');if(v&&p)v.innerHTML=vincHtml(p);
+  paintAparelho(p);
   var c=p&&S.app[p._id],d=c&&c.d;
   $$('[data-appstat]').forEach(function(el){el.innerHTML=appStatHtml(d,el.dataset.appstat)});
 }
@@ -564,7 +597,7 @@ function viewList(){
   return head+'<ul class="plist">'+ps.map(function(p){
     var nome=(p.profile||{}).nome||'Sem nome',ses=sessionsOf(p),last=ses.length?ses[ses.length-1].date:'';
     var info=ageText(p)+' · '+(ses.length?ses.length+(ses.length===1?' sessão':' sessões')+' · última em '+fmt(last):'nenhuma sessão ainda');
-    return '<li><button type="button" class="pcard" data-act="open-patient" data-id="'+esc(p._id)+'"><span class="pav" aria-hidden="true">'+esc(nome.trim().charAt(0).toUpperCase()||'?')+'</span><span class="pinfo"><b>'+esc(nome)+'</b><small>'+esc(info)+'</small></span>'+ic('chevron')+'</button></li>';
+    return '<li><button type="button" class="pcard" data-act="open-patient" data-id="'+esc(p._id)+'"><span class="pav" aria-hidden="true">'+esc(nome.trim().charAt(0).toUpperCase()||'?')+'</span><span class="pinfo"><b>'+esc(nome)+'</b>'+(S.ap&&S.ap.pacienteId===p._id?'<span class="aptag">No aparelho</span>':'')+'<small>'+esc(info)+'</small></span>'+ic('chevron')+'</button></li>';
   }).join('')+'</ul>';
 }
 
@@ -999,6 +1032,15 @@ function submitPlan(f){
 /* ---------- eventos ---------- */
 function guard(){if(S.dirty){toast('Salve ou cancele as alterações antes de continuar.',true);return true}return false}
 var ACT={
+  'ap-use':function(b){
+    var p=cur();if(!p)return;b.disabled=true;
+    apiReq('PUT','/api/profissional/aparelho',{pacienteId:p._id}).then(function(){
+      S.ap={conectado:true,pacienteId:p._id};paintAparelho(p);toast('Aparelho pronto: '+firstName(p)+' já pode jogar.');
+    },function(e){b.disabled=false;toast((e&&e.msg)||'Não foi possível usar o aparelho agora.',true)});
+  },
+  'ap-stop':function(){
+    var p=cur();apiReq('DELETE','/api/profissional/aparelho').then(function(){S.ap={conectado:true,pacienteId:null};paintAparelho(p);toast('Aparelho liberado.')},function(){toast('Não foi possível liberar o aparelho.',true)});
+  },
   'tab':function(b){if(b.dataset.tab===S.tab)return;if(guard())return;S.tab=b.dataset.tab;render();var t=$('#tab-'+S.tab);if(t&&t.scrollIntoView)t.scrollIntoView({block:'nearest',inline:'nearest'})},
   'new-patient':function(){if(guard())return;S.newP=true;S.view='lista';S.tab='perfil';render();window.scrollTo({top:0})},
   'open-patient':function(b){if(guard())return;S.newP=false;S.pid=b.dataset.id;S.view='paciente';S.tab='perfil';S.skill=null;S.open={};render();window.scrollTo({top:0});var pp=cur();if(pp)ensureApp(pp,true)},
