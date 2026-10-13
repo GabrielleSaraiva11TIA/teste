@@ -431,5 +431,89 @@
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") hidePop(); });
 
 </script>
+<!-- Reconectar o aparelho do Lumis: gera um código novo, a fono digita no celular -->
+<style>
+.lumis-rec-btn{position:fixed;left:12px;bottom:12px;z-index:2147483000;appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.94);color:#0b4fd1;font:700 13px/1 system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 4px 14px rgba(20,60,160,.18)}
+.lumis-rec-btn:active{transform:scale(.97)}
+.lumis-rec-btn svg{width:15px;height:15px}
+.lumis-rec-bg{position:fixed;inset:0;z-index:2147483001;display:none;place-items:center;padding:16px;background:rgba(11,31,77,.5);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lumis-rec-bg.on{display:grid}
+.lumis-rec-box{width:min(100%,360px);background:#fff;color:#0b1f4d;border-radius:22px;padding:20px 18px 16px;text-align:center;box-shadow:0 20px 50px rgba(11,31,77,.35)}
+.lumis-rec-box h3{margin:0 0 8px;font-size:19px}
+.lumis-rec-box p{margin:0 0 12px;font-size:14px;line-height:1.4;color:#5b6b92}
+.lumis-rec-code{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border-radius:14px;background:#0b4fd1;color:#fff;font:800 24px/1 system-ui,sans-serif;letter-spacing:.04em;box-shadow:0 4px 10px rgba(10,86,214,.3)}
+.lumis-rec-st{margin:12px 0 14px;font-size:13px;font-weight:700;color:#0b4fd1;min-height:18px}
+.lumis-rec-st.err{color:#b3382e}
+.lumis-rec-box .acts{display:flex;gap:8px;justify-content:center}
+.lumis-rec-box .acts button{appearance:none;border:0;cursor:pointer;border-radius:12px;padding:11px 16px;font:700 14px system-ui,sans-serif;background:#e5eeff;color:#0b4fd1}
+</style>
+<button type="button" class="lumis-rec-btn" id="lumisRecBtn" aria-label="Reconectar o aparelho do Lumis">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
+  Reconectar
+</button>
+<div class="lumis-rec-bg" id="lumisRecBg">
+  <div class="lumis-rec-box" role="dialog" aria-modal="true" aria-labelledby="lumisRecT">
+    <h3 id="lumisRecT">Reconectar o Lumis</h3>
+    <p>No celular, abra o portal do Lumis, escolha <b>Conectar aparelho do Lumis</b> e digite o código:</p>
+    <button type="button" class="lumis-rec-code" id="lumisRecCode" title="Copiar código"><span id="lumisRecCodeTxt">LUMIS-····</span></button>
+    <div class="lumis-rec-st" id="lumisRecSt" role="status"></div>
+    <div class="acts"><button type="button" id="lumisRecNovo" hidden>Gerar novo código</button><button type="button" id="lumisRecFechar">Cancelar</button></div>
+  </div>
+</div>
+<script>
+(function(){
+  var h = location.hostname, p = location.port;
+  var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
+  var $ = function(i){ return document.getElementById(i); };
+  var bg = $("lumisRecBg"), codeTxt = $("lumisRecCodeTxt"), st = $("lumisRecSt"), novo = $("lumisRecNovo");
+  var par = null, timer = null, vivo = false;
+
+  function msg(t, erro){ st.textContent = t; st.className = "lumis-rec-st" + (erro ? " err" : ""); }
+  function parar(){ vivo = false; clearTimeout(timer); }
+  function fechar(){ parar(); bg.classList.remove("on"); }
+
+  function criar(){
+    parar(); novo.hidden = true; codeTxt.textContent = "LUMIS-····"; msg("Gerando código…");
+    fetch(API + "/api/pareamentos", { method:"POST", headers:{ "content-type":"application/json" } })
+      .then(function(r){ return r.json().then(function(d){ if (r.status !== 201) throw new Error(); return d; }); })
+      .then(function(d){
+        par = d; codeTxt.textContent = d.codigo; msg("Aguardando o celular…"); vivo = true; consultar();
+      })
+      .catch(function(){ msg("Sem conexão com o servidor. Tente de novo.", true); novo.hidden = false; });
+  }
+
+  function consultar(){
+    if (!vivo || !par) return;
+    fetch(API + "/api/pareamentos/status", { headers:{ "x-segredo": par.segredo } })
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { s:r.status, d:d }; }); })
+      .then(function(r){
+        if (!vivo) return;
+        if (r.s === 410 || r.s === 404){ parar(); msg("O código expirou.", true); novo.hidden = false; return; }
+        if (r.s === 200 && r.d.status === "concluido" && r.d.deviceToken){
+          parar();
+          try{ localStorage.setItem("lumis_device_token", r.d.deviceToken); }catch(e){}
+          msg("Reconectado! ✓");
+          setTimeout(function(){ location.reload(); }, 1200);
+          return;
+        }
+        if (r.s === 200 && r.d.status && r.d.status !== "aguardando") msg("Celular conectado… finalizando");
+        timer = setTimeout(consultar, 2000);
+      })
+      .catch(function(){ if (vivo) timer = setTimeout(consultar, 3000); });
+  }
+
+  $("lumisRecBtn").addEventListener("click", function(){ bg.classList.add("on"); criar(); });
+  $("lumisRecFechar").addEventListener("click", fechar);
+  novo.addEventListener("click", criar);
+  bg.addEventListener("click", function(e){ if (e.target === bg) fechar(); });
+  $("lumisRecCode").addEventListener("click", function(){
+    if (!par) return;
+    var c = par.codigo;
+    function ok(){ codeTxt.textContent = "Copiado!"; setTimeout(function(){ if (par) codeTxt.textContent = c; }, 1200); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(ok, function(){});
+    else ok();
+  });
+})();
+</script>
 </body>
 </html>

@@ -439,9 +439,44 @@ const falar = h => { $('baloI').innerHTML = $('balao').innerHTML = `<small>Lumis
 const status = t => { $('status').textContent = t; };
 const micTxt = t => { $('btnMicTxt').textContent = t; };
 const dica = t => { $('dica').textContent = t; };
-/* Ponte para a pulseira real: o app que hospeda esta tela escuta 'lumis:pulseira' (ou a mensagem) e envia o padrão por Bluetooth/API. */
-function enviarParaPulseira(p){ window.dispatchEvent(new CustomEvent('lumis:pulseira',{detail:p})); parent.postMessage({lumis:'vibrar',padrao:p},'*'); }
-function vibrar(p){ if(!PULSEIRA_ATIVA) return; navigator.vibrate?.(p); enviarParaPulseira(p); const v=$('vibra'); v.classList.remove('buzz'); void v.offsetWidth; v.classList.add('buzz'); }
+/* ===== Integração com a pulseira real (Python no Raspberry — pulseira.py) ===== */
+var API = "http://localhost:5001";
+function enviar(url, dados) {
+  return fetch(url, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(dados) })
+    .then(function(r){ return r.json(); });
+}
+function vibrarPulseira(padrao, celular) {
+  return enviar(API + "/api/pulseira/vibrar", {padrao: padrao})
+    .catch(function(){
+      if (celular)                     vibrarLocal(celular);
+      else if (padrao === "sss")       vibrarLocal([60,40,60,40,60,40,60]);
+      else if (padrao === "p")         vibrarLocal([120]);
+      else if (padrao === "comemorar") vibrarLocal([100,60,100,60,100,60,200]);
+      else if (padrao === "toque")     vibrarLocal([80,50,80]);
+      else if (padrao === "tambor")    vibrarLocal([150,80,150]);
+      else if (padrao === "sino")      vibrarLocal([200]);
+      else if (padrao === "vento")     vibrarLocal([40,30,40,30,40,30,40,30,40]);
+      else                             vibrarLocal([60]);
+    });
+}
+function pararPulseira() { return enviar(API + "/api/pulseira/parar", {}).catch(function(){}); }
+function vibrarLocal(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+/* ao-vivo: envia intensidade da voz para a pulseira em tempo real */
+var aoVivoAtivo = false;
+function enviarAoVivo(intensidade) {
+  if (!aoVivoAtivo) return;
+  enviar(API + "/api/pulseira/ao-vivo", {ligado: true, intensidade: Math.min(1, intensidade)}).catch(function(){});
+}
+function pararAoVivo() {
+  aoVivoAtivo = false;
+  enviar(API + "/api/pulseira/ao-vivo", {ligado: false, intensidade: 0}).catch(function(){});
+}
+/* vibrar: mantém o visual (chip buzz) + pulseira real via API */
+function vibrar(p, padrao){
+  if(!PULSEIRA_ATIVA) return;
+  if (padrao) vibrarPulseira(padrao, p); else vibrarLocal(p);
+  const v=$('vibra'); v.classList.remove('buzz'); void v.offsetWidth; v.classList.add('buzz');
+}
 
 /* cabeçalho */
 $('tituloEtapa').textContent = `Etapa ${ETAPA_ATUAL} de 8: ${TITULO_ETAPA}`;
@@ -494,18 +529,18 @@ function estrelasBurst(){
 }
 async function intro(){
   document.body.classList.add('escuro'); $('gatoI').appendChild($('orbe')); $('orbe').classList.add('festa'); $('tit').textContent = '';
-  for(const t of [U.f1,U.f2,U.f3]){ if(pulou) return; falar(t); vibrar([60,40,60]); await esperar(2400); }
+  for(const t of [U.f1,U.f2,U.f3]){ if(pulou) return; falar(t); vibrar([60,40,60], "toque"); await esperar(2400); }
   if(pulou) return; $('orbe').classList.remove('festa'); $('luz').classList.add('go'); await esperar(650); if(pulou) return;
-  $('cat').classList.add('lado'); $('intro').classList.add('acesa'); $('bauBtn').classList.add('ver'); falar(U.bau); vibrar([150,60,150]); await esperar(1000); if(pulou) return;
+  $('cat').classList.add('lado'); $('intro').classList.add('acesa'); $('bauBtn').classList.add('ver'); falar(U.bau); vibrar([150,60,150], "toque"); await esperar(1000); if(pulou) return;
   await new Promise(r=>{ $('bauBtn').addEventListener('click',r,{once:true}); $('pular').addEventListener('click',r,{once:true}); }); if(pulou) return;
-  $('bauBtn').classList.remove('ver'); $('bauBtn').classList.add('aberta'); $('cat').classList.add('some'); $('bau').classList.add('aberto'); estrelasBurst(); vibrar([100,50,100,50,300]);
+  $('bauBtn').classList.remove('ver'); $('bauBtn').classList.add('aberta'); $('cat').classList.add('some'); $('bau').classList.add('aberto'); estrelasBurst(); vibrar([100,50,100,50,300], "comemorar");
   const alt = [[-110,-125],[0,-155],[110,-125]], orbs = [I.mic,CAM,VIB].map(ic=>{ const o=document.createElement('div'); o.className='orbC'; o.innerHTML=svg(ic); $('cenaI').appendChild(o); return o; });
   orbs.forEach((o,k)=>o.animate([{transform:'translate(0,0) scale(.2)',opacity:0},{transform:`translate(${alt[k][0]}px,${alt[k][1]}px) scale(1)`,opacity:1}],{duration:1100,delay:500+k*250,easing:'cubic-bezier(.3,1.4,.5,1)',fill:'forwards'}));
   await esperar(3200); if(pulou) return;
   const pf = posicao($('frase'));
   orbs.forEach((o,k)=>{ const po = posicao(o), dx = pf.x-po.x, dy = pf.y-po.y;
     o.animate([{transform:`translate(${alt[k][0]}px,${alt[k][1]}px) scale(1)`,opacity:1},{transform:`translate(${alt[k][0]+dx}px,${alt[k][1]+dy}px) scale(.3)`,opacity:0}],{duration:900,easing:'ease-in',fill:'forwards'}); });
-  await esperar(850); $('flash').classList.add('go'); $('frase').classList.add('ver'); vibrar([200,80,200]);
+  await esperar(850); $('flash').classList.add('go'); $('frase').classList.add('ver'); vibrar([200,80,200], "comemorar");
   await esperar(2600); encerrarIntro();
 }
 function encerrarIntro(){
@@ -515,7 +550,7 @@ function encerrarIntro(){
 $('pular').addEventListener('click', ()=>{ if(!pulou) encerrarIntro(); });
 
 /* ===== desafio final ===== */
-$('vibra').addEventListener('click',()=>{ vibrar([300,150,300]); status(navigator.vibrate ? 'Sentiu a vibração?' : 'Este aparelho não vibra. Na pulseira você sente assim!'); });
+$('vibra').addEventListener('click',()=>{ vibrar([300,150,300], "sss"); status(navigator.vibrate ? 'Sentiu a vibração?' : 'Este aparelho não vibra. Na pulseira você sente assim!'); });
 function iniciarDesafio(){
   fase = 1; $('tit').textContent = 'Prepare-se!'; falar(`Olhe para a câmera e faça o <b>${SOM}</b>!`); dica('Dica: olhe para a câmera e faça o som com vontade.');
   status(U.privado); controles([['comecar','Começar o desafio','btn-mic']]);
@@ -529,9 +564,9 @@ async function comecar(){
   actx = actx || new (window.AudioContext||window.webkitAudioContext)(); await actx.resume();
   analyserG = actx.createAnalyser(); analyserG.fftSize = 1024; actx.createMediaStreamSource(midia).connect(analyserG); tmp = new Float32Array(analyserG.fftSize);
   
-  await enquadrar(); $('tit').textContent = 'Sinta a vibração'; falar(U.sinta); $('ondas').classList.add('on'); vibrar([300,150,300,150,300]); await aguardar(2600); $('ondas').classList.remove('on');
+  await enquadrar(); $('tit').textContent = 'Sinta a vibração'; falar(U.sinta); $('ondas').classList.add('on'); vibrar([300,150,300,150,300], "sss"); await aguardar(2600); $('ondas').classList.remove('on');
   $('tit').textContent = 'Agora é a sua vez!'; falar(U.vez);
-  for(let n=CONTAGEM;n>0;n--){ const c=$('conta'); c.textContent = n; c.classList.remove('on'); void c.offsetWidth; c.classList.add('on'); vibrar(60); await aguardar(1000); }
+  for(let n=CONTAGEM;n>0;n--){ const c=$('conta'); c.textContent = n; c.classList.remove('on'); void c.offsetWidth; c.classList.add('on'); vibrar(60, "toque"); await aguardar(1000); }
   gravar();
 }
 function gravar(){
@@ -539,12 +574,15 @@ function gravar(){
   pedacos = []; gravador = new MediaRecorder(midia, mime?{mimeType:mime}:undefined);
   gravador.ondataavailable = e=>{ if(e.data.size) pedacos.push(e.data); };
   gravador.onstop = ()=>revisar(gravador.mimeType||mime||'video/webm');
-  gravador.start(); fase = 6; ouvindo = true; $('rec').classList.add('on'); $('orbe').classList.add('ouvindo'); falar(U.gravando); status('');
+  gravador.start(); fase = 6; ouvindo = true; aoVivoAtivo = true; $('rec').classList.add('on'); $('orbe').classList.add('ouvindo'); falar(U.gravando); status('');
   controles([['terminei','Terminei','btn-mic']]); const fim = setTimeout(()=>gravador.state==='recording'&&gravador.stop(), GRAVACAO_MS); gravador.addEventListener('stop',()=>clearTimeout(fim));
+  var contAoVivo = 0;
   (function laco(){ if(!ouvindo) return; analyserG.getFloatTimeDomainData(tmp); let sm=0; for(const x of tmp) sm+=x*x;
-    const nv = Math.min(1, Math.sqrt(sm/tmp.length)*14); $('quadro').style.setProperty('--nivel',nv.toFixed(2)); $('orbe').style.setProperty('--nivel',nv.toFixed(2)); rafG = requestAnimationFrame(laco); })();
+    const nv = Math.min(1, Math.sqrt(sm/tmp.length)*14); $('quadro').style.setProperty('--nivel',nv.toFixed(2)); $('orbe').style.setProperty('--nivel',nv.toFixed(2));
+    contAoVivo++; if(contAoVivo % 7 === 0) enviarAoVivo(nv);
+    rafG = requestAnimationFrame(laco); })();
 }
-function parar(){ ouvindo = false; cancelAnimationFrame(rafG); $('rec').classList.remove('on'); $('orbe').classList.remove('ouvindo'); $('quadro').style.removeProperty('--nivel'); $('orbe').style.removeProperty('--nivel'); }
+function parar(){ ouvindo = false; pararAoVivo(); pararPulseira(); cancelAnimationFrame(rafG); $('rec').classList.remove('on'); $('orbe').classList.remove('ouvindo'); $('quadro').style.removeProperty('--nivel'); $('orbe').style.removeProperty('--nivel'); }
 function revisar(mime){
   parar(); midia.getTracks().forEach(t=>t.stop()); fase = 7;
   const ext = mime.includes('mp4') ? 'mp4' : 'webm'; arquivo = new File(pedacos,`${NOME_ARQUIVO}.${ext}`,{type:mime});
@@ -559,7 +597,7 @@ async function compartilhar(){
   catch(e){ if(e.name==='AbortError') return; }
   const a = document.createElement('a'); a.href = urlVideo; a.download = arquivo.name; a.click(); status('Vídeo salvo neste aparelho. Agora é só enviar!');
 }
-function celebrar(){ $('orbe').classList.add('festa'); setTimeout(()=>$('orbe').classList.remove('festa'),3000); vibrar([200,80,200,80,400]); chuvaDeEstrelas(); confete(); }
+function celebrar(){ $('orbe').classList.add('festa'); setTimeout(()=>$('orbe').classList.remove('festa'),3000); vibrar([200,80,200,80,400], "comemorar"); chuvaDeEstrelas(); confete(); }
 function fimJornada(){ salvarProgresso(); parar(); midia?.getTracks().forEach(t=>t.stop()); fase = 9; controles([]); paginaFinal(); }
 /* enquadrar o rosto: oval-guia; se o navegador tem FaceDetector, o oval fica dourado quando o rosto está no lugar */
 let prontoRes, premiado = false;
@@ -581,7 +619,7 @@ async function enquadrar(){
       await aguardar(250);
     }
   })();
-  await fim; vibrar(40); g.classList.add('ok'); dc.querySelectorAll('.on').forEach(e=>e.classList.remove('on')); controles([]); status('');
+  await fim; vibrar(40, "toque"); g.classList.add('ok'); dc.querySelectorAll('.on').forEach(e=>e.classList.remove('on')); controles([]); status('');
   await aguardar(500); g.classList.remove('on');   /* as marcações somem quando o rosto está no lugar */
 }
 /* posição do rosto (0–1 no quadro visível): FaceDetector quando existe; senão, estimativa por cor de pele (aproximada) */
@@ -608,7 +646,7 @@ function chuvaDeEstrelas(){
     const dx = (k-(n-1)/2)*80;
     f.animate([{transform:'translate(0,0) scale(.3)',opacity:0},{transform:`translate(${dx}px,-80px) scale(1.6) rotate(20deg)`,opacity:1,offset:.35},{transform:`translate(${alvo.x-de.x}px,${alvo.y-de.y}px) scale(.5)`,opacity:1}],
       {duration:1400,delay:800+k*400,easing:'ease-in-out',fill:'both'}).onfinish = ()=>{
-      f.remove(); estrelas++; $('qtdEstrelas').textContent = estrelas; vibrar(40);
+      f.remove(); estrelas++; $('qtdEstrelas').textContent = estrelas; vibrar(40, "toque");
       const p = $('pillEstrelas'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); };
   }
 }
@@ -631,15 +669,99 @@ function paginaFinal(){ salvarProgresso();   // chegou na tela "Parabéns!": a i
   $('passam').innerHTML = Array.from({length:13},(_,k)=>{ const roc = k<5, y0 = 10+Math.random()*80, y1 = y0-20-Math.random()*35, r = Math.round(Math.atan2(innerWidth+180,(y0-y1)*innerHeight/100)*180/Math.PI),
     d = (roc?9:6)+Math.random()*6, w = roc ? 30+Math.random()*26 : 12+Math.random()*12;
     return `<div class="pass" style="--y0:${y0.toFixed(1)};--y1:${y1.toFixed(1)};--r:${r}deg;--d:${d.toFixed(1)}s;--dl:-${(Math.random()*d).toFixed(1)}s;width:${w.toFixed(0)}px">${roc?ROC:EST}</div>`; }).join('');
-  $('parado').appendChild($('orbe')); $('orbe').classList.remove('festa','ouvindo'); void f.offsetWidth; f.classList.add('ver'); vibrar([100,50,100]);
+  $('parado').appendChild($('orbe')); $('orbe').classList.remove('festa','ouvindo'); void f.offsetWidth; f.classList.add('ver'); vibrar([100,50,100], "toque");
   setTimeout(()=>f.classList.add('fala-ver'),800);
-  [...$('cinco').children].forEach((st,k)=>setTimeout(()=>{ st.classList.add('on'); vibrar(50); },2000+k*500));
-  setTimeout(()=>{ confete($('final')); vibrar([200,80,200,80,400]); },2000+5*500);
+  [...$('cinco').children].forEach((st,k)=>setTimeout(()=>{ st.classList.add('on'); vibrar(50, "toque"); },2000+k*500));
+  setTimeout(()=>{ confete($('final')); vibrar([200,80,200,80,400], "comemorar"); },2000+5*500);
 }
 $('voltar').addEventListener('click', ()=>{ if(URL_VOLTAR!=='#') location.href = URL_VOLTAR; parent.postMessage({lumis:'voltar'},'*'); });
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden && ouvindo) parar(false); });
 
 intro();
+</script>
+<!-- Reconectar o aparelho do Lumis: gera um código novo, a fono digita no celular -->
+<style>
+.lumis-rec-btn{position:fixed;left:12px;bottom:12px;z-index:2147483000;appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.94);color:#0b4fd1;font:700 13px/1 system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 4px 14px rgba(20,60,160,.18)}
+.lumis-rec-btn:active{transform:scale(.97)}
+.lumis-rec-btn svg{width:15px;height:15px}
+.lumis-rec-bg{position:fixed;inset:0;z-index:2147483001;display:none;place-items:center;padding:16px;background:rgba(11,31,77,.5);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lumis-rec-bg.on{display:grid}
+.lumis-rec-box{width:min(100%,360px);background:#fff;color:#0b1f4d;border-radius:22px;padding:20px 18px 16px;text-align:center;box-shadow:0 20px 50px rgba(11,31,77,.35)}
+.lumis-rec-box h3{margin:0 0 8px;font-size:19px}
+.lumis-rec-box p{margin:0 0 12px;font-size:14px;line-height:1.4;color:#5b6b92}
+.lumis-rec-code{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border-radius:14px;background:#0b4fd1;color:#fff;font:800 24px/1 system-ui,sans-serif;letter-spacing:.04em;box-shadow:0 4px 10px rgba(10,86,214,.3)}
+.lumis-rec-st{margin:12px 0 14px;font-size:13px;font-weight:700;color:#0b4fd1;min-height:18px}
+.lumis-rec-st.err{color:#b3382e}
+.lumis-rec-box .acts{display:flex;gap:8px;justify-content:center}
+.lumis-rec-box .acts button{appearance:none;border:0;cursor:pointer;border-radius:12px;padding:11px 16px;font:700 14px system-ui,sans-serif;background:#e5eeff;color:#0b4fd1}
+</style>
+<button type="button" class="lumis-rec-btn" id="lumisRecBtn" aria-label="Reconectar o aparelho do Lumis">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
+  Reconectar
+</button>
+<div class="lumis-rec-bg" id="lumisRecBg">
+  <div class="lumis-rec-box" role="dialog" aria-modal="true" aria-labelledby="lumisRecT">
+    <h3 id="lumisRecT">Reconectar o Lumis</h3>
+    <p>No celular, abra o portal do Lumis, escolha <b>Conectar aparelho do Lumis</b> e digite o código:</p>
+    <button type="button" class="lumis-rec-code" id="lumisRecCode" title="Copiar código"><span id="lumisRecCodeTxt">LUMIS-····</span></button>
+    <div class="lumis-rec-st" id="lumisRecSt" role="status"></div>
+    <div class="acts"><button type="button" id="lumisRecNovo" hidden>Gerar novo código</button><button type="button" id="lumisRecFechar">Cancelar</button></div>
+  </div>
+</div>
+<script>
+(function(){
+  var h = location.hostname, p = location.port;
+  var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
+  var $ = function(i){ return document.getElementById(i); };
+  var bg = $("lumisRecBg"), codeTxt = $("lumisRecCodeTxt"), st = $("lumisRecSt"), novo = $("lumisRecNovo");
+  var par = null, timer = null, vivo = false;
+
+  function msg(t, erro){ st.textContent = t; st.className = "lumis-rec-st" + (erro ? " err" : ""); }
+  function parar(){ vivo = false; clearTimeout(timer); }
+  function fechar(){ parar(); bg.classList.remove("on"); }
+
+  function criar(){
+    parar(); novo.hidden = true; codeTxt.textContent = "LUMIS-····"; msg("Gerando código…");
+    fetch(API + "/api/pareamentos", { method:"POST", headers:{ "content-type":"application/json" } })
+      .then(function(r){ return r.json().then(function(d){ if (r.status !== 201) throw new Error(); return d; }); })
+      .then(function(d){
+        par = d; codeTxt.textContent = d.codigo; msg("Aguardando o celular…"); vivo = true; consultar();
+      })
+      .catch(function(){ msg("Sem conexão com o servidor. Tente de novo.", true); novo.hidden = false; });
+  }
+
+  function consultar(){
+    if (!vivo || !par) return;
+    fetch(API + "/api/pareamentos/status", { headers:{ "x-segredo": par.segredo } })
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { s:r.status, d:d }; }); })
+      .then(function(r){
+        if (!vivo) return;
+        if (r.s === 410 || r.s === 404){ parar(); msg("O código expirou.", true); novo.hidden = false; return; }
+        if (r.s === 200 && r.d.status === "concluido" && r.d.deviceToken){
+          parar();
+          try{ localStorage.setItem("lumis_device_token", r.d.deviceToken); }catch(e){}
+          msg("Reconectado! ✓");
+          setTimeout(function(){ location.reload(); }, 1200);
+          return;
+        }
+        if (r.s === 200 && r.d.status && r.d.status !== "aguardando") msg("Celular conectado… finalizando");
+        timer = setTimeout(consultar, 2000);
+      })
+      .catch(function(){ if (vivo) timer = setTimeout(consultar, 3000); });
+  }
+
+  $("lumisRecBtn").addEventListener("click", function(){ bg.classList.add("on"); criar(); });
+  $("lumisRecFechar").addEventListener("click", fechar);
+  novo.addEventListener("click", criar);
+  bg.addEventListener("click", function(e){ if (e.target === bg) fechar(); });
+  $("lumisRecCode").addEventListener("click", function(){
+    if (!par) return;
+    var c = par.codigo;
+    function ok(){ codeTxt.textContent = "Copiado!"; setTimeout(function(){ if (par) codeTxt.textContent = c; }, 1200); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(ok, function(){});
+    else ok();
+  });
+})();
 </script>
 </body>
 </html>

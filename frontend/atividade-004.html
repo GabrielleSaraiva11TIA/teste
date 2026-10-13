@@ -644,6 +644,41 @@ button:disabled { cursor: not-allowed; }
   };
   const HAPTIC_SSS = [140, 160, 140, 160, 140];   // "3 toques suaves" no pulso
 
+  // ---------- Pulseira (Python no Raspberry — pulseira.py) ----------
+  // A página pode estar na internet; o Python roda no próprio Raspberry ("localhost" = o aparelho onde a página está aberta).
+  // Se o Python estiver desligado, o celular vibra como reserva.
+  var API = "http://localhost:5001";
+  const DURACAO_SEM_VIDEO_MS = 2000;              // "Sss" quando não houver vídeo (igual ao som de 2 s)
+  // Trechos do vídeo em que a boca faz o "Sss" (em segundos). Ajuste se trocar o vídeo.
+  const SEGMENTOS_SSS = [[1.7, 5.2], [8.2, 10.6]];
+
+  function enviar(url, dados) {
+    return fetch(url, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(dados) })
+      .then(function(r){ return r.json(); });
+  }
+  // padrao: "sss" | "toque" | "comemorar" | "p" | "tambor" | "sino" | "vento"
+  // celular (opcional): padrão de vibração do celular usado só se a pulseira não responder
+  function vibrarPulseira(padrao, celular) {
+    return enviar(API + "/api/pulseira/vibrar", {padrao: padrao})
+      .catch(function(){
+        if (celular)                     vibrarLocal(celular);
+        else if (padrao === "sss")       vibrarLocal(HAPTIC_SSS);
+        else if (padrao === "p")         vibrarLocal([120]);
+        else if (padrao === "comemorar") vibrarLocal([100,60,100,60,100,60,200]);
+        else if (padrao === "toque")     vibrarLocal([80,50,80]);
+        else if (padrao === "tambor")    vibrarLocal([150,80,150]);
+        else if (padrao === "sino")      vibrarLocal([200]);
+        else if (padrao === "vento")     vibrarLocal([40,30,40,30,40,30,40,30,40]);
+        else                             vibrarLocal([60]);
+      });
+  }
+  function pararPulseira() {
+    return enviar(API + "/api/pulseira/parar", {}).catch(function(){});
+  }
+  function vibrarLocal(p) {
+    try { if (navigator.vibrate) navigator.vibrate(p); } catch(e) {}
+  }
+
   // Detector de rosto (MediaPipe). Roda no próprio aparelho; só baixa a biblioteca e o modelo.
   // Para funcionar sem internet, baixe estes arquivos para a sua pasta e troque os endereços.
   const MEDIAPIPE = {
@@ -708,6 +743,7 @@ button:disabled { cursor: not-allowed; }
     if (leaving === 2 && n !== 2) leaveMirror();
     if (n === 2) enterMirror();
     if (n === 1) updateVideoSlot();
+    if (n !== 1 && !demoVideo.paused) demoVideo.pause();   // pausa o vídeo (e a pulseira) ao sair
 
     tabs[n].scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
@@ -732,14 +768,15 @@ button:disabled { cursor: not-allowed; }
     return videoOk;
   }
   // Ajusta o quadro à proporção real do vídeo (entre 4:5 e 16:9), para a boca não ser cortada
-  demoVideo.addEventListener("loadedmetadata", () => {
+  function onVideoMeta() {
     const w = demoVideo.videoWidth, h = demoVideo.videoHeight;
     if (w && h) {
       const r = Math.min(1.78, Math.max(0.8, w / h));
       demoEl.style.setProperty("--demo-ratio", r.toFixed(4));
     }
     videoOk = true; updateVideoSlot();
-  });
+  }
+  demoVideo.addEventListener("loadedmetadata", onVideoMeta);
   // erro em TODAS as <source> => sem vídeo
   const sources = demoVideo.querySelectorAll("source");
   if (sources.length) {
@@ -747,14 +784,20 @@ button:disabled { cursor: not-allowed; }
   }
   demoVideo.addEventListener("error", () => { videoOk = false; updateVideoSlot(); });
   updateVideoSlot();
+  // se o vídeo carregou antes deste código rodar, o aviso "loadedmetadata" já passou: confere agora
+  if (demoVideo.readyState >= 1) onVideoMeta();
 
   demoVideo.addEventListener("click", () => {
     if (demoVideo.paused) demoVideo.play().catch(() => {}); else demoVideo.pause();
   });
 
   let hapticTimer = null;
-  function haptic(pattern, uiMs) {
-    if ("vibrate" in navigator) navigator.vibrate(pattern);
+  function haptic(padrao, uiMs) {
+    vibrarPulseira(padrao);
+    hapticUi(uiMs);
+  }
+  // liga as "linhas" da Pista Tátil pelo tempo da vibração
+  function hapticUi(uiMs) {
     tactile.classList.add("is-active");
     bandStatus.classList.add("is-active");
     bandTag.firstChild.textContent = "Vibrando ";
@@ -768,13 +811,35 @@ button:disabled { cursor: not-allowed; }
   }
 
   function playDemo() {
-    haptic(HAPTIC_SSS, 2200);
-    if (!updateVideoSlot()) playSound("ssss"); // com vídeo, o som é o do próprio vídeo
-    if (videoOk) {
-      demoVideo.currentTime = 0;
-      demoVideo.play().catch(() => {});
+    if (!updateVideoSlot()) {                  // sem vídeo: som + "Sss" na pulseira juntos
+      haptic("sss", DURACAO_SEM_VIDEO_MS);
+      playSound("ssss");
+      return;
     }
+    demoVideo.currentTime = 0;                 // com vídeo: a pulseira acompanha o vídeo
+    demoVideo.play().catch(() => {});
   }
+
+  // ---------- pulseira junto com o vídeo ----------
+  let sssTimers = [], sssAtivo = false;
+  function sincronizarComVideo() {
+    pararSincronia();
+    const t = demoVideo.currentTime;
+    SEGMENTOS_SSS.forEach(([ini, fim]) => {
+      if (fim <= t) return;
+      const espera = Math.max(0, ini - t) * 1000;
+      const duracao = Math.round((fim - Math.max(t, ini)) * 1000);
+      sssTimers.push(setTimeout(() => { sssAtivo = true; haptic("sss", duracao); }, espera));
+    });
+  }
+  function pararSincronia() {
+    sssTimers.forEach(clearTimeout); sssTimers = [];
+    if (sssAtivo) { sssAtivo = false; pararPulseira(); clearTimeout(hapticTimer); stopHapticUi(); }
+  }
+  demoVideo.addEventListener("playing", sincronizarComVideo);
+  demoVideo.addEventListener("pause", pararSincronia);
+  demoVideo.addEventListener("seeking", pararSincronia);
+  demoVideo.addEventListener("ended", pararSincronia);
   btnSsss.addEventListener("click", playDemo);
   btnReplay.addEventListener("click", playDemo);
 
@@ -897,8 +962,6 @@ button:disabled { cursor: not-allowed; }
   let landmarker = null, lipIdx = null;
   let frameOk = null;                   // null = ainda não sei | true | false
   let frameHint = "", frameHist = [], lastFrameCheck = 0, detectErrors = 0;
-  // diagnóstico (aparece na tela com ?debug=1, ou sozinho se o detector não responder)
-  const dbg = { calls: 0, ok: 0, faces: 0, lastMs: 0, err: "", skip: "", readyAt: 0, mouthW: 0, guideW: 0 };
 
   // só dá para exigir o enquadramento se o detector estiver pronto (ou no modo de teste)
   const framingKnown = () => (DEMO ? true : lmState === "ready" && hasCam);
@@ -919,10 +982,8 @@ button:disabled { cursor: not-allowed; }
       landmarker = await make("CPU");
       lipIdx = [...new Set(FaceLandmarker.FACE_LANDMARKS_LIPS.flatMap((c) => [c.start, c.end]))];
       lmState = "ready";
-      dbg.readyAt = performance.now();
     } catch (e) {
       console.error("[Lumis] falha ao carregar o detector de rosto:", e);
-      dbg.err = "load: " + (e && (e.message || e));
       lmState = "failed";               // sem internet / bloqueado: a atividade segue sem exigir o enquadramento
     }
     paintFraming();
@@ -973,24 +1034,13 @@ button:disabled { cursor: not-allowed; }
   }
 
   function detectFraming(now) {
-    if (camVideo.readyState < 2 || !camVideo.videoWidth) {
-      dbg.skip = "video sem imagem (readyState=" + camVideo.readyState + ")";
-      if (camVideo.paused) camVideo.play().catch(() => {});
-      return;
-    }
-    dbg.skip = "";
+    if (camVideo.readyState < 2 || !camVideo.videoWidth) return;
     let res;
-    const t0 = performance.now();
-    dbg.calls++;
     try {
       res = landmarker.detectForVideo(camVideo, now);
       detectErrors = 0;
-      dbg.ok++;
-      dbg.lastMs = Math.round(performance.now() - t0);
-      if (lmState === "failed") { lmState = "ready"; paintFraming(); }   // se voltou a funcionar, volta ao normal
     } catch (e) {
       console.error("[Lumis] detectForVideo falhou:", e);
-      dbg.err = "detect: " + (e && (e.message || e));
       if (++detectErrors >= 5) { lmState = "failed"; paintFraming(); }   // não fica preso em "Procurando..."
       return;
     }
@@ -1000,11 +1050,9 @@ button:disabled { cursor: not-allowed; }
     if (!lm) {
       r = { ok: false, hint: "Não achei seu rostinho 🔍" };
     } else {
-      dbg.faces++;
       const cam = camera.getBoundingClientRect(), g = guideBox.getBoundingClientRect();
-      if (!cam.width) { dbg.skip = "área da câmera sem largura"; return; }
+      if (!cam.width) return;
       const m = lipsBox(lm, lipIdx, cam.width, cam.height, camVideo.videoWidth, camVideo.videoHeight);
-      dbg.mouthW = Math.round(m.x1 - m.x0); dbg.guideW = Math.round(g.width);
       r = judgeBox(m, { x: g.left - cam.left, y: g.top - cam.top, w: g.width, h: g.height });
     }
 
@@ -1071,11 +1119,6 @@ button:disabled { cursor: not-allowed; }
       if (!listening && above < 6) ambientDb += (m.db - ambientDb) * 0.03;
     }
 
-    // detector pronto mas nunca respondeu: avisa na tela em vez de ficar mudo
-    if (lmState === "ready" && hasCam && !dbg.ok && dbg.readyAt && now - dbg.readyAt > 12000) {
-      lmState = "failed"; paintFraming();
-    }
-
     // confere se a boca está no quadrado (10x por segundo)
     if (landmarker && hasCam && now - lastFrameCheck >= CONFIG.FRAME_EVERY_MS) {
       lastFrameCheck = now;
@@ -1116,7 +1159,7 @@ button:disabled { cursor: not-allowed; }
     // carinho no pulso enquanto o ventinho está saindo
     if (soundHit && framedNow && now - lastBuzz > 700) {
       lastBuzz = now;
-      if ("vibrate" in navigator) navigator.vibrate(40);
+      vibrarPulseira("toque", 40);
     }
 
     if (hitMs >= CONFIG.SUCCESS_HIT_MS) {
@@ -1232,7 +1275,7 @@ button:disabled { cursor: not-allowed; }
         starsPillText.textContent = "Você já tem as Estrelas Mágicas desta Missão. Que sopro lindo!";
       }
       setFbView("success");
-      if ("vibrate" in navigator) navigator.vibrate([100, 60, 100, 60, 220]);
+      vibrarPulseira("comemorar", [100, 60, 100, 60, 220]);
       playSound("sucesso");
       confetti();
     } else {
@@ -1242,7 +1285,7 @@ button:disabled { cursor: not-allowed; }
       fails += 1;
       btnSkip.hidden = fails < CONFIG.MAX_TRIES_BEFORE_SKIP;
       setFbView("retry");
-      if ("vibrate" in navigator) navigator.vibrate(60);
+      vibrarPulseira("toque", 60);
       playSound("tentar");
     }
     showTab(3);
@@ -1392,26 +1435,90 @@ button:disabled { cursor: not-allowed; }
     seg.hidden = false;
   }
 })();
+</script>
+<!-- Reconectar o aparelho do Lumis: gera um código novo, a fono digita no celular -->
+<style>
+.lumis-rec-btn{position:fixed;left:12px;bottom:12px;z-index:2147483000;appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.94);color:#0b4fd1;font:700 13px/1 system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 4px 14px rgba(20,60,160,.18)}
+.lumis-rec-btn:active{transform:scale(.97)}
+.lumis-rec-btn svg{width:15px;height:15px}
+.lumis-rec-bg{position:fixed;inset:0;z-index:2147483001;display:none;place-items:center;padding:16px;background:rgba(11,31,77,.5);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lumis-rec-bg.on{display:grid}
+.lumis-rec-box{width:min(100%,360px);background:#fff;color:#0b1f4d;border-radius:22px;padding:20px 18px 16px;text-align:center;box-shadow:0 20px 50px rgba(11,31,77,.35)}
+.lumis-rec-box h3{margin:0 0 8px;font-size:19px}
+.lumis-rec-box p{margin:0 0 12px;font-size:14px;line-height:1.4;color:#5b6b92}
+.lumis-rec-code{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border-radius:14px;background:#0b4fd1;color:#fff;font:800 24px/1 system-ui,sans-serif;letter-spacing:.04em;box-shadow:0 4px 10px rgba(10,86,214,.3)}
+.lumis-rec-st{margin:12px 0 14px;font-size:13px;font-weight:700;color:#0b4fd1;min-height:18px}
+.lumis-rec-st.err{color:#b3382e}
+.lumis-rec-box .acts{display:flex;gap:8px;justify-content:center}
+.lumis-rec-box .acts button{appearance:none;border:0;cursor:pointer;border-radius:12px;padding:11px 16px;font:700 14px system-ui,sans-serif;background:#e5eeff;color:#0b4fd1}
+</style>
+<button type="button" class="lumis-rec-btn" id="lumisRecBtn" aria-label="Reconectar o aparelho do Lumis">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
+  Reconectar
+</button>
+<div class="lumis-rec-bg" id="lumisRecBg">
+  <div class="lumis-rec-box" role="dialog" aria-modal="true" aria-labelledby="lumisRecT">
+    <h3 id="lumisRecT">Reconectar o Lumis</h3>
+    <p>No celular, abra o portal do Lumis, escolha <b>Conectar aparelho do Lumis</b> e digite o código:</p>
+    <button type="button" class="lumis-rec-code" id="lumisRecCode" title="Copiar código"><span id="lumisRecCodeTxt">LUMIS-····</span></button>
+    <div class="lumis-rec-st" id="lumisRecSt" role="status"></div>
+    <div class="acts"><button type="button" id="lumisRecNovo" hidden>Gerar novo código</button><button type="button" id="lumisRecFechar">Cancelar</button></div>
+  </div>
+</div>
+<script>
+(function(){
+  var h = location.hostname, p = location.port;
+  var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
+  var $ = function(i){ return document.getElementById(i); };
+  var bg = $("lumisRecBg"), codeTxt = $("lumisRecCodeTxt"), st = $("lumisRecSt"), novo = $("lumisRecNovo");
+  var par = null, timer = null, vivo = false;
 
-  // ---------- painel de diagnóstico na tela (para o Raspberry, sem console) ----------
-  (function () {
-    const box = document.createElement("div");
-    box.style.cssText = "position:fixed;left:4px;right:4px;bottom:4px;z-index:99999;background:rgba(0,0,0,.85);color:#9f9;font:11px/1.35 monospace;padding:6px 8px;border-radius:8px;white-space:pre-wrap;pointer-events:none;display:none";
-    document.body.appendChild(box);
-    const forced = params.has("debug");
-    setInterval(() => {
-      const stuck = lmState === "failed" || (lmState === "ready" && hasCam && !dbg.ok && dbg.readyAt && performance.now() - dbg.readyAt > 6000);
-      if (!forced && !stuck) { box.style.display = "none"; return; }
-      box.style.display = "block";
-      box.textContent =
-        "DIAGNOSTICO  detector=" + lmState + "  camera=" + hasCam + "  mic=" + hasMic + "\n" +
-        "video: ready=" + camVideo.readyState + " " + camVideo.videoWidth + "x" + camVideo.videoHeight + " paused=" + camVideo.paused + "\n" +
-        "deteccoes: chamadas=" + dbg.calls + " ok=" + dbg.ok + " com rosto=" + dbg.faces + " ultima=" + dbg.lastMs + "ms\n" +
-        "boca=" + dbg.mouthW + "px  quadrado=" + dbg.guideW + "px  frameOk=" + frameOk + "\n" +
-        (dbg.skip ? "pulou: " + dbg.skip + "\n" : "") + (dbg.err ? "ERRO: " + dbg.err + "\n" : "") +
-        navigator.userAgent.slice(-80);
-    }, 500);
-  })();
+  function msg(t, erro){ st.textContent = t; st.className = "lumis-rec-st" + (erro ? " err" : ""); }
+  function parar(){ vivo = false; clearTimeout(timer); }
+  function fechar(){ parar(); bg.classList.remove("on"); }
+
+  function criar(){
+    parar(); novo.hidden = true; codeTxt.textContent = "LUMIS-····"; msg("Gerando código…");
+    fetch(API + "/api/pareamentos", { method:"POST", headers:{ "content-type":"application/json" } })
+      .then(function(r){ return r.json().then(function(d){ if (r.status !== 201) throw new Error(); return d; }); })
+      .then(function(d){
+        par = d; codeTxt.textContent = d.codigo; msg("Aguardando o celular…"); vivo = true; consultar();
+      })
+      .catch(function(){ msg("Sem conexão com o servidor. Tente de novo.", true); novo.hidden = false; });
+  }
+
+  function consultar(){
+    if (!vivo || !par) return;
+    fetch(API + "/api/pareamentos/status", { headers:{ "x-segredo": par.segredo } })
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { s:r.status, d:d }; }); })
+      .then(function(r){
+        if (!vivo) return;
+        if (r.s === 410 || r.s === 404){ parar(); msg("O código expirou.", true); novo.hidden = false; return; }
+        if (r.s === 200 && r.d.status === "concluido" && r.d.deviceToken){
+          parar();
+          try{ localStorage.setItem("lumis_device_token", r.d.deviceToken); }catch(e){}
+          msg("Reconectado! ✓");
+          setTimeout(function(){ location.reload(); }, 1200);
+          return;
+        }
+        if (r.s === 200 && r.d.status && r.d.status !== "aguardando") msg("Celular conectado… finalizando");
+        timer = setTimeout(consultar, 2000);
+      })
+      .catch(function(){ if (vivo) timer = setTimeout(consultar, 3000); });
+  }
+
+  $("lumisRecBtn").addEventListener("click", function(){ bg.classList.add("on"); criar(); });
+  $("lumisRecFechar").addEventListener("click", fechar);
+  novo.addEventListener("click", criar);
+  bg.addEventListener("click", function(e){ if (e.target === bg) fechar(); });
+  $("lumisRecCode").addEventListener("click", function(){
+    if (!par) return;
+    var c = par.codigo;
+    function ok(){ codeTxt.textContent = "Copiado!"; setTimeout(function(){ if (par) codeTxt.textContent = c; }, 1200); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(ok, function(){});
+    else ok();
+  });
+})();
 </script>
 </body>
 </html>

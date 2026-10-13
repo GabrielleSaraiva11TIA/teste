@@ -283,9 +283,52 @@ $('chip').textContent = ALVO.rotulo;
 const falar = html => { $('balao').innerHTML = `<small>Lumis:</small>${html}`; };
 const status = t => { $('status').textContent = t; };
 const micTxt = t => { $('btnMicTxt').textContent = t; };
-function vibrar(p){
+/* ---------- Pulseira (Python no Raspberry — pulseira.py) ----------
+   A página pode estar na internet; o Python roda no próprio Raspberry ("localhost" = o aparelho onde a página está aberta).
+   Se o Python estiver desligado, o celular vibra como reserva. */
+var API = "http://localhost:5001";
+function enviar(url, dados) {
+  return fetch(url, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(dados) })
+    .then(function(r){ return r.json(); });
+}
+// celular (opcional): padrão de vibração do celular usado só se a pulseira não responder
+function vibrarPulseira(padrao, celular) {
+  return enviar(API + "/api/pulseira/vibrar", {padrao: padrao})
+    .catch(function(){
+      if (celular)                     vibrarLocal(celular);
+      else if (padrao === "sss")       vibrarLocal([60,40,60,40,60,40,60]);
+      else if (padrao === "p")         vibrarLocal([120]);
+      else if (padrao === "comemorar") vibrarLocal([100,60,100,60,100,60,200]);
+      else if (padrao === "toque")     vibrarLocal([80,50,80]);
+      else if (padrao === "tambor")    vibrarLocal([150,80,150]);
+      else if (padrao === "sino")      vibrarLocal([200]);
+      else if (padrao === "vento")     vibrarLocal([40,30,40,30,40,30,40,30,40]);
+      else                             vibrarLocal([60]);
+    });
+}
+function pararPulseira() {
+  return enviar(API + "/api/pulseira/parar", {}).catch(function(){});
+}
+function vibrarLocal(p) {
+  try { if (navigator.vibrate) navigator.vibrate(p); } catch(e) {}
+}
+
+/* ===== Ao vivo (microfone): a pulseira vibra enquanto a criança faz o som ===== */
+var aoVivoAtivo = false, contAoVivo = 0;
+function enviarAoVivo(intensidade) {
+  if (!aoVivoAtivo) return;
+  enviar(API + "/api/pulseira/ao-vivo", {ligado: true, intensidade: Math.min(1, intensidade)}).catch(function(){});
+}
+function pararAoVivo() {
+  aoVivoAtivo = false;
+  enviar(API + "/api/pulseira/ao-vivo", {ligado: false, intensidade: 0}).catch(function(){});
+}
+
+/* padrao: "toque" | "comemorar"; celular: vibração do celular se o Python estiver desligado */
+function vibrar(padrao, celular){
   if(!PULSEIRA_ATIVA) return;
-  navigator.vibrate?.(p);
+  if (padrao) vibrarPulseira(padrao, typeof celular === 'number' ? [celular] : celular);
+  else vibrarLocal(typeof celular === 'number' ? [celular] : (celular || []));
   const v = $('vibra'); v.classList.remove('buzz'); void v.offsetWidth; v.classList.add('buzz');
 }
 function barra(p){ $('enche').style.setProperty('--p', p); $('trilho').setAttribute('aria-valuenow', Math.round(p*100)); }
@@ -313,6 +356,7 @@ async function iniciar(){
   $('btnMic').classList.add('ouvindo'); micTxt(T.botaoOuvindo);
   $('orbe').classList.add('ouvindo'); $('bau').classList.add('tremendo');
   $('btnSimular').disabled = true; status(T.esperando); falar(T.ouvindo);
+  contAoVivo = 0;
   raf = requestAnimationFrame(laco);
 }
 function laco(agora){
@@ -329,6 +373,10 @@ function laco(agora){
   carga = Math.max(0, carga + dt*taxa); if(taxa>0) ultimoProg = agora;
   const p = Math.min(1, carga/SEGURAR_MS), nivel = Math.min(1, rms*14);
   barra(p); $('orbe').style.setProperty('--nivel', nivel.toFixed(2));
+  if(PULSEIRA_ATIVA){      // vibra enquanto a criança faz o som; para quando ela para
+    if(voz){ aoVivoAtivo = true; contAoVivo++; if(contAoVivo % 7 === 0) enviarAoVivo(nivel); }
+    else { if(aoVivoAtivo) pararAoVivo(); contAoVivo = 0; }
+  }
   status(taxa>0 ? T.continue : T.esperando);
   if(p>=1) return sucesso();
   if(agora - ultimoProg > JANELA_MS) return parar(true);
@@ -336,6 +384,7 @@ function laco(agora){
 }
 function limparEscuta(){
   cancelAnimationFrame(raf); ouvindo = false;
+  if(aoVivoAtivo) pararAoVivo();
   $('btnMic').classList.remove('ouvindo'); $('orbe').classList.remove('ouvindo'); $('orbe').style.removeProperty('--nivel');
   $('bau').classList.remove('tremendo');
 }
@@ -343,7 +392,7 @@ function limparEscuta(){
 function parar(esgotou){
   limparEscuta(); barra(0); micTxt(T.botaoFalar);
   $('btnSimular').disabled = false; status(T.denovo);
-  falar(esgotou ? T.tentar : T.pausa); if(esgotou) vibrar(80);
+  falar(esgotou ? T.tentar : T.pausa); if(esgotou) vibrar('toque', 80);
 }
 
 /* sucesso: o baú abre e a estrela é desbloqueada */
@@ -357,7 +406,7 @@ function sucesso(){
     b.style.background = k%2 ? '#FBBF24' : '#38BDF8'; bau.appendChild(b);
   }
   bau.classList.add('aberto'); $('meta').classList.add('on');
-  vibrar([120,60,120,60,240,80,400]);
+  vibrar('comemorar', [120,60,120,60,240,80,400]);
   chuvaDeEstrelas(); confete();
   $('orbe').classList.add('festa'); $('cena').classList.add('festa'); setTimeout(()=>$('orbe').classList.remove('festa'),3000);
   falar(T.final); status(T.completo); $('dica').textContent = 'Você segurou o som até o fim!';
@@ -380,7 +429,7 @@ function chuvaDeEstrelas(){
       {transform:`translate(${dx}px,-80px) scale(1.6) rotate(20deg)`,opacity:1,offset:.35},
       {transform:`translate(${alvo.x-de.x}px,${alvo.y-de.y}px) scale(.5)`,opacity:1}
     ],{duration:1400,delay:800+k*400,easing:'ease-in-out',fill:'both'}).onfinish = ()=>{
-      f.remove(); estrelas++; $('qtdEstrelas').textContent = estrelas; vibrar(40);
+      f.remove(); estrelas++; $('qtdEstrelas').textContent = estrelas; vibrar('toque', 40);
       const p = $('pillEstrelas'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump');
     };
   }
@@ -398,6 +447,90 @@ function confete(){
 }
 $('voltar').addEventListener('click', ()=>{ if(URL_VOLTAR!=='#') location.href = URL_VOLTAR; parent.postMessage({lumis:'voltar'},'*'); });
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden && ouvindo) parar(false); });
+</script>
+<!-- Reconectar o aparelho do Lumis: gera um código novo, a fono digita no celular -->
+<style>
+.lumis-rec-btn{position:fixed;left:12px;bottom:12px;z-index:2147483000;appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.94);color:#0b4fd1;font:700 13px/1 system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 4px 14px rgba(20,60,160,.18)}
+.lumis-rec-btn:active{transform:scale(.97)}
+.lumis-rec-btn svg{width:15px;height:15px}
+.lumis-rec-bg{position:fixed;inset:0;z-index:2147483001;display:none;place-items:center;padding:16px;background:rgba(11,31,77,.5);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lumis-rec-bg.on{display:grid}
+.lumis-rec-box{width:min(100%,360px);background:#fff;color:#0b1f4d;border-radius:22px;padding:20px 18px 16px;text-align:center;box-shadow:0 20px 50px rgba(11,31,77,.35)}
+.lumis-rec-box h3{margin:0 0 8px;font-size:19px}
+.lumis-rec-box p{margin:0 0 12px;font-size:14px;line-height:1.4;color:#5b6b92}
+.lumis-rec-code{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border-radius:14px;background:#0b4fd1;color:#fff;font:800 24px/1 system-ui,sans-serif;letter-spacing:.04em;box-shadow:0 4px 10px rgba(10,86,214,.3)}
+.lumis-rec-st{margin:12px 0 14px;font-size:13px;font-weight:700;color:#0b4fd1;min-height:18px}
+.lumis-rec-st.err{color:#b3382e}
+.lumis-rec-box .acts{display:flex;gap:8px;justify-content:center}
+.lumis-rec-box .acts button{appearance:none;border:0;cursor:pointer;border-radius:12px;padding:11px 16px;font:700 14px system-ui,sans-serif;background:#e5eeff;color:#0b4fd1}
+</style>
+<button type="button" class="lumis-rec-btn" id="lumisRecBtn" aria-label="Reconectar o aparelho do Lumis">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
+  Reconectar
+</button>
+<div class="lumis-rec-bg" id="lumisRecBg">
+  <div class="lumis-rec-box" role="dialog" aria-modal="true" aria-labelledby="lumisRecT">
+    <h3 id="lumisRecT">Reconectar o Lumis</h3>
+    <p>No celular, abra o portal do Lumis, escolha <b>Conectar aparelho do Lumis</b> e digite o código:</p>
+    <button type="button" class="lumis-rec-code" id="lumisRecCode" title="Copiar código"><span id="lumisRecCodeTxt">LUMIS-····</span></button>
+    <div class="lumis-rec-st" id="lumisRecSt" role="status"></div>
+    <div class="acts"><button type="button" id="lumisRecNovo" hidden>Gerar novo código</button><button type="button" id="lumisRecFechar">Cancelar</button></div>
+  </div>
+</div>
+<script>
+(function(){
+  var h = location.hostname, p = location.port;
+  var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
+  var $ = function(i){ return document.getElementById(i); };
+  var bg = $("lumisRecBg"), codeTxt = $("lumisRecCodeTxt"), st = $("lumisRecSt"), novo = $("lumisRecNovo");
+  var par = null, timer = null, vivo = false;
+
+  function msg(t, erro){ st.textContent = t; st.className = "lumis-rec-st" + (erro ? " err" : ""); }
+  function parar(){ vivo = false; clearTimeout(timer); }
+  function fechar(){ parar(); bg.classList.remove("on"); }
+
+  function criar(){
+    parar(); novo.hidden = true; codeTxt.textContent = "LUMIS-····"; msg("Gerando código…");
+    fetch(API + "/api/pareamentos", { method:"POST", headers:{ "content-type":"application/json" } })
+      .then(function(r){ return r.json().then(function(d){ if (r.status !== 201) throw new Error(); return d; }); })
+      .then(function(d){
+        par = d; codeTxt.textContent = d.codigo; msg("Aguardando o celular…"); vivo = true; consultar();
+      })
+      .catch(function(){ msg("Sem conexão com o servidor. Tente de novo.", true); novo.hidden = false; });
+  }
+
+  function consultar(){
+    if (!vivo || !par) return;
+    fetch(API + "/api/pareamentos/status", { headers:{ "x-segredo": par.segredo } })
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { s:r.status, d:d }; }); })
+      .then(function(r){
+        if (!vivo) return;
+        if (r.s === 410 || r.s === 404){ parar(); msg("O código expirou.", true); novo.hidden = false; return; }
+        if (r.s === 200 && r.d.status === "concluido" && r.d.deviceToken){
+          parar();
+          try{ localStorage.setItem("lumis_device_token", r.d.deviceToken); }catch(e){}
+          msg("Reconectado! ✓");
+          setTimeout(function(){ location.reload(); }, 1200);
+          return;
+        }
+        if (r.s === 200 && r.d.status && r.d.status !== "aguardando") msg("Celular conectado… finalizando");
+        timer = setTimeout(consultar, 2000);
+      })
+      .catch(function(){ if (vivo) timer = setTimeout(consultar, 3000); });
+  }
+
+  $("lumisRecBtn").addEventListener("click", function(){ bg.classList.add("on"); criar(); });
+  $("lumisRecFechar").addEventListener("click", fechar);
+  novo.addEventListener("click", criar);
+  bg.addEventListener("click", function(e){ if (e.target === bg) fechar(); });
+  $("lumisRecCode").addEventListener("click", function(){
+    if (!par) return;
+    var c = par.codigo;
+    function ok(){ codeTxt.textContent = "Copiado!"; setTimeout(function(){ if (par) codeTxt.textContent = c; }, 1200); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(ok, function(){});
+    else ok();
+  });
+})();
 </script>
 </body>
 </html>
