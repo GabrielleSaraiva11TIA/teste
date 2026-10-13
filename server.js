@@ -297,6 +297,36 @@ app.put("/api/profissional/formulario", exigirUsuario("profissional"), wrap(asyn
 }))
 
 // ============================================================
+//  PROFISSIONAL • pacientes, sessões e relatórios (área da fono)
+//  Cada registro é um JSON guardado na conta da profissional logada.
+// ============================================================
+const TIPOS_FONO = ["patient", "session", "assessment"]
+
+app.get("/api/profissional/registros", exigirUsuario("profissional"), wrap(async (req, res) => {
+    const linhas = await q("SELECT registro_id, dados FROM lumis_fono_registros WHERE usuario_id = ? ORDER BY criado_em", [req.usuario.id])
+    res.json({
+        registros: linhas.map(l => ({ ...lerJson(l.dados, {}), _id: l.registro_id }))
+    })
+}))
+
+app.put("/api/profissional/registros/:id", exigirUsuario("profissional"), limite(300, 60 * 1000), wrap(async (req, res) => {
+    const id = String(req.params.id || "")
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) return erro(res, 400, "Identificador inválido.")
+    const dados = req.body && req.body.dados
+    if (!dados || typeof dados !== "object" || Array.isArray(dados)) return erro(res, 400, "Dados inválidos.")
+    if (!TIPOS_FONO.includes(dados.kind)) return erro(res, 400, "Tipo de registro inválido.")
+    delete dados._id
+    const json = JSON.stringify(dados)
+    if (json.length > 90000) return erro(res, 413, "Registro grande demais.")
+    await q(
+        `INSERT INTO lumis_fono_registros (usuario_id, registro_id, tipo, dados) VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE tipo = VALUES(tipo), dados = VALUES(dados)`,
+        [req.usuario.id, id, dados.kind, json]
+    )
+    res.json({ ok: true })
+}))
+
+// ============================================================
 //  PAREAMENTO  (aparelho ⇄ celular do adulto)
 //
 //  1. Aparelho:  POST /api/pareamentos            → codigo, token (vai no QR), segredo

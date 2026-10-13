@@ -92,3 +92,20 @@ CREATE TABLE IF NOT EXISTS lumis_pareamentos (
   UNIQUE KEY uq_lumis_pareamentos_segredo (segredo),
   KEY ix_lumis_pareamentos_codigo (codigo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Área da fonoaudióloga: pacientes, sessões e reavaliações cadastrados por ela.
+-- Cada registro é um documento JSON (o formato é o mesmo usado pela tela fono.html),
+-- então dá para criar campos novos (ex.: relatórios por atividade) sem mexer na tabela.
+--   tipo = 'patient' | 'session' | 'assessment'
+CREATE TABLE IF NOT EXISTS lumis_fono_registros (
+  usuario_id     INT UNSIGNED NOT NULL,
+  registro_id    VARCHAR(40) NOT NULL,
+  tipo           VARCHAR(20) NOT NULL,
+  dados          MEDIUMTEXT NOT NULL,
+  criado_em      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (usuario_id, registro_id),
+  KEY ix_lumis_fono_tipo (usuario_id, tipo),
+  CONSTRAINT fk_lumis_fono_usuario FOREIGN KEY (usuario_id)
+    REFERENCES lumis_usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

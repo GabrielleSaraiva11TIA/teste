@@ -228,11 +228,40 @@ button,select,label.chip,summary{touch-action:manipulation}
 .subh{font-size:14.5px;font-weight:700;margin:0 0 10px}
 .clin{margin-bottom:28px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* lista de pacientes e cabeçalho do paciente */
+.pbar{display:flex;align-items:center;gap:12px;margin:22px 0 4px}
+.pbar .back{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px 0 10px;border-radius:999px;border:1px solid var(--line2);background:#fff;color:var(--blue-d);font-weight:700;font-size:14.5px;cursor:pointer}
+.pbar .back:hover{border-color:var(--blue)}
+.pbar .pname{min-width:0}
+.pbar .pname b{display:block;font-size:19px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.pbar .pname small{display:block;color:var(--ink2);font-size:13.5px}
+.plist-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:28px 0 16px}
+.plist-head h2{font-size:20px;font-weight:700}
+.plist-head p{font-size:14px;color:var(--ink2);margin-top:2px}
+.plist{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.pcard{display:grid;grid-template-columns:48px 1fr 24px;gap:14px;align-items:center;width:100%;padding:14px 16px;background:#fff;border:1px solid var(--line2);border-radius:18px;text-align:left;cursor:pointer}
+.pcard:hover{border-color:var(--blue);background:var(--blue50)}
+.pcard:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.pav{width:48px;height:48px;border-radius:16px;background:var(--blue100);color:var(--blue-d);display:grid;place-items:center;font-weight:700;font-size:19px}
+.pinfo{min-width:0}
+.pinfo b{display:block;font-size:16.5px;font-weight:700;overflow-wrap:anywhere}
+.pinfo small{display:block;color:var(--ink2);font-size:13.5px}
+.pcard .ic{color:var(--ink2);transform:rotate(-90deg)}
+.rep{padding:18px;border:1px solid var(--line2);border-radius:18px;background:#fff;margin-bottom:14px}
+.rep-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.rep-h b{font-size:16px}
+.rep-h small{color:var(--ink2);font-size:13px}
+.rep-n{display:inline-grid;place-items:center;width:28px;height:28px;margin-right:8px;border-radius:50%;background:var(--blue100);color:var(--blue-d);font-size:14px;font-weight:700}
+.rep .btn{margin-top:12px;min-height:40px}
+.rep textarea{min-height:110px}
+.tabs[hidden]{display:none!important}
+@media (max-width:760px){.rep .btn{width:100%}.tabs{display:flex!important;overflow-x:auto!important}.tab{white-space:nowrap!important;flex:none}}
 /* modo incorporado no portal Lumis (menu fica no portal) */
 body.embed{background:transparent}
-body.embed .top,body.embed .hero,body.embed #tabs,body.embed .foot p:not(#storeNote){display:none}
+body.embed .top,body.embed .hero,body.embed .foot p:not(#storeNote){display:none}
 body.embed .wrap{padding-bottom:28px}
-body.embed .patientbar{margin-top:6px}
+body.embed .pbar{margin-top:6px}
+body.embed .plist-head{padding-top:10px}
 body.embed .bar{background:#f4f9ff;padding-bottom:16px}
 @media (max-width:760px){body.embed .wrap{padding-left:16px;padding-right:16px}}
 </style>
@@ -252,13 +281,7 @@ body.embed .bar{background:#f4f9ff;padding-bottom:16px}
 
     <div id="banner"></div>
 
-    <div class="patientbar">
-      <div class="fld">
-        <label for="patientSelect">Paciente</label>
-        <select id="patientSelect"></select>
-      </div>
-      <button type="button" class="btn btn-ghost" data-act="new-patient" id="newPatientBtn">+ Novo paciente</button>
-    </div>
+    <div id="pbar"></div>
 
     <nav class="tabs" role="tablist" aria-label="Seções do acompanhamento" id="tabs"></nav>
     <section id="panel" role="tabpanel" tabindex="-1"></section>
@@ -284,7 +307,8 @@ var DOMAINS=[['percepcao','Percepção e discriminação auditiva'],['sons','Rec
 var STATUS=[['','Não preenchido'],['nao_avaliado','Ainda não avaliado'],['nao_se_aplica','Não se aplica'],['ausente','Ainda não presente'],['emergente','Emergente'],['desenvolvimento','Em desenvolvimento'],['consolidado','Consolidado']];
 var STATUS_NAME={};STATUS.forEach(function(s){STATUS_NAME[s[0]]=s[1]});
 var RANK={ausente:1,emergente:2,desenvolvimento:3,consolidado:4};
-var TABS=[['perfil','Perfil do paciente','user'],['sessoes','Sessões e exercícios','list'],['evolucao','Evolução','trend'],['plano','Plano terapêutico','target']];
+var TABS=[['perfil','Dados','user'],['sessoes','Sessões','list'],['evolucao','Evolução e progresso','trend'],['plano','Plano','target'],['relatorios','Relatórios','doc']];
+var ATIVIDADES=[['a1','Atividade 1','Descoberta do Som'],['a2','Atividade 2','Espelho do Lumis'],['a3','Atividade 3','Missão da língua'],['a4','Atividade 4','Espelho do Lumis'],['a5','Atividade 5','Desafio de Percepção'],['a6','Atividade 6','Presente do Lumis'],['a7','Atividade 7','Detetive do Lumis'],['a8','Atividade 8','Desafio Final']];
 var GOAL_STATUS=[['desenvolvimento','Em desenvolvimento'],['parcial','Parcialmente alcançada'],['alcancada','Alcançada']];
 var DESEMPENHO=[['','Não registrado'],['muita','Muita dificuldade'],['alguma','Alguma dificuldade'],['pouca','Pouca dificuldade'],['sem','Sem dificuldade']];
 var AUXILIO=[['','Não registrado'],['nenhum','Sem auxílio'],['minimo','Auxílio mínimo'],['moderado','Auxílio moderado'],['maximo','Auxílio máximo']];
@@ -298,6 +322,8 @@ var ICON={
   list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
   trend:'<path d="M4 17l5-5.5 4 3L20 7"/><path d="M4 20.5h16"/>',
   target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/>',
+  doc:'<path d="M7 3.5h7l4 4V20a.5.5 0 01-.5.5h-10A.5.5 0 017 20V3.5z"/><path d="M14 3.5V8h4M9.5 12.5h5M9.5 16h5"/>',
+  back:'<path d="M15 6l-6 6 6 6"/>',
   chevron:'<path d="M6 9l6 6 6-6"/>',
   close:'<path d="M6 6l12 12M18 6L6 18"/>',
   trash:'<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/>'
@@ -305,10 +331,9 @@ var ICON={
 function ic(n,s){s=s||18;return '<svg class="ic" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICON[n]+'</svg>'}
 
 /* ---------- estado ---------- */
-var S={db:null,col:null,uid:null,status:'loading',docs:[],pid:null,tab:'perfil',newP:false,dirty:false,skill:null,open:{},moreObs:false};
+var S={db:null,col:null,uid:null,status:'loading',docs:[],pid:null,view:'lista',tab:'perfil',newP:false,dirty:false,skill:null,open:{},moreObs:false};
 var QP=new URLSearchParams(location.search),EMB=QP.get('embed')==='1',UID=(QP.get('u')||'').replace(/\W/g,''),SUF=UID?'.'+UID:'',PIDKEY='lumis.fono.pid'+SUF;
 if(EMB)document.body.classList.add('embed');
-try{S.pid=localStorage.getItem(PIDKEY)||null}catch(e){}
 
 /* ---------- utilidades ---------- */
 function $(s,r){return (r||document).querySelector(s)}
@@ -349,7 +374,7 @@ function setDirty(v){S.dirty=v;var n=$('#dirtyNote');if(n)n.hidden=!v}
 
 /* ---------- dados ---------- */
 function patients(){return S.docs.filter(function(d){return d.kind==='patient'}).sort(function(a,b){return ((a.profile||{}).nome||'').localeCompare(((b.profile||{}).nome||''),'pt-BR')})}
-function cur(){if(S.newP)return null;var ps=patients();for(var i=0;i<ps.length;i++){if(ps[i]._id===S.pid)return ps[i]}return null}
+function cur(){if(S.newP||S.view!=='paciente')return null;var ps=patients();for(var i=0;i<ps.length;i++){if(ps[i]._id===S.pid)return ps[i]}return null}
 function byDate(a,b){return a.date<b.date?-1:a.date>b.date?1:((a.createdAt||0)-(b.createdAt||0))}
 function sessionsOf(p){return S.docs.filter(function(d){return d.kind==='session'&&d.patientId===p._id}).sort(byDate)}
 function assessOf(p){return S.docs.filter(function(d){return d.kind==='assessment'&&d.patientId===p._id}).sort(byDate)}
@@ -358,11 +383,12 @@ function firstName(p){return (((p.profile||{}).nome||'').trim().split(/\s+/)[0])
 function isReady(){return S.status!=='unavailable'}
 function onData(){
   var ps=patients();
-  if(!S.newP&&!ps.some(function(p){return p._id===S.pid}))S.pid=ps.length?ps[0]._id:null;
+  if(!S.newP&&S.view==='paciente'&&!ps.some(function(p){return p._id===S.pid})){S.pid=null;S.view='lista'}
   if(S.dirty)renderChrome();else render();
 }
 function errMsg(e){
   var c=e&&e.code;
+  if(c==='network')return 'Sem conexão com o servidor. Nada foi salvo, tente de novo.';
   if((e&&e.name==='QuotaExceededError')||c==='quota_exceeded')return 'Limite de armazenamento atingido. Nada foi salvo.';
   if(c==='invalid_argument'||c==='not_granted'||c==='revoked')return 'Não foi possível salvar. Verifique se o seu acesso permite editar e tente novamente.';
   return 'Não foi possível salvar. Tente novamente.';
@@ -376,23 +402,29 @@ function write(fn,okMsg){
 }
 
 /* ---------- renderização geral ---------- */
-function render(){renderChrome();renderPanel();notifyTab()}
-function notifyTab(){if(EMB&&window.parent!==window){try{window.parent.postMessage({lumisTabAtual:S.tab,lumisNovo:!!S.newP},location.origin)}catch(e){}}}
+function render(){renderChrome();renderPanel()}
 
 function renderChrome(){
   var b=$('#banner');
   b.innerHTML=S.status==='unavailable'?'<p class="notice">Não foi possível acessar nenhum armazenamento neste navegador. Nada é salvo nesta visualização.</p>':S.status==='local'?'<p class="notice">Seus registros estão sendo salvos somente neste aparelho e neste navegador. Limpar os dados do navegador apaga esses registros.</p>':'';
   $('#storeNote').textContent=S.status==='ready'?'Os registros ficam salvos na sua conta e são visíveis somente para você.':S.status==='local'?'Os registros ficam salvos apenas neste aparelho.':'';
-  var ps=patients(),sel=$('#patientSelect'),html='';
-  if(S.newP)html+='<option value="__new" selected>Novo paciente</option>';
-  if(!ps.length&&!S.newP)html+='<option value="">Nenhum paciente cadastrado</option>';
-  ps.forEach(function(p){html+='<option value="'+esc(p._id)+'"'+(!S.newP&&p._id===S.pid?' selected':'')+'>'+esc((p.profile||{}).nome||'Sem nome')+'</option>'});
-  sel.innerHTML=html;sel.disabled=!ps.length;
-  $('#newPatientBtn').disabled=!isReady();
-  $('#tabs').innerHTML=TABS.map(function(t){
+  var pb=$('#pbar'),inP=S.view==='paciente'||S.newP,p=cur();
+  if(inP){
+    var nm=S.newP?'Novo paciente':((p&&(p.profile||{}).nome)||'Paciente');
+    pb.innerHTML='<div class="pbar"><button type="button" class="back" data-act="back-list">'+ic('back',18)+'Pacientes</button><div class="pname"><b>'+esc(nm)+'</b>'+(p?'<small>'+esc(ageText(p))+'</small>':'')+'</div></div>';
+  }else pb.innerHTML='';
+  var tb=$('#tabs');tb.hidden=!inP||S.newP;
+  tb.innerHTML=TABS.map(function(t){
     var on=S.tab===t[0];
     return '<button type="button" role="tab" class="tab" id="tab-'+t[0]+'" aria-selected="'+on+'" aria-controls="panel" tabindex="'+(on?0:-1)+'" data-act="tab" data-tab="'+t[0]+'">'+ic(t[2],17)+t[1]+'</button>'
   }).join('');
+}
+function ageText(p){
+  var n=(p.profile||{}).nascimento;if(!n)return 'Dados do paciente';
+  var d=new Date(n+'T00:00:00'),now=new Date(),m=(now.getFullYear()-d.getFullYear())*12+now.getMonth()-d.getMonth();
+  if(now.getDate()<d.getDate())m--;if(m<0)m=0;
+  var y=Math.floor(m/12),r=m%12;
+  return y>0?y+(y===1?' ano':' anos')+(r?' e '+r+(r===1?' mês':' meses'):''):r+(r===1?' mês':' meses');
 }
 
 function emptyBlock(title,body,btn){
@@ -403,15 +435,50 @@ function emptyNoPatient(){
 }
 function renderPanel(){
   var el=$('#panel');
-  el.setAttribute('aria-labelledby','tab-'+S.tab);
+  if(S.view==='paciente'&&!S.newP)el.setAttribute('aria-labelledby','tab-'+S.tab);else el.removeAttribute('aria-labelledby');
   if(S.status==='loading'&&!S.newP){el.innerHTML='<p class="muted pad">Carregando registros…</p>';return}
   if(S.status==='unavailable'){el.innerHTML=emptyBlock('Armazenamento indisponível','Este navegador não permite guardar registros. Abra a página em outro navegador para cadastrar pacientes e salvar informações.');return}
+  if(S.view==='lista'&&!S.newP){el.innerHTML=viewList();return}
   var p=cur();
-  if(S.tab==='perfil'){el.innerHTML=viewProfile(p);return}
-  if(!p){el.innerHTML=emptyNoPatient();return}
-  if(S.tab==='sessoes')el.innerHTML=viewSessions(p);
+  if(S.newP){el.innerHTML=viewProfile(null);return}
+  if(!p){el.innerHTML=viewList();return}
+  if(S.tab==='perfil')el.innerHTML=viewProfile(p);
+  else if(S.tab==='sessoes')el.innerHTML=viewSessions(p);
   else if(S.tab==='evolucao')el.innerHTML=viewEvolution(p);
+  else if(S.tab==='relatorios')el.innerHTML=viewReports(p);
   else el.innerHTML=viewPlan(p);
+}
+
+/* ---------- lista de pacientes ---------- */
+function viewList(){
+  var ps=patients();
+  if(!ps.length)return emptyNoPatient();
+  var head='<div class="plist-head"><div><h2>Pacientes</h2><p>'+ps.length+(ps.length===1?' paciente cadastrado':' pacientes cadastrados')+'. Toque em um nome para ver dados, evolução e relatórios.</p></div><button type="button" class="btn btn-primary" data-act="new-patient"'+(!isReady()?' disabled':'')+'>+ Cadastrar paciente</button></div>';
+  return head+'<ul class="plist">'+ps.map(function(p){
+    var nome=(p.profile||{}).nome||'Sem nome',ses=sessionsOf(p),last=ses.length?ses[ses.length-1].date:'';
+    var info=ageText(p)+' · '+(ses.length?ses.length+(ses.length===1?' sessão':' sessões')+' · última em '+fmt(last):'nenhuma sessão ainda');
+    return '<li><button type="button" class="pcard" data-act="open-patient" data-id="'+esc(p._id)+'"><span class="pav" aria-hidden="true">'+esc(nome.trim().charAt(0).toUpperCase()||'?')+'</span><span class="pinfo"><b>'+esc(nome)+'</b><small>'+esc(info)+'</small></span>'+ic('chevron')+'</button></li>';
+  }).join('')+'</ul>';
+}
+
+/* ---------- relatórios por atividade ---------- */
+function viewReports(p){
+  var rel=p.relatorios||{};
+  var intro='<div class="toolbar"><div><h2>Relatórios por atividade</h2><p>Escreva como '+esc(firstName(p))+' se saiu em cada atividade do Lumis. Cada relatório é salvo separadamente.</p></div></div>';
+  return intro+ATIVIDADES.map(function(a){
+    var r=rel[a[0]]||{},when=r.em?new Date(r.em).toLocaleDateString('pt-BR'):'';
+    return '<form class="rep" data-rid="'+a[0]+'" novalidate><div class="rep-h"><b><span class="rep-n">'+a[0].slice(1)+'</span>'+esc(a[2])+'</b><small>'+(when?'Atualizado em '+when:'Ainda sem relatório')+'</small></div>'
+      +'<label class="sr" for="rp-'+a[0]+'">Relatório da '+esc(a[1])+'</label><textarea id="rp-'+a[0]+'" rows="4" placeholder="Como foi a atividade? Desempenho, dificuldades, pistas usadas, observações…">'+esc(r.texto||'')+'</textarea>'
+      +'<button type="submit" class="btn btn-primary">Salvar relatório</button></form>';
+  }).join('');
+}
+function submitReport(f){
+  var p=cur();if(!p)return;
+  var id=f.dataset.rid,txt=$('textarea',f).value.trim(),btn=$('button[type=submit]',f);btn.disabled=true;
+  var rel={};var old=p.relatorios||{};for(var k in old)rel[k]=old[k];
+  if(txt)rel[id]={texto:txt,em:Date.now()};else delete rel[id];
+  var y=window.scrollY;
+  write(function(){return S.col.doc(p._id).update({relatorios:rel,updatedAt:Date.now()})},txt?'Relatório salvo':'Relatório removido').then(function(ok){btn.disabled=false;if(ok)window.scrollTo(0,y)});
 }
 
 /* ---------- perfil ---------- */
@@ -475,8 +542,8 @@ function submitProfile(f){
   },p?'Alterações salvas':'Paciente cadastrado').then(function(ok){
     btn.disabled=false;
     if(!ok)return;
-    S.newP=false;S.pid=id;try{localStorage.setItem(PIDKEY,id)}catch(e){}
-    setDirty(false);render();
+    S.newP=false;S.pid=id;S.view='paciente';
+    setDirty(false);render();window.scrollTo({top:0});
   });
 }
 
@@ -810,8 +877,10 @@ function submitPlan(f){
 function guard(){if(S.dirty){toast('Salve ou cancele as alterações antes de continuar.',true);return true}return false}
 var ACT={
   'tab':function(b){if(b.dataset.tab===S.tab)return;if(guard())return;S.tab=b.dataset.tab;render();var t=$('#tab-'+S.tab);if(t&&t.scrollIntoView)t.scrollIntoView({block:'nearest',inline:'nearest'})},
-  'new-patient':function(){if(guard())return;S.newP=true;S.tab='perfil';render();window.scrollTo({top:0})},
-  'cancel-form':function(){setDirty(false);if(S.newP)S.newP=false;render()},
+  'new-patient':function(){if(guard())return;S.newP=true;S.view='lista';S.tab='perfil';render();window.scrollTo({top:0})},
+  'open-patient':function(b){if(guard())return;S.newP=false;S.pid=b.dataset.id;S.view='paciente';S.tab='perfil';S.skill=null;S.open={};render();window.scrollTo({top:0})},
+  'back-list':function(){if(guard())return;S.newP=false;S.pid=null;S.view='lista';render();window.scrollTo({top:0})},
+  'cancel-form':function(){setDirty(false);if(S.newP){S.newP=false;S.view='lista'}render()},
   'open-session':function(){openSession()},
   'edit-session':function(b){openSession(b.dataset.id)},
   'toggle-ses':function(b){var id=b.dataset.id;S.open[id]=!S.open[id];b.setAttribute('aria-expanded',S.open[id]);var body=$('#sb-'+id);if(body)body.hidden=!S.open[id]},
@@ -839,6 +908,7 @@ document.addEventListener('submit',function(e){
   else if(f.id==='f-plano')submitPlan(f);
   else if(f.id==='f-sessao')submitSession(f);
   else if(f.id==='f-reav')submitAssess(f);
+  else if(f.classList.contains('rep'))submitReport(f);
 });
 document.addEventListener('input',function(e){
   var f=e.target.closest('form[data-track]');if(f)setDirty(true);
@@ -846,12 +916,6 @@ document.addEventListener('input',function(e){
 document.addEventListener('change',function(e){
   var t=e.target;
   var f=t.closest('form[data-track]');if(f)setDirty(true);
-  if(t.id==='patientSelect'){
-    if(guard()){renderChrome();return}
-    if(t.value==='__new')return;
-    S.newP=false;S.pid=t.value||null;try{localStorage.setItem(PIDKEY,S.pid||'')}catch(x){}
-    render();return;
-  }
   if(t.name==='recursos'){
     var form=t.closest('form');
     if(t.checked&&t.value==='nenhum')$$('input[name=recursos]',form).forEach(function(i){if(i.value!=='nenhum')i.checked=false});
@@ -872,8 +936,8 @@ document.addEventListener('change',function(e){
 window.addEventListener('message',function(e){
   if(e.origin!==location.origin)return;
   var d=e.data||{};
-  if(d.lumisTab){var b=$('#tab-'+d.lumisTab);if(b)b.click();else notifyTab()}
-  if(d.lumisNovoPaciente){var n=$('#newPatientBtn');if(n)n.click()}
+  if(d.lumisView==='lista'){ACT['back-list']()}
+  if(d.lumisNovoPaciente){ACT['new-patient']()}
 });
 $('#tabs').addEventListener('keydown',function(e){
   if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
@@ -901,12 +965,55 @@ function localStore(){
     }
   }}}
 }
+/* armazenamento na conta (servidor): a lista de pacientes, sessões e relatórios fica salva no banco */
+var API_BASE=(function(){var q=QP.get('api');if(q)return q;if(window.LUMIS_API)return window.LUMIS_API;var h=location.hostname,p=location.port;if((h==='localhost'||h==='127.0.0.1')&&p&&p!=='3000')return 'http://localhost:3000';return ''})();
+function authToken(){try{return localStorage.getItem('lumis_portal_token')||''}catch(e){return ''}}
+function apiReq(method,path,body){
+  var tk=authToken();
+  if(!tk)return Promise.reject({code:'network',status:401});
+  return fetch(API_BASE+path,{method:method,headers:{'content-type':'application/json',authorization:'Bearer '+tk},body:body?JSON.stringify(body):undefined}).then(function(r){
+    return r.json().catch(function(){return {}}).then(function(d){if(!r.ok)throw {code:r.status===401?'not_granted':'server',status:r.status,msg:d.erro};return d});
+  },function(){throw {code:'network'}});
+}
+function serverStore(list){
+  var data={};
+  list.forEach(function(d){var c=JSON.parse(JSON.stringify(d));var id=c._id;delete c._id;data[id]=c});
+  function clone(v){return JSON.parse(JSON.stringify(v))}
+  function cache(){try{localStorage.setItem(LSKEY,JSON.stringify(data))}catch(e){}}
+  function emit(){S.docs=Object.keys(data).map(function(k){var c=clone(data[k]);c._id=k;return c});onData()}
+  function save(id,doc){return apiReq('PUT','/api/profissional/registros/'+encodeURIComponent(id),{dados:doc}).then(function(){data[id]=clone(doc);cache();emit()})}
+  return {emit:emit,data:data,doc:function(id){return {
+    set:function(d){return save(id,d)},
+    update:function(d){
+      if(!data[id])return Promise.reject({code:'invalid_argument'});
+      var m=clone(data[id]);for(var k in d)m[k]=clone(d[k]);
+      return save(id,m);
+    }
+  }}}
+}
+function useServer(){
+  return apiReq('GET','/api/profissional/registros').then(function(r){
+    var list=r.registros||[],have={};list.forEach(function(d){have[d._id]=1});
+    /* migra o que já estava salvo só neste aparelho para a conta */
+    var local={};try{local=JSON.parse(localStorage.getItem(LSKEY)||'{}')||{}}catch(e){local={}}
+    var pend=Object.keys(local).filter(function(k){return !have[k]&&local[k]&&local[k].kind});
+    var chain=Promise.resolve();
+    pend.forEach(function(k){chain=chain.then(function(){return apiReq('PUT','/api/profissional/registros/'+encodeURIComponent(k),{dados:local[k]}).then(function(){var c=JSON.parse(JSON.stringify(local[k]));c._id=k;list.push(c)},function(){})})});
+    return chain.then(function(){
+      var st=serverStore(list);S.col=st;S.status='ready';readyRes();st.emit();
+    });
+  });
+}
 function useLocal(){
   try{localStorage.setItem('lumis.fono.t','1');localStorage.removeItem('lumis.fono.t')}catch(e){S.status='unavailable';S.col=null;readyRes();render();return}
   var ls=localStore();S.db=null;S.col=ls;S.status='local';readyRes();ls.emit();
 }
 render();
 (function init(){
+  if(EMB&&authToken()){useServer().catch(function(){useLocal()});return}
+  initLegacy();
+})();
+function initLegacy(){
   var mode=null;
   function fallback(){if(mode)return;mode='local';clearTimeout(timer);useLocal()}
   var timer=setTimeout(fallback,3000);
@@ -927,7 +1034,7 @@ render();
       },function(){if(mode==='db'){return}fallback()});
     });
   }).catch(fallback);
-})();
+}
 })();
 </script>
 </body>
