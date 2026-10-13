@@ -1265,6 +1265,7 @@ button:disabled { cursor: not-allowed; }
   }
 
   function showResult(ok, reason) {
+    try{lumisReg(ok?'acerto':'erro')}catch(e){}
     unlockTab3();
     if (ok) {
       if (!rewarded) {
@@ -1449,6 +1450,7 @@ button:disabled { cursor: not-allowed; }
 .lumis-rec-code{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border-radius:14px;background:#0b4fd1;color:#fff;font:800 24px/1 system-ui,sans-serif;letter-spacing:.04em;box-shadow:0 4px 10px rgba(10,86,214,.3)}
 .lumis-rec-st{margin:12px 0 14px;font-size:13px;font-weight:700;color:#0b4fd1;min-height:18px}
 .lumis-rec-st.err{color:#b3382e}
+.lumis-rec-sair{appearance:none;border:0;cursor:pointer;margin-top:14px;background:none;color:#b3382e;font:700 13px system-ui,sans-serif;text-decoration:underline;padding:6px}
 .lumis-rec-box .acts{display:flex;gap:8px;justify-content:center}
 .lumis-rec-box .acts button{appearance:none;border:0;cursor:pointer;border-radius:12px;padding:11px 16px;font:700 14px system-ui,sans-serif;background:#e5eeff;color:#0b4fd1}
 </style>
@@ -1463,6 +1465,7 @@ button:disabled { cursor: not-allowed; }
     <button type="button" class="lumis-rec-code" id="lumisRecCode" title="Copiar código"><span id="lumisRecCodeTxt">LUMIS-····</span></button>
     <div class="lumis-rec-st" id="lumisRecSt" role="status"></div>
     <div class="acts"><button type="button" id="lumisRecNovo" hidden>Gerar novo código</button><button type="button" id="lumisRecFechar">Cancelar</button></div>
+    <button type="button" class="lumis-rec-sair" id="lumisRecSair">Sair do aparelho</button>
   </div>
 </div>
 <script>
@@ -1508,6 +1511,12 @@ button:disabled { cursor: not-allowed; }
   }
 
   $("lumisRecBtn").addEventListener("click", function(){ bg.classList.add("on"); criar(); });
+  $("lumisRecSair").addEventListener("click", function(){
+    var ok = window.confirm ? window.confirm("Sair deste aparelho? Para voltar, é preciso conectar de novo com o código ou o QR Code.") : true;
+    if (!ok) return;
+    try{ localStorage.removeItem("lumis_device_token"); localStorage.removeItem("lumis_fila_tent"); }catch(e){}
+    location.replace(location.pathname.indexOf("/frontend/") > -1 ? "inicio.html?reset=1" : "frontend/inicio.html?reset=1");
+  });
   $("lumisRecFechar").addEventListener("click", fechar);
   novo.addEventListener("click", criar);
   bg.addEventListener("click", function(e){ if (e.target === bg) fechar(); });
@@ -1518,6 +1527,37 @@ button:disabled { cursor: not-allowed; }
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(ok, function(){});
     else ok();
   });
+})();
+</script>
+<script>
+/* Registro de desempenho: cada acerto/erro da criança vai para o banco (painel do responsável e evolução da fono) */
+(function(){
+  var h = location.hostname, p = location.port;
+  var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
+  var KF = "lumis_fila_tent", envio = false;
+  function tok(){ try{ return localStorage.getItem("lumis_device_token"); }catch(e){ return null; } }
+  function fila(){ try{ return JSON.parse(localStorage.getItem(KF) || "[]"); }catch(e){ return []; } }
+  function guarda(f){ try{ localStorage.setItem(KF, JSON.stringify(f.slice(-200))); }catch(e){} }
+  function enviar(){
+    var t = tok(); if (!t || envio) return;
+    var k = t.slice(-16), todos = fila(), meus = todos.filter(function(e){ return e.k === k; });
+    if (todos.length !== meus.length){ guarda(meus); }      // sobras de outra criança/aparelho
+    if (!meus.length) return;
+    var lote = meus.slice(0, 50); envio = true;
+    fetch(API + "/api/dispositivo/tentativas", { method:"POST", keepalive:true,
+      headers:{ "content-type":"application/json", authorization:"Bearer " + t },
+      body: JSON.stringify({ eventos: lote.map(function(e){ return { atividade:e.atividade, resultado:e.resultado, t:e.t }; }) }) })
+      .then(function(r){
+        envio = false;
+        if (r.ok || r.status === 400){ guarda(fila().slice(lote.length)); if (fila().length) enviar(); }
+      }, function(){ envio = false; });
+  }
+  window.lumisReg = function(resultado){
+    var m = location.pathname.match(/atividade-0*(\d+)/), t = tok();
+    if (!m || !t || (resultado !== "acerto" && resultado !== "erro")) return;
+    var f = fila(); f.push({ atividade:"a" + m[1], resultado:resultado, t:Date.now(), k:t.slice(-16) }); guarda(f); enviar();
+  };
+  enviar(); window.addEventListener("online", enviar);
 })();
 </script>
 </body>

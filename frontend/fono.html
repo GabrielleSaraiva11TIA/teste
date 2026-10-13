@@ -24,6 +24,21 @@ h1,h2,h3,p{margin:0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .wrap{max-width:960px;margin:0 auto;padding:0 24px}
 .muted{color:var(--ink2)}
+.vinc{font-size:13.5px;line-height:1.4;padding:10px 12px;border-radius:12px;background:#eef2fb;color:var(--ink2);margin:0}
+.vinc-ok{background:#e3f6ea;color:#14633a}.vinc-wait{background:#fff4d6;color:#7a5200}.vinc-bad{background:#fde6e3;color:#a02a1e}
+.appnote{background:#f3f6fd;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px;color:var(--ink2)}
+.appnote p+p{margin-top:6px}
+.appsum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.appsum div{background:#f3f6fd;border-radius:14px;padding:10px 6px;text-align:center}
+.appsum b{display:block;font-size:22px;line-height:1.1}.appsum small{font-size:12px;color:var(--ink2)}
+.habs{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:8px}
+.habs li{display:grid;grid-template-columns:1fr 70px 42px;gap:10px;align-items:center;font-size:14px}
+.habs .hb{height:8px;border-radius:99px;background:#e3eaf7;overflow:hidden;display:block}
+.habs .hb i{display:block;height:100%;background:#2563eb;border-radius:99px}
+.habs b{text-align:right}
+.appstat{font-size:13.5px;background:#eef6ff;border-radius:10px;padding:8px 10px;margin:0 0 10px;color:#0b3a8a}
+.appsec{border-top:0;padding-top:8px}
+
 .ic{flex:none;display:block}
 
 /* topo */
@@ -449,6 +464,98 @@ function renderPanel(){
   else el.innerHTML=viewPlan(p);
 }
 
+
+/* ---------- desempenho real nas atividades (vem do banco) ---------- */
+S.app={};var appBusy={};
+function vincLabel(d){
+  if(!EMB)return {c:'off',t:'O vínculo com o responsável funciona quando você está logada na sua conta.'};
+  if(!d)return {c:'off',t:'Verificando o vínculo…'};
+  if(d.vinculo==='aceito')return {c:'ok',t:'Vinculado: o responsável aceitou. O desempenho aparece em Sessões, Evolução e Relatórios.'};
+  if(d.vinculo==='pendente')return {c:'wait',t:'Pedido enviado. Falta o responsável aceitar no portal do Lumis (Visão Geral).'};
+  if(d.vinculo==='recusado')return {c:'bad',t:'O responsável recusou o acompanhamento. Confirme o e-mail e salve para enviar de novo.'};
+  if(d.vinculo==='erro')return {c:'off',t:'Não foi possível verificar o vínculo agora.'};
+  return {c:'off',t:'Ainda sem vínculo. Informe o e-mail do responsável e salve para enviar o pedido.'};
+}
+function vincHtml(p){
+  if(!p)return '<p class="vinc vinc-off">Ao salvar, o pedido de vínculo é enviado ao e-mail do responsável.</p>';
+  var c=S.app[p._id],l=vincLabel(c&&c.d);
+  return '<p class="vinc vinc-'+l.c+'">'+esc(l.t)+'</p>';
+}
+function ensureApp(p,force){
+  if(!EMB||!p||S.status!=='ready')return;
+  var id=p._id,c=S.app[id];
+  if(!force&&c&&Date.now()-c.t<20000)return;
+  if(appBusy[id])return;
+  appBusy[id]=1;
+  apiReq('GET','/api/profissional/progresso/'+encodeURIComponent(id)).then(function(d){
+    var old=c&&JSON.stringify(c.d);appBusy[id]=0;S.app[id]={t:Date.now(),d:d};
+    appChanged(id,old!==JSON.stringify(d));
+  },function(){appBusy[id]=0;S.app[id]={t:Date.now(),d:{vinculo:'erro'}};appChanged(id,true)});
+}
+function appChanged(id,changed){
+  var p=cur();if(!p||p._id!==id)return;
+  paintApp(p);
+  if(changed&&(S.tab==='evolucao'||S.tab==='sessoes')&&!S.dirty&&!$('#dlg').open)renderPanel();
+}
+function paintApp(p){
+  var v=$('#vincStatus');if(v&&p)v.innerHTML=vincHtml(p);
+  var c=p&&S.app[p._id],d=c&&c.d;
+  $$('[data-appstat]').forEach(function(el){el.innerHTML=appStatHtml(d,el.dataset.appstat)});
+}
+function appStatHtml(d,aid){
+  if(!d||d.vinculo!=='aceito')return '';
+  var a=(d.atividades||[]).filter(function(x){return x.id===aid})[0];
+  if(!a||!a.tentativas)return '<p class="appstat">No app: ainda sem tentativas nesta atividade.</p>';
+  return '<p class="appstat"><b>No app:</b> '+a.tentativas+(a.tentativas===1?' tentativa':' tentativas')+' · '+a.acertos+(a.acertos===1?' acerto':' acertos')+' · '+a.erros+(a.erros===1?' erro':' erros')+' ('+a.taxa+'% de acertos)'+(a.ultima?' · última vez em '+fmt(a.ultima):'')+'</p>';
+}
+function syncVinculo(id,pr){
+  if(!EMB||!pr||!pr.emailResponsavel)return;
+  apiReq('PUT','/api/profissional/vinculos/'+encodeURIComponent(id),{email:pr.emailResponsavel,pacienteNome:pr.nome}).then(function(){
+    delete S.app[id];ensureApp({_id:id},true);
+  },function(){toast('Paciente salvo, mas não foi possível enviar o pedido ao responsável. Salve de novo mais tarde.',true)});
+}
+function appBlock(p,mode){
+  if(!EMB||S.status!=='ready')return '';
+  var c=S.app[p._id];
+  if(!c)return '<p class="muted">Carregando desempenho nas atividades do app…</p>';
+  var d=c.d;
+  if(d.vinculo!=='aceito'){
+    var l=vincLabel(d);
+    return '<div class="appnote"><p>'+esc(l.t)+'</p>'+(d.vinculo==='sem'||d.vinculo==='recusado'?'<p><button type="button" class="linkbtn" data-act="tab" data-tab="perfil">Informar o responsável em Dados</button></p>':'')+'</div>';
+  }
+  var t=d.total;
+  if(!t.tentativas)return '<p class="muted">Vinculado. Assim que a criança fizer atividades no Lumis, tentativas, acertos e erros aparecem aqui automaticamente.</p>';
+  var sum='<div class="appsum"><div><b>'+t.tentativas+'</b><small>tentativas</small></div><div><b>'+t.acertos+'</b><small>acertos</small></div><div><b>'+t.erros+'</b><small>erros</small></div><div><b>'+t.taxa+'%</b><small>de acerto</small></div></div>';
+  if(mode==='sessoes'){
+    var rows=(d.sessoes||[]).slice(0,40);
+    return sum+'<div class="tscroll"><table><thead><tr><th scope="col">Data</th><th scope="col">Atividade</th><th scope="col">Tentativas</th><th scope="col">Acertos</th><th scope="col">Taxa</th></tr></thead><tbody>'
+      +rows.map(function(r){return '<tr><td>'+fmt(r.dia)+'</td><td>'+esc(r.atividade.slice(1)+'. '+r.nome)+'</td><td>'+r.tentativas+'</td><td>'+r.acertos+'</td><td>'+Math.round(100*r.acertos/r.tentativas)+'%</td></tr>'}).join('')+'</tbody></table></div>';
+  }
+  var hab=(d.habilidades||[]).map(function(h){
+    return '<li><span>'+esc(h.nome)+'</span><span class="hb"><i style="width:'+(h.taxa||0)+'%"></i></span><b>'+(h.taxa==null?'—':h.taxa+'%')+'</b></li>';
+  }).join('');
+  var at=(d.atividades||[]).filter(function(a){return a.tentativas>0});
+  var tb='<div class="tscroll"><table><thead><tr><th scope="col">Atividade</th><th scope="col">Tentativas</th><th scope="col">Acertos</th><th scope="col">Erros</th><th scope="col">Taxa</th></tr></thead><tbody>'
+    +at.map(function(a){return '<tr><td>'+esc(a.id.slice(1)+'. '+a.nome)+'</td><td>'+a.tentativas+'</td><td>'+a.acertos+'</td><td>'+a.erros+'</td><td>'+a.taxa+'%</td></tr>'}).join('')+'</tbody></table></div>';
+  return sum+'<ul class="habs">'+hab+'</ul>'+appChart(d)+tb;
+}
+function appChart(d){
+  var by={};
+  (d.sessoes||[]).forEach(function(r){var k=r.skill;by[k]=by[k]||{};var o=by[k][r.dia]=by[k][r.dia]||{t:0,a:0};o.t+=r.tentativas;o.a+=r.acertos});
+  var names={sons:'Sons e Articulação',orofacial:'Reconhecimento Orofacial',palavras:'Palavras e Frases'},ts=[],dates={},keys=Object.keys(by).filter(function(k){return Object.keys(by[k]).length>0});
+  keys.forEach(function(k){Object.keys(by[k]).forEach(function(dia){ts.push(Date.parse(dia+'T12:00:00'));dates[dia]=1})});
+  if(Object.keys(dates).length<2)return '<p class="hint" style="margin:14px 0">O gráfico de evolução aparece quando houver tentativas em dois dias diferentes.</p>';
+  var t0=Math.min.apply(null,ts),t1=Math.max.apply(null,ts);
+  var ser=keys.map(function(k,i){
+    var st=sst(i),pts=Object.keys(by[k]).sort().map(function(dia){var o=by[k][dia],pct=Math.round(100*o.a/o.t);return {f:t1===t0?0.5:(Date.parse(dia+'T12:00:00')-t0)/(t1-t0),v:pct,t:names[k]+', '+fmt(dia)+': '+o.a+' de '+o.t+' ('+pct+'%)'}});
+    return {n:names[k],c:st.c,d:st.d,segs:[pts]};
+  });
+  var narrow=(($('#panel')||{}).clientWidth||640)<460,ds=Object.keys(dates).sort();
+  var xt=pickTicks(ds,narrow?3:6).map(function(x){return {f:(Date.parse(x+'T12:00:00')-t0)/(t1-t0),l:fmtShort(x)}});
+  return '<div style="margin:18px 0 6px">'+drawChart({vmin:0,vmax:100,yt:[{v:0,l:'0%'},{v:50,l:'50%'},{v:100,l:'100%'}],xt:xt,series:ser,aria:'Gráfico da taxa de acertos por dia nas atividades do app'})+legend(ser)+'<p class="cap">Taxa de acertos por dia, calculada automaticamente a partir das atividades da criança.</p></div>';
+}
+setInterval(function(){var p=cur();if(p&&!document.hidden&&!S.dirty)ensureApp(p)},20000);
+
 /* ---------- lista de pacientes ---------- */
 function viewList(){
   var ps=patients();
@@ -463,12 +570,13 @@ function viewList(){
 
 /* ---------- relatórios por atividade ---------- */
 function viewReports(p){
+  ensureApp(p);
   var rel=p.relatorios||{};
   var intro='<div class="toolbar"><div><h2>Relatórios por atividade</h2><p>Escreva como '+esc(firstName(p))+' se saiu em cada atividade do Lumis. Cada relatório é salvo separadamente.</p></div></div>';
   return intro+ATIVIDADES.map(function(a){
     var r=rel[a[0]]||{},when=r.em?new Date(r.em).toLocaleDateString('pt-BR'):'';
     return '<form class="rep" data-rid="'+a[0]+'" novalidate><div class="rep-h"><b><span class="rep-n">'+a[0].slice(1)+'</span>'+esc(a[2])+'</b><small>'+(when?'Atualizado em '+when:'Ainda sem relatório')+'</small></div>'
-      +'<label class="sr" for="rp-'+a[0]+'">Relatório da '+esc(a[1])+'</label><textarea id="rp-'+a[0]+'" rows="4" placeholder="Como foi a atividade? Desempenho, dificuldades, pistas usadas, observações…">'+esc(r.texto||'')+'</textarea>'
+      +'<div class="appst" data-appstat="'+a[0]+'">'+appStatHtml((S.app[p._id]||{}).d,a[0])+'</div><label class="sr" for="rp-'+a[0]+'">Relatório da '+esc(a[1])+'</label><textarea id="rp-'+a[0]+'" rows="4" placeholder="Como foi a atividade? Desempenho, dificuldades, pistas usadas, observações…">'+esc(r.texto||'')+'</textarea>'
       +'<button type="submit" class="btn btn-primary">Salvar relatório</button></form>';
   }).join('');
 }
@@ -484,12 +592,18 @@ function submitReport(f){
 /* ---------- perfil ---------- */
 function viewProfile(p){
   if(!p&&!S.newP)return emptyNoPatient();
+  if(p)ensureApp(p);
   var pr=(p&&p.profile)||{},as=(p&&p.assessment)||{},dom=as.dominios||{},rec=pr.recursos||[];
   var ident='<div class="grid2">'
     +fld('pf-nome','Nome completo da criança',inp('pf-nome','text',pr.nome,'autocomplete="off"'),{req:true,cls:'span2'})
     +fld('pf-nasc','Data de nascimento',inp('pf-nasc','date',pr.nascimento,'max="'+todayISO()+'"'))
     +fld('pf-inicio','Início do acompanhamento',inp('pf-inicio','date',pr.inicio))
-    +fld('pf-resp','Responsável legal',inp('pf-resp','text',pr.responsavel,'autocomplete="off"'),{cls:'span2'})
+    +'</div>';
+  var resp='<div class="grid2">'
+    +fld('pf-resp','Nome do responsável',inp('pf-resp','text',pr.responsavel,'autocomplete="name"'),{req:true,cls:'span2'})
+    +fld('pf-paren','Parentesco',inp('pf-paren','text',pr.parentesco,'autocomplete="off" placeholder="Mãe, pai, avó…"'))
+    +fld('pf-email','E-mail do responsável',inp('pf-email','email',pr.emailResponsavel,'autocomplete="off" inputmode="email" placeholder="o mesmo e-mail da conta dele no Lumis"'),{req:true,hint:'É por este e-mail que a criança é ligada à conta do responsável, e assim o progresso aparece para vocês dois.'})
+    +'<div class="span2 vinc-box" id="vincStatus">'+vincHtml(p)+'</div>'
     +'</div>';
   var aud='<div class="grid2">'
     +fld('pf-grau','Grau da perda auditiva','<select id="pf-grau">'+opts(GRAU,pr.grau)+'</select>')
@@ -510,7 +624,8 @@ function viewProfile(p){
     +'</div>';
   return '<form id="f-perfil" data-track novalidate>'
     +(S.newP?'<h2 class="ptitle">Novo paciente</h2>':'')
-    +group('Identificação','Dados da criança e do responsável.',ident)
+    +group('Identificação','Dados da criança.',ident)
+    +group('Responsável','Cada criança fica ligada a um responsável. O responsável recebe um pedido no portal do Lumis e precisa aceitar para que você veja o desempenho dela nas atividades.',resp)
     +group('Audição','Preencha o que estiver disponível. O restante pode ficar em branco.',aud)
     +group('Avaliação inicial','Registre apenas o que já foi avaliado. Use “Ainda não avaliado” ou “Não se aplica” quando for o caso.',aval)
     +'<div class="bar"><button type="submit" class="btn btn-primary">Salvar alterações</button><button type="button" class="btn btn-ghost" data-act="cancel-form">Cancelar</button><span class="dirty" id="dirtyNote" hidden>Alterações não salvas</span></div>'
@@ -521,7 +636,7 @@ function collectProfile(f){
   DOMAINS.forEach(function(d){dominios[d[0]]={status:$('#dom-'+d[0]+'-s').value,nota:$('#dom-'+d[0]+'-n').value.trim()}});
   var rec=checked(f,'recursos');
   return {
-    profile:{nome:$('#pf-nome').value.trim(),nascimento:$('#pf-nasc').value,inicio:$('#pf-inicio').value,responsavel:$('#pf-resp').value.trim(),grau:$('#pf-grau').value,tipo:$('#pf-tipo').value,recursos:rec,recursoOutro:rec.indexOf('outro')>-1?$('#pf-outro').value.trim():'',infoClinica:$('#pf-info').value.trim()},
+    profile:{nome:$('#pf-nome').value.trim(),nascimento:$('#pf-nasc').value,inicio:$('#pf-inicio').value,responsavel:$('#pf-resp').value.trim(),parentesco:$('#pf-paren').value.trim(),emailResponsavel:$('#pf-email').value.trim().toLowerCase(),grau:$('#pf-grau').value,tipo:$('#pf-tipo').value,recursos:rec,recursoOutro:rec.indexOf('outro')>-1?$('#pf-outro').value.trim():'',infoClinica:$('#pf-info').value.trim()},
     assessment:{dominios:dominios,dificuldades:$('#pf-dif').value.trim(),objetivos:$('#pf-obj').value.trim()}
   };
 }
@@ -532,6 +647,9 @@ function submitProfile(f){
   if(!v.profile.nome)fail('pf-nome','Informe o nome completo da criança.');
   if(v.profile.nascimento&&v.profile.nascimento>todayISO())fail('pf-nasc','A data de nascimento não pode ser futura.');
   if(v.profile.nascimento&&v.profile.inicio&&v.profile.inicio<v.profile.nascimento)fail('pf-inicio','O início do acompanhamento não pode ser anterior ao nascimento.');
+  if(!v.profile.responsavel)fail('pf-resp','Informe o nome do responsável.');
+  if(!v.profile.emailResponsavel)fail('pf-email','Informe o e-mail do responsável.');
+  else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.profile.emailResponsavel))fail('pf-email','Este e-mail não parece válido.');
   if(bad){$('#'+bad).focus();return}
   var btn=$('button[type=submit]',f);btn.disabled=true;
   var p=cur(),now=Date.now(),id;
@@ -542,6 +660,7 @@ function submitProfile(f){
   },p?'Alterações salvas':'Paciente cadastrado').then(function(ok){
     btn.disabled=false;
     if(!ok)return;
+    syncVinculo(id,v.profile);
     S.newP=false;S.pid=id;S.view='paciente';
     setDirty(false);render();window.scrollTo({top:0});
   });
@@ -555,9 +674,11 @@ function perfSummary(s){
 }
 function viewSessions(p){
   var list=sessionsOf(p).slice().reverse();
+  ensureApp(p);
+  var appHtml=EMB?'<section class="sec appsec"><div class="sec-head"><div><h2>Atividades feitas no app</h2><p>Registradas automaticamente quando '+esc(firstName(p))+' joga no Lumis.</p></div></div>'+appBlock(p,'sessoes')+'</section>':'';
   var head='<div class="toolbar"><div><h2>Histórico de sessões</h2><p>'+(list.length?list.length+(list.length===1?' sessão registrada':' sessões registradas'):'Sessões de '+esc(firstName(p)))+'</p></div><button type="button" class="btn btn-primary" data-act="open-session">+ Registrar sessão</button></div>';
-  if(!list.length)return head+emptyBlock('Nenhuma sessão registrada','Use “+ Registrar sessão” para adicionar o primeiro atendimento. O histórico aparece aqui em ordem cronológica.');
-  return head+'<ul class="ses-list">'+list.map(function(s){
+  if(!list.length)return appHtml+head+emptyBlock('Nenhuma sessão registrada','Use “+ Registrar sessão” para adicionar o primeiro atendimento. O histórico aparece aqui em ordem cronológica.');
+  return appHtml+head+'<ul class="ses-list">'+list.map(function(s){
     var open=!!S.open[s._id];
     var skills=(s.skills||[]).map(function(k){return SKILL_NAME[k]}).filter(Boolean).join(', ');
     var second=(s.atividades||s.obs||'').replace(/\s+/g,' ').trim();
@@ -721,6 +842,7 @@ function clinChart(cols){
   return '<div class="clin"><h3 class="subh">Situação ao longo das avaliações</h3>'+drawChart(cfg)+legend(ser)+'<p class="cap">Mostra as situações marcadas pela fonoaudióloga em cada avaliação. Não são pontuações.</p></div>';
 }
 function viewEvolution(p){
+  ensureApp(p);
   var ses=sessionsOf(p),ass=assessOf(p),series={};
   ses.forEach(function(s){Object.keys(s.perf||{}).forEach(function(k){var v=s.perf[k];if(v&&v.t>0){(series[k]=series[k]||[]).push({date:s.date,t:v.t,a:v.a,pct:Math.round(100*v.a/v.t)})}})});
   var avail=SKILLS.map(function(k){return k[0]}).filter(function(k){return series[k]});
@@ -792,7 +914,8 @@ function viewEvolution(p){
   else s3='<ul class="obs">'+shown.map(function(o){return '<li><time datetime="'+o.date+'">'+fmt(o.date)+'<small>'+o.type+'</small></time><p>'+esc(o.text)+'</p></li>'}).join('')+'</ul>'
     +(obs.length>5?'<p style="margin-top:12px"><button type="button" class="linkbtn" data-act="more-obs">'+(S.moreObs?'Mostrar menos':'Mostrar todas ('+obs.length+')')+'</button></p>':'');
 
-  return '<section class="sec"><div class="sec-head"><div><h2>Resultados nas atividades</h2><p>Dados objetivos, calculados a partir das tentativas e acertos registrados nas sessões.</p></div></div>'+s1+'</section>'
+  var appSec=EMB?'<section class="sec appsec"><div class="sec-head"><div><h2>Desempenho no app</h2><p>Tentativas, acertos e erros registrados automaticamente nas atividades do Lumis. Não é preciso digitar.</p></div></div>'+appBlock(p,'evolucao')+'</section>':'';
+  return appSec+'<section class="sec"><div class="sec-head"><div><h2>Resultados registrados nas sessões</h2><p>Tentativas e acertos que você registrou nas sessões presenciais.</p></div></div>'+s1+'</section>'
     +'<section class="sec"><div class="sec-head"><div><h2>Avaliações clínicas</h2><p>Comparação entre a avaliação inicial e as reavaliações registradas pela fonoaudióloga.</p></div><button type="button" class="btn btn-ghost" data-act="open-assess">+ Registrar reavaliação</button></div>'+s2+'</section>'
     +'<section class="sec"><div class="sec-head"><div><h2>Observações clínicas</h2><p>Escritas pela fonoaudióloga, separadas dos resultados das atividades.</p></div></div>'+s3+'</section>';
 }
@@ -878,7 +1001,7 @@ function guard(){if(S.dirty){toast('Salve ou cancele as alterações antes de co
 var ACT={
   'tab':function(b){if(b.dataset.tab===S.tab)return;if(guard())return;S.tab=b.dataset.tab;render();var t=$('#tab-'+S.tab);if(t&&t.scrollIntoView)t.scrollIntoView({block:'nearest',inline:'nearest'})},
   'new-patient':function(){if(guard())return;S.newP=true;S.view='lista';S.tab='perfil';render();window.scrollTo({top:0})},
-  'open-patient':function(b){if(guard())return;S.newP=false;S.pid=b.dataset.id;S.view='paciente';S.tab='perfil';S.skill=null;S.open={};render();window.scrollTo({top:0})},
+  'open-patient':function(b){if(guard())return;S.newP=false;S.pid=b.dataset.id;S.view='paciente';S.tab='perfil';S.skill=null;S.open={};render();window.scrollTo({top:0});var pp=cur();if(pp)ensureApp(pp,true)},
   'back-list':function(){if(guard())return;S.newP=false;S.pid=null;S.view='lista';render();window.scrollTo({top:0})},
   'cancel-form':function(){setDirty(false);if(S.newP){S.newP=false;S.view='lista'}render()},
   'open-session':function(){openSession()},

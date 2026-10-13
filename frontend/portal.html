@@ -305,6 +305,10 @@ svg.i.f{fill:currentColor;stroke:none}
 .gh .ib{width:46px;height:46px;border-radius:50%;background:#eef2ff;color:var(--blue-d);display:grid;place-items:center;flex:none}
 .gh .ib.me{background:#dbe8ff;color:var(--blue)}
 .gh .ib svg{width:22px;height:22px}
+.vinc{margin:14px 0 4px;background:#fff7e0;border:1px solid #f3dc9a;border-radius:18px;padding:14px 16px}
+.vinc p{margin:0 0 10px;font-size:14px;line-height:1.4;color:var(--ink)}
+.vinc .vrow{display:flex;gap:10px}.vinc .vrow .btn{flex:1;min-height:42px}
+.vok{margin:12px 0 0;font-size:13px;color:var(--ink2)}
 .demo-tag{display:inline-block;margin-top:8px;background:#fff2d6;color:#8a5a00;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
 .dash{display:grid;gap:18px;margin-top:18px}
 .hero{background:linear-gradient(150deg,#0a4dc4,#1b6cf0);color:#fff;border-radius:28px;padding:18px;box-shadow:0 14px 34px rgba(10,82,201,.32)}
@@ -589,6 +593,8 @@ svg.i.f{fill:currentColor;stroke:none}
       <div class="center"><span class="chip-pill"><svg class="i"><use href="#i-lock"/></svg>Criptografia de ponta a ponta conforme a LGPD</span></div>
       <p class="ferr" id="pvErr" hidden style="text-align:center"></p>
 
+      <button class="logout" type="button" data-logout><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
+
       <div class="bar"><button class="btn" type="button" id="pvOk"><span>Continuar</span><svg class="i"><use href="#i-right"/></svg></button></div>
     </section>
 
@@ -685,6 +691,8 @@ svg.i.f{fill:currentColor;stroke:none}
       <p class="dg-foot"><svg class="i"><use href="#i-lock"/></svg>Dados médicos protegidos em conformidade com a LGPD (Lei nº 13.709/18).</p>
       <p class="ferr" id="dgErr" hidden style="text-align:center;margin-top:12px"></p>
 
+      <button class="logout" type="button" data-logout><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
+
       <div class="bar">
         <button class="btn ghost" type="button" data-back="menu" style="flex:1"><svg class="i"><use href="#i-left"/></svg>Voltar</button>
         <button class="btn" type="button" id="dgOk" style="flex:1.3"><svg class="i"><use href="#i-check"/></svg><span>Continuar</span></button>
@@ -752,44 +760,35 @@ svg.i.f{fill:currentColor;stroke:none}
       </div>
       <h1 class="h1">Como está a jornada?</h1>
       <p class="lead" style="margin-top:6px">Acompanhe com carinho cada pequena grande conquista</p>
-      <span class="demo-tag">Prévia com dados de exemplo</span>
+      <span class="demo-tag" id="gAviso" hidden></span>
+      <div id="gVinc"></div>
 
       <div class="dash">
         <div class="colA">
           <div class="hero">
-            <div class="hero-top"><span class="fl"><svg class="i"><use href="#i-flame"/></svg>4 dias seguidos de prática</span><span class="act"><i></i>Ativo hoje</span></div>
+            <div class="hero-top"><span class="fl"><svg class="i"><use href="#i-flame"/></svg><span id="gSeq">0 dias seguidos de prática</span></span><span class="act" id="gAtivo" hidden><i></i>Ativo hoje</span></div>
             <div class="glass">
-              <div class="ritmo" style="--p:85%"><div><b>85%</b><small>RITMO</small></div></div>
+              <div class="ritmo" id="gRitmo" style="--p:0%"><div><b id="gRitmoN">–</b><small>ACERTOS</small></div></div>
               <div class="week">
                 <div class="t"><svg class="i"><use href="#i-calendar"/></svg>Jornada semanal</div>
-                <div class="days">
-                  <div><small>S</small><span class="dayc done"><svg class="i f"><use href="#i-paw"/></svg></span></div>
-                  <div><small>T</small><span class="dayc done"><svg class="i f"><use href="#i-paw"/></svg></span></div>
-                  <div><small>Q</small><span class="dayc done"><svg class="i f"><use href="#i-paw"/></svg></span></div>
-                  <div><small>Q</small><span class="dayc now"><svg class="i f"><use href="#i-star"/></svg></span></div>
-                  <div><small>S</small><span class="dayc todo">5</span></div>
-                  <div><small>S</small><span class="dayc todo">6</span></div>
-                  <div><small>D</small><span class="dayc todo">7</span></div>
-                </div>
+                <div class="days" id="gDias"></div>
               </div>
             </div>
-            <div class="meta"><i></i>Meta Semanal: 4 de 5 sessões concluídas<span class="pc">80%</span></div>
-            <div class="mbar"><i></i></div>
+            <div class="meta"><i></i><span id="gMeta">Meta semanal: 0 de 5 dias de prática</span><span class="pc" id="gMetaPc">0%</span></div>
+            <div class="mbar"><i id="gMbar" style="width:0%"></i></div>
           </div>
 
           <div class="stats">
-            <div class="stat"><div class="ic" style="background:#dfe8ff;color:var(--blue)"><svg class="i"><use href="#i-target"/></svg></div><div class="n">5</div><b style="color:var(--blue)">atividades</b><small>realizadas na semana</small></div>
-            <div class="stat"><div class="ic" style="background:#fde0ea;color:var(--pink)"><svg class="i f"><use href="#i-star"/></svg></div><div class="n">3</div><b style="color:var(--pink)">conquistas</b><small>no mapa lúdico</small></div>
-            <div class="stat"><div class="ic" style="background:#cdeafd;color:#0b5aa6"><svg class="i"><use href="#i-trend"/></svg></div><div class="n">2</div><b style="color:#0b6fa0">habilidades</b><small>em evolução suave</small></div>
+            <div class="stat"><div class="ic" style="background:#dfe8ff;color:var(--blue)"><svg class="i"><use href="#i-target"/></svg></div><div class="n" id="gN1">0</div><b style="color:var(--blue)">tentativas</b><small id="gN1s">no total</small></div>
+            <div class="stat"><div class="ic" style="background:#fde0ea;color:var(--pink)"><svg class="i f"><use href="#i-star"/></svg></div><div class="n" id="gN2">0</div><b style="color:var(--pink)">acertos</b><small id="gN2s">de 0 tentativas</small></div>
+            <div class="stat"><div class="ic" style="background:#cdeafd;color:#0b5aa6"><svg class="i"><use href="#i-trend"/></svg></div><div class="n" id="gN3">0</div><b style="color:#0b6fa0">atividades</b><small>concluídas de 8</small></div>
           </div>
 
           <div>
             <h2 class="h2" style="margin-top:6px">Habilidades em desenvolvimento</h2>
             <div class="skills">
-              <div class="sk"><div class="row"><svg class="i" style="color:var(--blue)"><use href="#i-wave"/></svg>Sons e Articulação<span class="pc">80%</span></div><p>Treino suave fonemas /s/ e /b/</p><div class="bar-t"><i style="--p:80%;background:linear-gradient(90deg,#38b6f5,#0b6fa0)"></i></div></div>
-              <div class="sk"><div class="row"><svg class="i" style="color:var(--blue)"><use href="#i-smile"/></svg>Reconhecimento Orofacial<span class="pc" style="color:var(--blue)">65%</span></div><p>Expressões em frente ao espelho do Lumis</p><div class="bar-t"><i style="--p:65%;background:linear-gradient(90deg,#a9c4f7,#0a52c9)"></i></div></div>
-              <div class="sk"><div class="row"><svg class="i" style="color:var(--pink)"><use href="#i-chat"/></svg>Palavras &amp; Frases<span class="pc" style="color:var(--pink)">45%</span></div><p>Cadência rítmica e repetição alegre</p><div class="bar-t"><i style="--p:45%;background:linear-gradient(90deg,#f6a9c9,#a1245f)"></i></div></div>
-              <div class="tipbox"><span class="ic"><svg class="i"><use href="#i-watch"/></svg></span>Práticas acompanhadas com feedback vibratório da pulseira tátil e espelho integrado.</div>
+              <div id="gSkills"></div>
+              <div class="tipbox"><span class="ic"><svg class="i"><use href="#i-watch"/></svg></span>Os percentuais são a taxa de acertos nas atividades, calculada a cada tentativa da criança.</div>
             </div>
           </div>
         </div>
@@ -797,15 +796,14 @@ svg.i.f{fill:currentColor;stroke:none}
         <div class="colB">
           <div class="fase">
             <div class="top">
-              <span class="ic"><svg class="i"><use href="#i-wind"/></svg><span class="lk"><svg class="i"><use href="#i-lockfill"/></svg></span></span>
-              <div><span class="badge">Fase 2 desbloqueada</span><b>O Bosque dos Ecos</b><span class="d">Desafio lúdico: O Som do Vento.</span></div>
+              <span class="ic"><svg class="i"><use href="#i-wind"/></svg><span class="lk" id="gFaseLk"><svg class="i"><use href="#i-lockfill"/></svg></span></span>
+              <div><span class="badge" id="gFaseBadge">Fase 1 em andamento</span><b id="gFaseT">Ilha Ssss</b><span class="d" id="gFaseD">0 de 8 atividades concluídas.</span></div>
             </div>
             <button class="btn" type="button" data-soon><span>Ver mapa da aventura</span><span class="a"><svg class="i"><use href="#i-right"/></svg></span></button>
           </div>
           <div class="dica">
             <div class="top"><span class="ic"><svg class="i"><use href="#i-bulb"/></svg></span><div><small>Dica de carinho</small><b>Recomendação da semana</b></div></div>
-            <p>Experimente fazer brincadeiras de soprar bolhas de sabão ou imitar o ventinho juntos antes da próxima sessão. Isso reforça a respiração e os lábios de forma muito lúdica!</p>
-            <button class="more" type="button" data-soon style="margin-left:auto">Ver orientação completa <svg class="i"><use href="#i-right"/></svg></button>
+            <p id="gDica">Brinque com a criança de soprar bolhas de sabão ou imitar o ventinho juntos antes da próxima sessão. Isso reforça a respiração e os lábios de forma muito lúdica!</p>
           </div>
         </div>
       </div>
@@ -831,6 +829,19 @@ svg.i.f{fill:currentColor;stroke:none}
 </div>
 
 <!-- Menu da fonoaudióloga -->
+<div class="sheet-bg" id="sheetRespConta" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shRcT">
+    <h2 id="shRcT">Minha conta</h2>
+    <p id="rcQuem"></p>
+    <div class="row" style="flex-direction:column">
+      <button class="btn soft" type="button" id="rcDados"><svg class="i"><use href="#i-smile"/></svg>Dados da criança e privacidade</button>
+      <button class="btn soft" type="button" id="rcAparelho"><svg class="i"><use href="#i-link"/></svg><span id="rcAparelhoTxt">Conectar aparelho do Lumis</span></button>
+      <button class="btn ghost" type="button" id="rcSair"><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
+    </div>
+    <div class="row"><button class="btn ghost" type="button" data-close style="flex:1">Fechar</button></div>
+  </div>
+</div>
+
 <div class="sheet-bg" id="sheetFonoConta" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shFcT">
     <h2 id="shFcT">Minha conta</h2>
@@ -1048,13 +1059,21 @@ svg.i.f{fill:currentColor;stroke:none}
         await api("/api/pareamentos/" + r.token + "/escaneado", { method:"POST", auth:false });
         S.par = r.token; ssSet(K_PAR, r.token); atualizarConexao();
         $("sheetCodigo").hidden = true;
-        toast("Aparelho conectado!");
+        if (S.me) toast("Aparelho conectado!");
         if (S.me && S.me.usuario.papel === "responsavel"){
           await sincronizarProgresso();
           if (S.me.status.completo && current === "pronto") finalizar();
         } else if (S.me && S.me.usuario.papel === "profissional"){
           await sincronizarProgresso();
           finalizar();
+        } else if (!S.me){
+          // sem login: leva direto para a tela de entrar (do último perfil usado) para terminar de conectar
+          var ult = lsGet("lumis_ultimo_papel");
+          if (current === "perfil" && (ult === "responsavel" || ult === "profissional")){
+            S.papel = ult; progresso(30); modoAuth("login"); go("auth");
+            toast("Aparelho conectado! Agora entre na sua conta.");
+          } else if (current === "perfil") toast("Aparelho conectado! Escolha como quer entrar.");
+          else toast("Aparelho conectado! Agora entre na sua conta.");
         }
       }catch(e){ err.textContent = e.message; err.hidden = false; }
     });
@@ -1116,7 +1135,7 @@ svg.i.f{fill:currentColor;stroke:none}
     if (S.papel && S.me.usuario.papel !== S.papel){
       toast("Esta conta é de " + (S.me.usuario.papel === "profissional" ? "profissional" : "responsável") + ". Abrindo a área correta.", 4000);
     }
-    S.papel = S.me.usuario.papel;
+    S.papel = S.me.usuario.papel; lsSet("lumis_ultimo_papel", S.papel);   // lembra o perfil para o "reconectar"
     atualizarConexao();
     await sincronizarProgresso();
     rotear();
@@ -1181,7 +1200,14 @@ svg.i.f{fill:currentColor;stroke:none}
     if (!S.me.status.privacidade){ toast("Aceite primeiro a Privacidade e Segurança."); return; }
     go("diagnostico");
   });
-  $("geralMenu").addEventListener("click", function(){ go("menu"); });
+  $("geralMenu").addEventListener("click", function(){
+    $("rcQuem").textContent = S.me ? (S.me.usuario.nome + " · " + S.me.usuario.email) : "";
+    $("rcAparelhoTxt").textContent = S.linked ? "Reconectar aparelho do Lumis" : "Conectar aparelho do Lumis";
+    $("sheetRespConta").hidden = false;
+  });
+  $("rcDados").addEventListener("click", function(){ $("sheetRespConta").hidden = true; go("menu"); });
+  $("rcAparelho").addEventListener("click", function(){ $("sheetRespConta").hidden = true; abrirCodigo(); });
+  $("rcSair").addEventListener("click", function(){ $("sheetRespConta").hidden = true; sair(false); });
 
   /* ============================================================
      PRIVACIDADE E SEGURANÇA
@@ -1483,6 +1509,86 @@ svg.i.f{fill:currentColor;stroke:none}
   /* ============================================================
      O QUE MOSTRAR AO ENTRAR EM CADA TELA
      ============================================================ */
+
+  /* ============================================================
+     VISÃO GERAL DO RESPONSÁVEL (dados reais das atividades)
+     ============================================================ */
+  var DICAS = {
+    sons: "Experimente soprar bolhas de sabão ou imitar o ventinho juntos antes da próxima sessão. Isso reforça a respiração e a percepção do som de forma lúdica!",
+    orofacial: "Brinquem de caretas na frente do espelho: bico, sorriso e língua para fora. Isso treina os músculos da boca de um jeito divertido!",
+    palavras: "Repitam juntos palavras curtas com o som /s/, como sol, sapo e suco, de forma cantada e bem devagar."
+  };
+  var SK_ICON = { sons:["#i-wave","var(--blue)","linear-gradient(90deg,#38b6f5,#0b6fa0)"], orofacial:["#i-smile","var(--blue)","linear-gradient(90deg,#a9c4f7,#0a52c9)"], palavras:["#i-chat","var(--pink)","linear-gradient(90deg,#f6a9c9,#a1245f)"] };
+  function pl(n, um, varios){ return n + " " + (n === 1 ? um : varios); }
+
+  function desenharGeral(d){
+    var t = d.total;
+    $("gAviso").hidden = t.tentativas > 0;
+    $("gAviso").textContent = "Ainda não há atividades registradas. Quando a criança jogar no Lumis, os números aparecem aqui.";
+    $("gSeq").textContent = pl(d.sequencia, "dia seguido de prática", "dias seguidos de prática");
+    $("gAtivo").hidden = !d.ativoHoje;
+    var taxa = t.taxa == null ? 0 : t.taxa;
+    $("gRitmo").style.setProperty("--p", taxa + "%");
+    $("gRitmoN").textContent = t.taxa == null ? "–" : t.taxa + "%";
+    var L = ["S","T","Q","Q","S","S","D"];
+    $("gDias").innerHTML = d.semana.map(function(w, i){
+      var c = w.hoje ? '<span class="dayc now"><svg class="i f"><use href="#i-star"/></svg></span>'
+            : w.feito ? '<span class="dayc done"><svg class="i f"><use href="#i-paw"/></svg></span>'
+            : '<span class="dayc todo">' + (i + 1) + '</span>';
+      return '<div><small>' + L[i] + '</small>' + c + '</div>';
+    }).join("");
+    var pc = Math.min(100, Math.round(100 * d.sessoesNaSemana / d.metaSemana));
+    $("gMeta").textContent = "Meta semanal: " + d.sessoesNaSemana + " de " + d.metaSemana + " dias de prática";
+    $("gMetaPc").textContent = pc + "%"; $("gMbar").style.width = pc + "%";
+    $("gN1").textContent = t.tentativas; $("gN2").textContent = t.acertos;
+    $("gN2s").textContent = "de " + pl(t.tentativas, "tentativa", "tentativas");
+    $("gN3").textContent = d.atividadesFeitas;
+    var menor = null;
+    $("gSkills").innerHTML = d.habilidades.map(function(h){
+      var ic = SK_ICON[h.id] || SK_ICON.sons, tem = h.taxa != null;
+      if (tem && (!menor || h.taxa < menor.taxa)) menor = h;
+      return '<div class="sk"><div class="row"><svg class="i" style="color:' + ic[1] + '"><use href="' + ic[0] + '"/></svg>' + esc(h.nome) +
+        '<span class="pc" style="color:' + ic[1] + '">' + (tem ? h.taxa + "%" : "—") + '</span></div><p>' +
+        (tem ? esc(pl(h.acertos, "acerto", "acertos") + " em " + pl(h.tentativas, "tentativa", "tentativas")) : "Ainda sem tentativas") +
+        '</p><div class="bar-t"><i style="--p:' + (tem ? h.taxa : 0) + '%;background:' + ic[2] + '"></i></div></div>';
+    }).join("");
+    $("gDica").textContent = DICAS[menor ? menor.id : "sons"];
+    var fim = d.faseConcluida;
+    $("gFaseLk").hidden = false;
+    $("gFaseBadge").textContent = fim ? "Fase 2 desbloqueada" : "Fase 1 em andamento";
+    $("gFaseT").textContent = fim ? "O Bosque dos Ecos" : "Ilha Ssss";
+    $("gFaseD").textContent = fim ? "Desafio lúdico: O Som do Vento." : d.atividadesFeitas + " de 8 atividades concluídas.";
+  }
+
+  function desenharVinculos(lista){
+    var box = $("gVinc"), pend = (lista || []).filter(function(v){ return v.status === "pendente"; });
+    var ok = (lista || []).filter(function(v){ return v.status === "aceito"; });
+    var h = pend.map(function(v){
+      return '<div class="vinc"><p><b>' + esc(v.profissional) + '</b> quer acompanhar ' + (v.paciente ? "<b>" + esc(v.paciente) + "</b>" : "a criança") +
+        ' pelo Lumis e ver o progresso nas atividades.</p><div class="vrow"><button class="btn" type="button" data-vinc="aceitar" data-id="' + v.id + '">Aceitar</button>' +
+        '<button class="btn ghost" type="button" data-vinc="recusar" data-id="' + v.id + '">Recusar</button></div></div>';
+    }).join("");
+    if (ok.length) h += '<p class="vok">Acompanhamento com: ' + ok.map(function(v){ return "<b>" + esc(v.profissional) + "</b>"; }).join(", ") + '</p>';
+    box.innerHTML = h;
+  }
+  $("gVinc").addEventListener("click", async function(e){
+    var b = e.target.closest("[data-vinc]"); if (!b) return;
+    try{
+      await api("/api/responsavel/vinculos/" + b.getAttribute("data-id") + "/" + b.getAttribute("data-vinc"), { method:"POST" });
+      toast(b.getAttribute("data-vinc") === "aceitar" ? "Pronto! A fonoaudióloga já vê o progresso." : "Pedido recusado.");
+      carregarGeral();
+    }catch(er){ toast(er.message); }
+  });
+  var geralTimer = null;
+  async function carregarGeral(){
+    clearTimeout(geralTimer);
+    try{
+      var r = await Promise.all([api("/api/responsavel/progresso"), api("/api/responsavel/vinculos")]);
+      desenharGeral(r[0]); desenharVinculos(r[1].vinculos);
+    }catch(e){ $("gAviso").hidden = false; $("gAviso").textContent = "Não foi possível carregar o progresso agora."; }
+    if (current === "geral") geralTimer = setTimeout(carregarGeral, 30000);      // atualiza sozinho enquanto a tela está aberta
+  }
+
   var onShow = {
     perfil:       function(){ S.papel = null; atualizarConexao(); },
     auth:         function(){ textosPapel(); },
@@ -1495,7 +1601,7 @@ svg.i.f{fill:currentColor;stroke:none}
     },
     diagnostico:  function(){ if (!S.me.status.privacidade){ toast("Aceite primeiro a Privacidade e Segurança."); return go("privacidade"); } carregarDiag(); },
     fono:         function(){ S.papel = "profissional"; textosPapel(); renderFono(); },
-    geral:        function(){ atualizarConexao(); },
+    geral:        function(){ atualizarConexao(); carregarGeral(); },
     fonoapp:      function(){
       S.papel = "profissional"; atualizarConexao();
       if (faUser !== S.me.usuario.id){

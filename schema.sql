@@ -109,3 +109,35 @@ CREATE TABLE IF NOT EXISTS lumis_fono_registros (
   CONSTRAINT fk_lumis_fono_usuario FOREIGN KEY (usuario_id)
     REFERENCES lumis_usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Desempenho da criança nas atividades: uma linha por tentativa (acerto ou erro).
+-- É daqui que saem o painel do responsável e a evolução da fono.
+CREATE TABLE IF NOT EXISTS lumis_tentativas (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  crianca_id  INT UNSIGNED NOT NULL,
+  atividade   VARCHAR(8) NOT NULL,
+  resultado   ENUM('acerto','erro') NOT NULL,
+  criado_em   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY ix_lumis_tent_crianca (crianca_id, criado_em),
+  CONSTRAINT fk_lumis_tent_crianca FOREIGN KEY (crianca_id)
+    REFERENCES lumis_criancas(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Vínculo entre um paciente da fono e a criança do responsável.
+-- A fono informa o e-mail do responsável no cadastro do paciente. O vínculo só
+-- passa a valer quando o responsável aceita no portal (dados de criança).
+CREATE TABLE IF NOT EXISTS lumis_vinculos (
+  id                 INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  profissional_id    INT UNSIGNED NOT NULL,
+  paciente_id        VARCHAR(40) NOT NULL,
+  paciente_nome      VARCHAR(100) NULL,
+  email_responsavel  VARCHAR(190) NOT NULL,
+  crianca_id         INT UNSIGNED NULL,
+  status             ENUM('pendente','aceito','recusado') NOT NULL DEFAULT 'pendente',
+  criado_em          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_lumis_vinc (profissional_id, paciente_id),
+  KEY ix_lumis_vinc_email (email_responsavel),
+  CONSTRAINT fk_lumis_vinc_prof FOREIGN KEY (profissional_id)
+    REFERENCES lumis_usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

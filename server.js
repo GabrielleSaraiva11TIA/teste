@@ -327,6 +327,169 @@ app.put("/api/profissional/registros/:id", exigirUsuario("profissional"), limite
 }))
 
 // ============================================================
+//  DESEMPENHO NAS ATIVIDADES
+//  O aparelho registra cada acerto/erro; o painel do responsável e a
+//  evolução da fono são calculados a partir dessas linhas.
+// ============================================================
+const ATIVIDADES = {
+    a1: { nome: "Descoberta do Som",    skill: "sons" },
+    a2: { nome: "Espelho do Lumis",     skill: "orofacial" },
+    a3: { nome: "Missão da língua",     skill: "orofacial" },
+    a4: { nome: "Espelho do Lumis (sopro)", skill: "sons" },
+    a5: { nome: "Desafio de Percepção", skill: "sons" },
+    a6: { nome: "Presente do Lumis",    skill: "sons" },
+    a7: { nome: "Detetive do Lumis",    skill: "orofacial" },
+    a8: { nome: "Desafio Final",        skill: "palavras" }
+}
+const SKILLS = {
+    sons:      { nome: "Sons e Articulação",       desc: "Percepção do som, sopro e fonemas /s/ e /b/" },
+    orofacial: { nome: "Reconhecimento Orofacial", desc: "Expressões em frente ao espelho do Lumis" },
+    palavras:  { nome: "Palavras & Frases",        desc: "Cadência rítmica e repetição alegre" }
+}
+const FUSO = "America/Sao_Paulo"
+const diaBR = d => new Intl.DateTimeFormat("sv-SE", { timeZone: FUSO }).format(d)     // 2026-10-13
+const dataDoBanco = s => new Date(String(s).replace(" ", "T") + "Z")
+
+app.post("/api/dispositivo/tentativas", limite(120, 60 * 1000), wrap(async (req, res) => {
+    let payload
+    try { payload = lerToken(req, "dispositivo") } catch { return erro(res, 401, "Aparelho não autenticado.") }
+    if (!payload.cid) return res.json({ ok: true, ignorado: true })       // aparelho da fono: não há criança
+    const lista = Array.isArray(req.body.eventos) ? req.body.eventos : [req.body]
+    const validos = lista.slice(0, 50).filter(e => e && ATIVIDADES[e.atividade] && ["acerto", "erro"].includes(e.resultado))
+    for (const e of validos) {
+        const quando = Number(e.t) > 0 && Date.now() - Number(e.t) < 14 * 86400000 && Number(e.t) <= Date.now()
+            ? new Date(Number(e.t)) : new Date()
+        await q("INSERT INTO lumis_tentativas (crianca_id, atividade, resultado, criado_em) VALUES (?, ?, ?, ?)",
+            [payload.cid, e.atividade, e.resultado, quando.toISOString().slice(0, 19).replace("T", " ")])
+    }
+    res.json({ ok: true, gravados: validos.length })
+}))
+
+async function resumoDesempenho(criancaId) {
+    const linhas = await q(
+        "SELECT atividade, resultado, criado_em FROM lumis_tentativas WHERE crianca_id = ? ORDER BY criado_em, id", [criancaId])
+    const porAtividade = {}
+    for (const k of Object.keys(ATIVIDADES)) porAtividade[k] = { id: k, nome: ATIVIDADES[k].nome, tentativas: 0, acertos: 0, erros: 0, taxa: null, ultima: null }
+    const skills = {}
+    for (const k of Object.keys(SKILLS)) skills[k] = { id: k, ...SKILLS[k], tentativas: 0, acertos: 0, taxa: null }
+    const dias = new Map()          // dia -> { atividade -> { tentativas, acertos } }
+    const diasAtivos = new Set()
+    let acertos = 0, erros = 0
+    for (const l of linhas) {
+        const a = porAtividade[l.atividade]; if (!a) continue
+        const ok = l.resultado === "acerto"
+        a.tentativas++; ok ? a.acertos++ : a.erros++
+        ok ? acertos++ : erros++
+        const sk = skills[ATIVIDADES[l.atividade].skill]
+        sk.tentativas++; if (ok) sk.acertos++
+        const quando = dataDoBanco(l.criado_em), dia = diaBR(quando)
+        a.ultima = dia; diasAtivos.add(dia)
+        if (!dias.has(dia)) dias.set(dia, {})
+        const dd = dias.get(dia)
+        dd[l.atividade] = dd[l.atividade] || { tentativas: 0, acertos: 0 }
+        dd[l.atividade].tentativas++; if (ok) dd[l.atividade].acertos++
+    }
+    for (const a of Object.values(porAtividade)) a.taxa = a.tentativas ? Math.round(100 * a.acertos / a.tentativas) : null
+    for (const s of Object.values(skills)) s.taxa = s.tentativas ? Math.round(100 * s.acertos / s.tentativas) : null
+
+    // semana atual (segunda a domingo) e sequência de dias seguidos
+    const hoje = new Date(), hojeStr = diaBR(hoje)
+    const diaSemana = (new Date(hojeStr + "T12:00:00Z").getUTCDay() + 6) % 7           // 0 = segunda
+    const semana = []
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(new Date(hojeStr + "T12:00:00Z").getTime() + (i - diaSemana) * 86400000)
+        const s = d.toISOString().slice(0, 10)
+        semana.push({ dia: s, feito: diasAtivos.has(s), hoje: s === hojeStr, futuro: i > diaSemana })
+    }
+    let sequencia = 0
+    for (let i = diasAtivos.has(hojeStr) ? 0 : 1; ; i++) {
+        const s = new Date(new Date(hojeStr + "T12:00:00Z").getTime() - i * 86400000).toISOString().slice(0, 10)
+        if (!diasAtivos.has(s)) break
+        sequencia++
+    }
+    const sessoes = []                                      // uma linha por dia e atividade, mais recentes primeiro
+    for (const [dia, mapa] of dias) for (const [at, v] of Object.entries(mapa))
+        sessoes.push({ dia, atividade: at, nome: ATIVIDADES[at].nome, skill: ATIVIDADES[at].skill, tentativas: v.tentativas, acertos: v.acertos, erros: v.tentativas - v.acertos })
+    sessoes.sort((x, y) => (y.dia > x.dia ? 1 : y.dia < x.dia ? -1 : x.atividade.localeCompare(y.atividade)))
+
+    const total = acertos + erros
+    return {
+        total: { tentativas: total, acertos, erros, taxa: total ? Math.round(100 * acertos / total) : null },
+        sequencia, ativoHoje: diasAtivos.has(hojeStr),
+        semana, sessoesNaSemana: semana.filter(s => s.feito).length, metaSemana: 5,
+        atividadesFeitas: Object.values(porAtividade).filter(a => a.acertos > 0).length,
+        atividadesNaSemana: sessoes.filter(s => semana.some(w => w.dia === s.dia)).length,
+        faseConcluida: porAtividade.a8.acertos > 0,
+        habilidades: Object.values(skills),
+        atividades: Object.values(porAtividade),
+        sessoes: sessoes.slice(0, 120)
+    }
+}
+
+// Responsável: painel real
+app.get("/api/responsavel/progresso", exigirUsuario("responsavel"), wrap(async (req, res) => {
+    const crianca = await garantirCrianca(req.usuario.id)
+    res.json(await resumoDesempenho(crianca.id))
+}))
+
+// ---------- vínculo fono ⇄ responsável (precisa do aceite do responsável) ----------
+app.get("/api/responsavel/vinculos", exigirUsuario("responsavel"), wrap(async (req, res) => {
+    const [u] = await q("SELECT email FROM lumis_usuarios WHERE id = ?", [req.usuario.id])
+    const linhas = await q(
+        `SELECT v.id, v.status, v.paciente_nome, p.nome AS profissional
+           FROM lumis_vinculos v JOIN lumis_usuarios p ON p.id = v.profissional_id
+          WHERE v.email_responsavel = ? AND v.status <> 'recusado' ORDER BY v.criado_em DESC`, [u.email.toLowerCase()])
+    res.json({ vinculos: linhas.map(l => ({ id: l.id, status: l.status, paciente: l.paciente_nome || "", profissional: l.profissional })) })
+}))
+
+app.post("/api/responsavel/vinculos/:id/:acao", exigirUsuario("responsavel"), wrap(async (req, res) => {
+    const acao = req.params.acao
+    if (!["aceitar", "recusar"].includes(acao)) return erro(res, 400, "Ação inválida.")
+    const [u] = await q("SELECT email FROM lumis_usuarios WHERE id = ?", [req.usuario.id])
+    const [v] = await q("SELECT id FROM lumis_vinculos WHERE id = ? AND email_responsavel = ?", [Number(req.params.id) || 0, u.email.toLowerCase()])
+    if (!v) return erro(res, 404, "Pedido não encontrado.")
+    if (acao === "aceitar") {
+        const crianca = await garantirCrianca(req.usuario.id)
+        await q("UPDATE lumis_vinculos SET status = 'aceito', crianca_id = ? WHERE id = ?", [crianca.id, v.id])
+    } else {
+        await q("UPDATE lumis_vinculos SET status = 'recusado', crianca_id = NULL WHERE id = ?", [v.id])
+    }
+    res.json({ ok: true })
+}))
+
+// Fono: informa o e-mail do responsável de um paciente (cria/atualiza o pedido de vínculo)
+app.put("/api/profissional/vinculos/:pacienteId", exigirUsuario("profissional"), limite(60, 60 * 1000), wrap(async (req, res) => {
+    const pid = String(req.params.pacienteId || "")
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(pid)) return erro(res, 400, "Identificador inválido.")
+    const email = texto(req.body.email, 190).toLowerCase()
+    if (!emailValido(email)) return erro(res, 400, "Informe um e-mail válido do responsável.")
+    const nome = texto(req.body.pacienteNome, 100)
+    const [atual] = await q("SELECT id, email_responsavel FROM lumis_vinculos WHERE profissional_id = ? AND paciente_id = ?", [req.usuario.id, pid])
+    if (!atual) {
+        await q("INSERT INTO lumis_vinculos (profissional_id, paciente_id, paciente_nome, email_responsavel) VALUES (?, ?, ?, ?)",
+            [req.usuario.id, pid, nome || null, email])
+    } else if (atual.email_responsavel !== email) {
+        await q("UPDATE lumis_vinculos SET email_responsavel = ?, paciente_nome = ?, status = 'pendente', crianca_id = NULL WHERE id = ?",
+            [email, nome || null, atual.id])
+    } else if (nome) {
+        await q("UPDATE lumis_vinculos SET paciente_nome = ? WHERE id = ?", [nome, atual.id])
+    }
+    res.json({ ok: true })       // não revela se o e-mail tem conta
+}))
+
+app.get("/api/profissional/vinculos", exigirUsuario("profissional"), wrap(async (req, res) => {
+    const linhas = await q("SELECT paciente_id, status, email_responsavel FROM lumis_vinculos WHERE profissional_id = ?", [req.usuario.id])
+    res.json({ vinculos: linhas.map(l => ({ pacienteId: l.paciente_id, status: l.status, email: l.email_responsavel })) })
+}))
+
+app.get("/api/profissional/progresso/:pacienteId", exigirUsuario("profissional"), wrap(async (req, res) => {
+    const [v] = await q("SELECT status, crianca_id FROM lumis_vinculos WHERE profissional_id = ? AND paciente_id = ?", [req.usuario.id, String(req.params.pacienteId)])
+    if (!v) return res.json({ vinculo: "sem" })
+    if (v.status !== "aceito" || !v.crianca_id) return res.json({ vinculo: v.status })
+    res.json({ vinculo: "aceito", ...(await resumoDesempenho(v.crianca_id)) })
+}))
+
+// ============================================================
 //  PAREAMENTO  (aparelho ⇄ celular do adulto)
 //
 //  1. Aparelho:  POST /api/pareamentos            → codigo, token (vai no QR), segredo
