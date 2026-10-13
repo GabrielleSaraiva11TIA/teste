@@ -293,6 +293,12 @@ body{
       <div style="flex:1">
         <h1 class="h-title" id="loadTitle">Estamos preparando tudo...</h1>
         <p class="h-sub" id="loadSub">Aguardando o responsável concluir o cadastro no celular:</p>
+        <div class="code-wrap" style="margin-top:calc(var(--u)*.7)">Ou digite:
+          <button class="code" id="codeBtn2" type="button" title="Copiar código">
+            <span id="codeTxt2">LUMIS-····</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+          </button>
+        </div>
       </div>
       <button class="btn-soft" id="novoQrBtn" type="button">Gerar novo QR Code</button>
     </div>
@@ -420,7 +426,7 @@ body{
 
   function mostrarQR(){
     $("viewLoad").hidden = true; $("viewQR").hidden = false;
-    $("codeTxt").textContent = par.codigo;
+    $("codeTxt").textContent = par.codigo; $("codeTxt2").textContent = par.codigo;
     renderQR(portalUrl(par.token));
     setWaiting("Aguardando leitura pelo celular...", false);
   }
@@ -498,6 +504,7 @@ body{
   function mostrarCarregando(){
     if (!$("viewLoad").hidden) return;
     $("viewQR").hidden = true; $("viewLoad").hidden = false;
+    if (par) $("codeTxt2").textContent = par.codigo;   // o código continua visível durante o cadastro
     if (!avisouConexao){ avisouConexao = true; buzz(60); }   // "vibração suave ao conectar"
   }
   function resetarProgresso(){ mostrado = 0; alvo = 0; avisouConexao = false; desenhar(); atualizarEtapas(0); }
@@ -557,6 +564,13 @@ body{
     if (concluido) return;
     clearTimeout(pollTimer); store(KEY_PAR, null);
     criarPareamento().then(poll).catch(function(){ setTimeout(iniciarPareamento, 3000); });
+  });
+  $("codeBtn2").addEventListener("click", function(){
+    var txt = $("codeTxt2").textContent;
+    function ok(){ var el = $("codeTxt2"); el.textContent = "Copiado!"; setTimeout(function(){ if (par) el.textContent = par.codigo; }, 1200); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function(){});
+    else ok();
+    buzz(30);
   });
   $("codeBtn").addEventListener("click", function(){
     var txt = $("codeTxt").textContent;
