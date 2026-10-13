@@ -501,8 +501,6 @@ svg.i.f{fill:currentColor;stroke:none}
         <p class="ferr" hidden></p>
         <div class="forgot"><button type="button" class="link" id="btnEsqueci">Esqueci minha senha</button></div>
         <button class="btn" type="submit" style="margin-top:18px"><span>Entrar</span><svg class="i"><use href="#i-right"/></svg></button>
-        <div class="sep">ou</div>
-        <button class="btn soft" type="button" id="btnBio"><svg class="i"><use href="#i-finger"/></svg>Entrar com Face ID ou Biometria</button>
         <p class="note" style="margin-top:16px"><svg class="i"><use href="#i-lock"/></svg>Seus dados e relatórios clínicos são protegidos por criptografia de ponta a ponta.</p>
       </form>
 
@@ -529,6 +527,7 @@ svg.i.f{fill:currentColor;stroke:none}
 
       <p class="auth-foot" id="footLogin">Ainda não tem uma conta? <button type="button" class="link" id="goCadastro">Cadastre-se</button></p>
       <p class="auth-foot" id="footCadastro" hidden>Já possui uma conta? <button type="button" class="link" id="goLogin">Entrar</button></p>
+      <button class="help-link" type="button" id="btnCodigoAuth"><svg class="i"><use href="#i-link"/></svg>Digitar código do aparelho</button>
     </section>
 
     <!-- ===================== MENU DO RESPONSÁVEL ===================== -->
@@ -1038,6 +1037,7 @@ svg.i.f{fill:currentColor;stroke:none}
   function abrirCodigo(){ $("codigoErr").hidden = true; $("codigoInput").value = ""; $("sheetCodigo").hidden = false; setTimeout(function(){ $("codigoInput").focus(); }, 50); }
   $("btnAjuda").addEventListener("click", abrirCodigo);
   $("prontoCodigo").addEventListener("click", abrirCodigo);
+  $("btnCodigoAuth").addEventListener("click", abrirCodigo);
 
   $("codigoOk").addEventListener("click", function(){
     var btn = $("codigoOk");
@@ -1100,7 +1100,6 @@ svg.i.f{fill:currentColor;stroke:none}
   $("goCadastro").addEventListener("click", function(){ progresso(36); modoAuth("cadastro"); });
   $("goLogin").addEventListener("click", function(){ modoAuth("login"); });
   $("btnEsqueci").addEventListener("click", function(){ toast("Recuperação de senha em breve."); });
-  $("btnBio").addEventListener("click", function(){ toast("Face ID / biometria em breve."); });
 
   $$("[data-eye]").forEach(function(b){
     b.addEventListener("click", function(){
