@@ -366,7 +366,15 @@ const SENSIBILIDADE = 1.0;    // maior = percebe sons mais fracos
 const RMS_MINIMO = 0.02;      // volume mínimo antes da sensibilidade
 const SEGURAR_MS = 2500;      // tempo total de som para encher a barra
 const DECAIMENTO = 0.5;       // velocidade com que a barra esvazia se a criança para (1 = igual à subida)
-const RITMO_PARCIAL = 0.25;   // 0 = exige o som exato; 0.25 = qualquer voz também avança devagar
+const RITMO_PARCIAL = 0;      // 0 = só o "Sssss" certo avança a barra (voz, palma, apito etc. não contam)
+/* Detecção do "Sssss" (mesma da atividade 4): chiado agudo, sem tom, quase sem graves, acima do barulho do ambiente */
+const SSSS = {
+  HIGH_RATIO: 0.75,            // % da energia que precisa estar nos agudos (4–12 kHz)
+  MIN_DB_ABOVE_AMBIENT: 8,     // quão mais alto que o barulho da sala (dB)
+  CENTROID_MIN: 4500,          // "centro" do som (Hz): o "s" é agudo; o "sh" é mais grave
+  FLATNESS_MIN: 0.06,          // chiado = alto; apito/beep = perto de 0
+  LOW_RATIO_MAX: 0.12          // máximo de energia nos graves (fala, batidas)
+};
 const JANELA_MS = 9000;       // sem progresso por esse tempo -> "tentar mais uma vez"
 const T = {
   inicio:'Será que tem uma <b>estrela</b> aqui dentro? Segure o som para abrir a caixa!',
@@ -458,6 +466,49 @@ let ctx, analyser, stream, tempo, espectro, raf, tAnt, carga, ultimoProg;
 $('btnMic').addEventListener('click', ()=> ouvindo ? parar(false) : iniciar());
 $('btnSimular').addEventListener('click', ()=>{ if(!ouvindo && !concluido) sucesso(); });
 
+/* ---- análise do som (agudos, centro, chiado, graves) ---- */
+let ambienteDb = null, bandTop = 12000, hiStart = 4000, bwFrames = 0, bwHi = 0, bwMid = 0;
+const dbSeguro = v => (isFinite(v) ? Math.max(v, -200) : -200);
+function mediaDb(f0, f1, binHz){
+  const i0 = Math.floor(f0/binHz), i1 = Math.min(espectro.length-1, Math.floor(f1/binHz));
+  let s = 0, n = 0; for(let i = i0; i <= i1; i++){ s += dbSeguro(espectro[i]); n++; }
+  return n ? s/n : -200;
+}
+function fixarBanda(top){ bandTop = top; hiStart = top >= 12000 ? 4000 : top >= 7000 ? 2800 : 1800; bwFrames = 60; }
+/* descobre até onde o microfone "ouve" (Bluetooth/webcam podem cortar os agudos) */
+function estimarBanda(binHz, nyq){
+  if(bwFrames >= 60) return;
+  if(nyq < 9000){ fixarBanda(Math.floor(nyq*0.95)); return; }
+  if(mediaDb(300, 3000, binHz) < -85) return;
+  bwHi += mediaDb(9000, Math.min(11500, nyq*0.95), binHz); bwMid += mediaDb(5000, 7500, binHz);
+  if(++bwFrames === 60){
+    const hi = bwHi/60, mid = bwMid/60;
+    if(hi > -105) fixarBanda(12000); else if(mid > -105) fixarBanda(7500); else fixarBanda(3800);
+  }
+}
+function medir(){
+  const sr = ctx.sampleRate, nyq = sr/2, binHz = sr/analyser.fftSize;
+  estimarBanda(binHz, nyq);
+  const top = Math.min(bandTop, nyq*0.95);
+  const lowStart = Math.floor(100/binHz), midStart = Math.floor(1500/binHz), highStart = Math.floor(hiStart/binHz);
+  const highEnd = Math.min(espectro.length-1, Math.floor(top/binHz));
+  let low = 0, mid = 0, high = 0, cNum = 0, cDen = 0, sumLog = 0, sumP = 0, nFlat = 0;
+  for(let i = lowStart; i <= highEnd; i++){
+    const p = Math.pow(10, dbSeguro(espectro[i])/10);
+    if(i < midStart) low += p; else if(i < highStart) mid += p; else high += p;
+    if(i >= midStart){ cNum += i*binHz*p; cDen += p; }
+    if(i >= highStart){ sumLog += Math.log(p + 1e-20); sumP += p; nFlat++; }
+  }
+  const total = low + mid + high + 1e-12;
+  const flat = nFlat ? Math.exp(sumLog/nFlat)/(sumP/nFlat + 1e-20) : 0;
+  return { db: 10*Math.log10(total), ratio: high/total, lowRatio: low/total, centroid: cNum/(cDen + 1e-20), flat };
+}
+function ehSsss(m, acima){
+  const cmin = SSSS.CENTROID_MIN * (hiStart/4000);
+  return m.ratio > SSSS.HIGH_RATIO && acima > SSSS.MIN_DB_ABOVE_AMBIENT &&
+         m.centroid >= cmin && m.flat >= SSSS.FLATNESS_MIN && m.lowRatio <= SSSS.LOW_RATIO_MAX;
+}
+
 async function iniciar(){
   if(concluido) return;
   try{
@@ -482,12 +533,14 @@ function laco(agora){
   const dt = agora - tAnt; tAnt = agora;
   analyser.getFloatTimeDomainData(tempo); analyser.getFloatFrequencyData(espectro);
   let soma = 0; for(const v of tempo) soma += v*v;
-  const rms = Math.sqrt(soma/tempo.length), hz = ctx.sampleRate/analyser.fftSize;
-  let num = 0, den = 0;
-  for(let b = Math.floor(100/hz); b < 8000/hz; b++){ const m = Math.pow(10, espectro[b]/20); num += b*hz*m; den += m; }
-  const centro = den ? num/den : 0;
-  const voz = rms >= RMS_MINIMO/SENSIBILIDADE, certo = voz && centro >= ALVO.hzMin && centro <= ALVO.hzMax;
-  const taxa = certo ? 1 : (voz ? RITMO_PARCIAL : -DECAIMENTO);
+  const rms = Math.sqrt(soma/tempo.length);
+  const m = medir();
+  if(ambienteDb === null) ambienteDb = m.db;
+  const acima = m.db - ambienteDb;
+  const certo = ehSsss(m, acima);
+  if(!certo && acima < 6) ambienteDb += (m.db - ambienteDb) * 0.03;   // aprende o barulho da sala
+  const voz = certo || rms >= RMS_MINIMO/SENSIBILIDADE;
+  const taxa = certo ? 1 : (voz && RITMO_PARCIAL ? RITMO_PARCIAL : -DECAIMENTO);
   carga = Math.max(0, carga + dt*taxa); if(taxa>0) ultimoProg = agora;
   const p = Math.min(1, carga/SEGURAR_MS), nivel = Math.min(1, rms*14);
   barra(p); $('orbe').style.setProperty('--nivel', nivel.toFixed(2));
