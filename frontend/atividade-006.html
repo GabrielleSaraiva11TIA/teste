@@ -505,6 +505,29 @@ function medir(){
   const flat = nFlat ? Math.exp(sumLog/nFlat)/(sumP/nFlat + 1e-20) : 0;
   return { db: 10*Math.log10(total), ratio: high/total, lowRatio: low/total, centroid: cNum/(cDen + 1e-20), flat };
 }
+/* painel de teste: abra a atividade com ?debug=1 no final do endereço */
+const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
+let painel = null, ultimoPainel = 0;
+function pintarPainel(m, acima, certo, rms, extra){
+  if(!DEBUG) return;
+  if(!painel){
+    painel = document.createElement('pre');
+    painel.style.cssText = 'position:fixed;left:6px;top:6px;z-index:99999;margin:0;padding:8px 10px;background:rgba(0,0,0,.82);color:#9ef;font:12px/1.35 monospace;border-radius:8px;pointer-events:none;max-width:92vw;white-space:pre-wrap';
+    document.body.appendChild(painel);
+  }
+  const t = performance.now(); if(!extra && t - ultimoPainel < 120) return; ultimoPainel = t;
+  const trk = stream && stream.getAudioTracks()[0];
+  const ok = (v, f) => v ? 'OK ' : 'NAO';
+  painel.textContent =
+    'mic: ' + (trk ? trk.label : '?') + '\n' +
+    'amostragem ' + (ctx ? ctx.sampleRate : '?') + ' Hz · banda até ' + bandTop + ' Hz\n' +
+    'volume ' + m.db.toFixed(1) + ' dB · ambiente ' + (ambienteDb === null ? '-' : ambienteDb.toFixed(1)) + ' dB · acima ' + acima.toFixed(1) + ' (precisa >' + SSSS.MIN_DB_ABOVE_AMBIENT + ') ' + ok(acima > SSSS.MIN_DB_ABOVE_AMBIENT) + '\n' +
+    'agudos ' + (m.ratio*100).toFixed(0) + '% (precisa >' + (SSSS.HIGH_RATIO*100) + '%) ' + ok(m.ratio > SSSS.HIGH_RATIO) + '\n' +
+    'centro ' + m.centroid.toFixed(0) + ' Hz (precisa >=' + Math.round(SSSS.CENTROID_MIN*hiStart/4000) + ') ' + ok(m.centroid >= SSSS.CENTROID_MIN*hiStart/4000) + '\n' +
+    'chiado ' + m.flat.toFixed(2) + ' (precisa >=' + SSSS.FLATNESS_MIN + ') ' + ok(m.flat >= SSSS.FLATNESS_MIN) + '\n' +
+    'graves ' + (m.lowRatio*100).toFixed(0) + '% (precisa <=' + (SSSS.LOW_RATIO_MAX*100) + '%) ' + ok(m.lowRatio <= SSSS.LOW_RATIO_MAX) + '\n' +
+    '=> Sssss agora: ' + (certo ? 'SIM' : 'nao') + ' · acumulado ' + Math.round(acertoMs||0) + ' ms de ' + ACERTO_MIN_MS + (extra ? '\n' + extra : '');
+}
 function ehSsss(m, acima){
   const cmin = SSSS.CENTROID_MIN * (hiStart/4000);
   return m.ratio > SSSS.HIGH_RATIO && acima > SSSS.MIN_DB_ABOVE_AMBIENT &&
@@ -543,6 +566,7 @@ function laco(agora){
   if(!certo && acima < 6) ambienteDb += (m.db - ambienteDb) * 0.03;   // aprende o barulho da sala
   const voz = certo || rms >= RMS_MINIMO/SENSIBILIDADE;
   decorrido += dt; if(certo) acertoMs += dt;
+  pintarPainel(m, acima, certo, rms);
   const p = Math.min(1, decorrido/JANELA_OUVIR_MS), nivel = Math.min(1, rms*14);
   barra(p); $('orbe').style.setProperty('--nivel', nivel.toFixed(2));
   if(PULSEIRA_ATIVA){      // vibra enquanto a criança faz o som; para quando ela para
@@ -550,7 +574,11 @@ function laco(agora){
     else { if(aoVivoAtivo) pararAoVivo(); contAoVivo = 0; }
   }
   status(certo ? T.continue : T.esperando);
-  if(p>=1) return acertoMs >= ACERTO_MIN_MS ? sucesso() : errou();
+  if(p>=1){
+    const ok = acertoMs >= ACERTO_MIN_MS;
+    pintarPainel(m, acima, certo, rms, 'RESULTADO: ' + (ok ? 'CERTO' : 'ERRADO') + ' (' + Math.round(acertoMs) + ' ms de Sssss)');
+    return ok ? sucesso() : errou();
+  }
   raf = requestAnimationFrame(laco);
 }
 function limparEscuta(){
