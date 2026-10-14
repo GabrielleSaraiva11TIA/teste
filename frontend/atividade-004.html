@@ -749,14 +749,13 @@ html.lt-on .page { padding-bottom: 55vh; }
   const CONFIG = {
     LISTEN_MS: 4500,              // tempo máximo ouvindo a tentativa
     SUCCESS_HIT_MS: 1200,         // quanto tempo de "sssss" é preciso detectar
-    HIGH_RATIO: 0.75,             // (não usado mais; mantido por compatibilidade)
-    HIGH_RISE_MIN: 12,            // quanto os AGUDOS (4–12 kHz) sobem acima do barulho do ambiente (dB)
-    TILT_MIN: 18,                 // agudos sobem tanto MAIS que os graves (dB): o ruído de sala não passa
-    HIGH_ABS_MIN: -75,            // nível mínimo dos agudos (dB): ignora sinal minúsculo / microfone com "gate"
+    HIGH_RATIO: 0.75,             // % da energia do som que precisa estar nos agudos (4–12 kHz)
+    MIN_DB_ABOVE_AMBIENT: 8,      // quão mais alto que o barulho do ambiente (em dB)
     SUCCESS_RUN_MS: 900,          // "sssss" SEGUIDO que precisa ser detectado (aceita pausas curtas)
     RUN_GAP_MS: 150,              // pausa máxima dentro do "sssss" sem zerar a contagem
     CENTROID_MIN: 4500,           // "centro" do som (Hz): o "s" fica agudo; o "sh" fica mais grave
     FLATNESS_MIN: 0.06,           // chiado (sem tom) = alto; apito/beep = perto de 0
+    LOW_RATIO_MAX: 0.12,          // máximo de energia nos graves (< 1,5 kHz): fala/batidas
     START_GUARD_MS: 350,          // ignora o começo (toque no botão, fim do som da demonstração)
     STARS_REWARD: 3,              // estrelas pelo acerto (só na 1ª vez)
     MAX_TRIES_BEFORE_SKIP: 3,     // depois de N erros aparece "Continuar a Aventura"
@@ -769,7 +768,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   };
   // ajustes feitos no painel de teste (?debug=1) ficam guardados neste aparelho
   const CFG_KEY = "lumis_mic_cfg";
-  const CFG_NUM = ["HIGH_RISE_MIN","TILT_MIN","HIGH_ABS_MIN","SUCCESS_RUN_MS","RUN_GAP_MS","CENTROID_MIN","FLATNESS_MIN"];
+  const CFG_NUM = ["HIGH_RATIO","MIN_DB_ABOVE_AMBIENT","SUCCESS_RUN_MS","RUN_GAP_MS","CENTROID_MIN","FLATNESS_MIN","LOW_RATIO_MAX"];
   try {
     const salvo = JSON.parse(localStorage.getItem(CFG_KEY) || "{}");
     CFG_NUM.forEach((k) => { if (typeof salvo[k] === "number" && isFinite(salvo[k])) CONFIG[k] = salvo[k]; });
@@ -981,7 +980,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   // =====================================================
   let stream = null, srcNode = null, analyser = null, freqData = null;
   let hasMic = false, hasCam = false;
-  let ambientDb = null, ambLow = null, ambHigh = null;
+  let ambientDb = null;
   let rafId = 0, lastTs = 0;
 
   let listening = false, listenStart = 0, hitMs = 0, gapMs = 0, soundMs = 0, smooth = 0, lastBuzz = 0, demoSoundEnd = 0;
@@ -1097,7 +1096,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     if (stream) stream.getTracks().forEach((t) => t.stop());
     if (srcNode) { try { srcNode.disconnect(); } catch (e) {} }
     stream = null; srcNode = null; analyser = null; freqData = null;
-    hasCam = false; hasMic = false; zerarAmbiente(); reiniciarBanda();
+    hasCam = false; hasMic = false; ambientDb = null; reiniciarBanda();
     camVideo.srcObject = null;
   }
 
@@ -1133,12 +1132,12 @@ html.lt-on .page { padding-bottom: 55vh; }
   // =====================================================
   //  PAINEL DE TESTE (abra a página com ?debug=1): valores ao vivo + ajuste dos limites
   // =====================================================
-  let painel = null, pSel = null, pVal = null, pUltimo = 0, medindo = null;
+  let painel = null, pSel = null, pVal = null, pUltimo = 0;
   function reiniciarBanda() { bandTop = 12000; hiStart = 4000; bwFrames = 0; bwHi = 0; bwMid = 0; }
 
   function reconectarAnalisador() {
     if (srcNode) { try { srcNode.disconnect(); } catch (e) {} }
-    if (stream && stream.getAudioTracks().length) { reiniciarBanda(); zerarAmbiente(); setupAnalyser(); }
+    if (stream && stream.getAudioTracks().length) { reiniciarBanda(); ambientDb = null; setupAnalyser(); }
   }
 
   function montarPainel() {
@@ -1157,15 +1156,13 @@ html.lt-on .page { padding-bottom: 55vh; }
     painel.className = "mic-dbg";
     painel.innerHTML =
       '<h4>Teste do microfone <button type="button" id="micDbgMin">min</button></h4><div class="corpo">' +
-      '<label>Microfone<select id="micDbgSel"></select></label><canvas id="micDbgSpec" width="248" height="56" style="width:100%;margin-top:6px;border-radius:6px;background:#0b1633"></canvas><pre id="micDbgVal">Os números aparecem na etapa 2 (&quot;Agora Você!&quot;): toque em &quot;Agora é a minha vez!&quot; e permita câmera e microfone.</pre><div style="margin:6px 0"><button type="button" id="micDbgMedir">Medir 4 s (faça o Sssss)</button></div><pre id="micDbgRes"></pre><div id="micDbgCfg"></div>' +
+      '<label>Microfone<select id="micDbgSel"></select></label><pre id="micDbgVal">aguardando...</pre><div id="micDbgCfg"></div>' +
       '<div style="margin-top:8px;display:flex;gap:6px"><button type="button" id="micDbgBanda">Medir banda de novo</button>' +
       '<button type="button" id="micDbgReset">Zerar ajustes</button></div></div>';
     document.body.appendChild(painel);
     pSel = painel.querySelector("#micDbgSel"); pVal = painel.querySelector("#micDbgVal");
     painel.querySelector("#micDbgMin").onclick = () => painel.classList.toggle("min");
     painel.querySelector("#micDbgBanda").onclick = () => reiniciarBanda();
-    painel.querySelector("#micDbgMedir").onclick = () => { medindo = { fim: performance.now() + 4000, n: 0, ativos: 0, ok: {}, v: { subida: [], tilt: [], nivel: [], centro: [], chiado: [] } };
-      painel.querySelector("#micDbgRes").textContent = "Medindo... faça o Sssss agora!"; };
     painel.querySelector("#micDbgReset").onclick = () => { try { localStorage.removeItem(CFG_KEY); } catch (e) {} location.reload(); };
     const cfg = painel.querySelector("#micDbgCfg");
     CFG_NUM.forEach((k) => {
@@ -1207,63 +1204,23 @@ html.lt-on .page { padding-bottom: 55vh; }
     const atual = stream && stream.getAudioTracks()[0];
     if (!m) { pVal.textContent = "sem microfone"; return; }
     const cmin = CONFIG.CENTROID_MIN * (hiStart / 4000);
-    desenharEspectro();
-    if (medindo) amostrarMedicao(m, above, cmin, now);
     pVal.innerHTML =
       "em uso: " + (atual ? atual.label.replace(/[<>&]/g, "") : "-") + "\n" +
       "amostragem " + getCtx().sampleRate + " Hz · banda até " + bandTop + " Hz\n" +
-      "volume total ↑ " + above.toFixed(1) + " dB\n" +
-      t(ev.highRise >= CONFIG.HIGH_RISE_MIN, "agudos ↑ " + ev.highRise.toFixed(1) + " dB") + " (≥ " + CONFIG.HIGH_RISE_MIN + ")\n" +
-      "graves  ↑ " + ev.lowRise.toFixed(1) + " dB\n" +
-      t(ev.tilt >= CONFIG.TILT_MIN, "diferença " + ev.tilt.toFixed(1) + " dB") + " (≥ " + CONFIG.TILT_MIN + ")\n" +
-      t(m.highDb >= CONFIG.HIGH_ABS_MIN, "nível agudos " + m.highDb.toFixed(0) + " dB") + " (≥ " + CONFIG.HIGH_ABS_MIN + ")\n" +
-      t(m.centroid >= cmin, "centro   " + Math.round(m.centroid) + " Hz") + " (≥ " + Math.round(cmin) + ")\n" +
-      t(m.flat >= CONFIG.FLATNESS_MIN, "chiado   " + m.flat.toFixed(3)) + " (≥ " + CONFIG.FLATNESS_MIN + ")\n" +
+      t(above > CONFIG.MIN_DB_ABOVE_AMBIENT, "volume  " + above.toFixed(1) + " dB") + " (> " + CONFIG.MIN_DB_ABOVE_AMBIENT + ")\n" +
+      t(m.ratio > CONFIG.HIGH_RATIO, "agudos  " + m.ratio.toFixed(2)) + " (> " + CONFIG.HIGH_RATIO + ")\n" +
+      t(m.centroid >= cmin, "centro  " + Math.round(m.centroid) + " Hz") + " (≥ " + Math.round(cmin) + ")\n" +
+      t(m.flat >= CONFIG.FLATNESS_MIN, "chiado  " + m.flat.toFixed(3)) + " (≥ " + CONFIG.FLATNESS_MIN + ")\n" +
+      t(m.lowRatio <= CONFIG.LOW_RATIO_MAX, "graves  " + m.lowRatio.toFixed(3)) + " (≤ " + CONFIG.LOW_RATIO_MAX + ")\n" +
       "\"sssss\" agora: " + t(hit, hit ? "SIM" : "não") + "\n" +
       "seguido: " + Math.round(hitMs) + " / " + CONFIG.SUCCESS_RUN_MS + " ms";
-  }
-  // espectro ao vivo (0 até o fim da banda); a linha vertical marca onde começam os "agudos"
-  function desenharEspectro() {
-    const cv = painel.querySelector("#micDbgSpec"), g = cv.getContext("2d");
-    const W = cv.width, H = cv.height, sr = getCtx().sampleRate, binHz = sr / analyser.fftSize;
-    const fim = Math.min(freqData.length - 1, Math.floor(Math.max(bandTop, 8000) / binHz));
-    g.clearRect(0, 0, W, H);
-    g.fillStyle = "#5fe39c";
-    for (let x = 0; x < W; x++) {
-      const i = Math.floor((x / W) * fim);
-      const v = Math.min(1, Math.max(0, (dbSeguro(freqData[i]) + 110) / 90));
-      g.fillRect(x, H - v * H, 1, v * H);
-    }
-    g.fillStyle = "#ffb64d"; g.fillRect(Math.floor((hiStart / binHz / fim) * W), 0, 1, H);
-  }
-  // "Medir 4 s": mostra, nos instantes com som, quais critérios passam e quais falham
-  function amostrarMedicao(m, above, cmin, now) {
-    const r = painel.querySelector("#micDbgRes");
-    const med = (a) => { const s = a.slice().sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : NaN; };
-    medindo.n++;
-    if (ev.highRise > 6) {
-      medindo.ativos++;
-      const ck = { "agudos sobem": ev.highRise >= CONFIG.HIGH_RISE_MIN, "agudos >> graves": ev.tilt >= CONFIG.TILT_MIN,
-        "nível dos agudos": m.highDb >= CONFIG.HIGH_ABS_MIN, "centro agudo": m.centroid >= cmin, "chiado": m.flat >= CONFIG.FLATNESS_MIN };
-      for (const k in ck) medindo.ok[k] = (medindo.ok[k] || 0) + (ck[k] ? 1 : 0);
-      medindo.v.subida.push(ev.highRise); medindo.v.tilt.push(ev.tilt); medindo.v.nivel.push(m.highDb);
-      medindo.v.centro.push(m.centroid); medindo.v.chiado.push(m.flat);
-    }
-    if (now < medindo.fim) return;
-    const d = medindo; medindo = null;
-    if (d.ativos < 3) { r.textContent = "Quase nenhum som captado. Aproxime a lapela da boca ou aumente o volume do microfone no sistema."; return; }
-    let txt = "Com som em " + d.ativos + " de " + d.n + " leituras:\n";
-    for (const k in d.ok) txt += (d.ok[k] / d.ativos >= 0.8 ? "✓ " : "✗ ") + k + ": " + Math.round(100 * d.ok[k] / d.ativos) + "%\n";
-    txt += "valores (mediana): agudos↑ " + med(d.v.subida).toFixed(0) + " dB · diferença " + med(d.v.tilt).toFixed(0) + " dB · nível " + med(d.v.nivel).toFixed(0) +
-           " dB · centro " + Math.round(med(d.v.centro)) + " Hz · chiado " + med(d.v.chiado).toFixed(2);
-    r.textContent = txt;
   }
   if (DEBUG) montarPainel();
 
   // Banda útil do microfone: lapela USB entrega até 20 kHz; Bluetooth/headset corta em 4–8 kHz.
   // Descobre sozinho até onde vai o sinal e ajusta onde começam os "agudos".
   let bandTop = 12000, hiStart = 4000, bwFrames = 0, bwHi = 0, bwMid = 0;
-  const dbSeguro = (v) => (isFinite(v) ? Math.max(v, -110) : -110);
+  const dbSeguro = (v) => (isFinite(v) ? Math.max(v, -200) : -200);
   function mediaDb(f0, f1, binHz) {
     const i0 = Math.floor(f0 / binHz), i1 = Math.min(freqData.length - 1, Math.floor(f1 / binHz));
     let s = 0, n = 0;
@@ -1271,7 +1228,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     return n ? s / n : -200;
   }
   function fixarBanda(top) {
-    bandTop = top; hiStart = top >= 12000 ? 4000 : top >= 7000 ? 2800 : 1800; bwFrames = 60; hist.high.length = 0; ambHigh = null;
+    bandTop = top; hiStart = top >= 12000 ? 4000 : top >= 7000 ? 2800 : 1800; bwFrames = 60;
   }
   const BANDA_URL = Number(new URLSearchParams(location.search).get("banda")) || 0;   // ex.: ?banda=7500 (força a banda)
   function estimarBanda(binHz, nyq) {
@@ -1279,7 +1236,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     if (bwFrames >= 60) return;
     if (nyq < 9000) { fixarBanda(Math.floor(nyq * 0.95)); return; }
     // só conta quando há sinal nos médios (microfone mudo/"gate" não pode parecer banda curta)
-    if (mediaDb(300, 3000, binHz) < -100) return;
+    if (mediaDb(300, 3000, binHz) < -85) return;
     bwHi += mediaDb(9000, Math.min(11500, nyq * 0.95), binHz);
     bwMid += mediaDb(5000, 7500, binHz);
     if (++bwFrames === 60) {
@@ -1310,36 +1267,15 @@ html.lt-on .page { padding-bottom: 55vh; }
     const total = low + mid + high + 1e-12;
     const flat = nFlat ? Math.exp(sumLog / nFlat) / (sumP / nFlat + 1e-20) : 0;
     return { db: 10 * Math.log10(total), ratio: high / total, lowRatio: low / total,
-             lowDb: 10 * Math.log10(low + 1e-12), highDb: 10 * Math.log10(high + 1e-12),
              centroid: cNum / (cDen + 1e-20), flat: flat };
   }
 
-  // é "sssss"? Compara cada faixa com o barulho do PRÓPRIO ambiente (não importa se a sala é grave/ruidosa):
-  // os agudos precisam subir bastante, muito mais que os graves, com formato de chiado (sem tom).
-  let ev = { highRise: 0, lowRise: 0, tilt: 0 };
+  // é "sssss"? (agudo, alto o bastante, centro agudo, chiado sem tom, quase sem graves)
   function ehSsss(m, above) {
-    if (ambLow === null) { ambLow = m.lowDb; ambHigh = m.highDb; }
-    ev.highRise = m.highDb - ambHigh;
-    ev.lowRise  = m.lowDb - ambLow;
-    ev.tilt     = ev.highRise - ev.lowRise;
     const cmin = CONFIG.CENTROID_MIN * (hiStart / 4000);
-    return ev.highRise >= CONFIG.HIGH_RISE_MIN && ev.tilt >= CONFIG.TILT_MIN && m.highDb >= CONFIG.HIGH_ABS_MIN &&
-           m.centroid >= cmin && m.flat >= CONFIG.FLATNESS_MIN;
+    return m.ratio > CONFIG.HIGH_RATIO && above > CONFIG.MIN_DB_ABOVE_AMBIENT &&
+           m.centroid >= cmin && m.flat >= CONFIG.FLATNESS_MIN && m.lowRatio <= CONFIG.LOW_RATIO_MAX;
   }
-  // aprende o ambiente: nível "de repouso" = percentil baixo dos últimos ~2,5 s (congelado enquanto a criança faz o som).
-  // Assim não importa se o microfone começou mudo, nem se a sala é barulhenta ou silenciosa.
-  const hist = { tot: [], low: [], high: [] };
-  const HIST_N = 150;
-  let histTick = 0;
-  function percentil(a, q) { const s = a.slice().sort((x, y) => x - y); return s[Math.floor((s.length - 1) * q)]; }
-  function aprenderAmbiente(m) {
-    hist.tot.push(m.db); hist.low.push(m.lowDb); hist.high.push(m.highDb);
-    if (hist.tot.length > HIST_N) { hist.tot.shift(); hist.low.shift(); hist.high.shift(); }
-    if (++histTick % 4 === 1 || hist.tot.length < 8) {
-      ambientDb = percentil(hist.tot, 0.2); ambLow = percentil(hist.low, 0.2); ambHigh = percentil(hist.high, 0.2);
-    }
-  }
-  function zerarAmbiente() { hist.tot.length = 0; hist.low.length = 0; hist.high.length = 0; ambientDb = null; ambLow = null; ambHigh = null; }
 
   // =====================================================
   //  ENQUADRAMENTO — a boca (e os dentes) estão dentro do quadrado?
@@ -1496,7 +1432,7 @@ html.lt-on .page { padding-bottom: 55vh; }
       ratio = m.ratio;
       hitNow = ehSsss(m, above);
       // aprende o barulho do ambiente enquanto ninguém está fazendo o som
-      if (!listening) aprenderAmbiente(m);
+      if (!listening && above < 6) ambientDb += (m.db - ambientDb) * 0.03;
     }
 
     // confere se a boca está no quadrado (10x por segundo)
@@ -1508,7 +1444,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     if (DEBUG) pintarPainelValores(mNow, above, hitNow, now);
 
     // barrinhas do microfone
-    const lv = clamp(Math.max(above, ev.highRise) / 30, 0, 1);
+    const lv = clamp(above / 30, 0, 1);
     micLevel[0].style.height = 20 + lv * 70 + "%";
     micLevel[1].style.height = 20 + lv * 100 + "%";
     micLevel[2].style.height = 20 + lv * 60 + "%";
@@ -1522,7 +1458,7 @@ html.lt-on .page { padding-bottom: 55vh; }
       target = DEMO !== "erro" ? (elapsed > 600 ? 0.97 : 0.3) : 0.02;
     } else {
       soundHit = hitNow && elapsed >= CONFIG.START_GUARD_MS;
-      target = clamp((ev.highRise - 4) / 24, 0, 1) * clamp((ev.tilt - 6) / 16, 0, 1);
+      target = clamp((above - 3) / 22, 0, 1) * clamp((ratio - 0.5) / 0.4, 0, 1);
     }
 
     // o ventinho só vale se a boca estiver dentro do quadrado
