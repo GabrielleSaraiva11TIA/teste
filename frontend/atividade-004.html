@@ -751,6 +751,12 @@ html.lt-on .page { padding-bottom: 55vh; }
     SUCCESS_HIT_MS: 1200,         // quanto tempo de "sssss" é preciso detectar
     HIGH_RATIO: 0.75,             // % da energia do som que precisa estar nos agudos (4–12 kHz)
     MIN_DB_ABOVE_AMBIENT: 8,      // quão mais alto que o barulho do ambiente (em dB)
+    SUCCESS_RUN_MS: 900,          // "sssss" SEGUIDO que precisa ser detectado (aceita pausas curtas)
+    RUN_GAP_MS: 150,              // pausa máxima dentro do "sssss" sem zerar a contagem
+    CENTROID_MIN: 4500,           // "centro" do som (Hz): o "s" fica agudo; o "sh" fica mais grave
+    FLATNESS_MIN: 0.06,           // chiado (sem tom) = alto; apito/beep = perto de 0
+    LOW_RATIO_MAX: 0.12,          // máximo de energia nos graves (< 1,5 kHz): fala/batidas
+    START_GUARD_MS: 350,          // ignora o começo (toque no botão, fim do som da demonstração)
     STARS_REWARD: 3,              // estrelas pelo acerto (só na 1ª vez)
     MAX_TRIES_BEFORE_SKIP: 3,     // depois de N erros aparece "Continuar a Aventura"
 
@@ -760,6 +766,14 @@ html.lt-on .page { padding-bottom: 55vh; }
     MOUTH_MAX: 1.0,               // boca maior que isso = perto demais
     FRAME_EVERY_MS: 100,          // confere o enquadramento 10x por segundo
   };
+  // ajustes feitos no painel de teste (?debug=1) ficam guardados neste aparelho
+  const CFG_KEY = "lumis_mic_cfg";
+  const CFG_NUM = ["HIGH_RATIO","MIN_DB_ABOVE_AMBIENT","SUCCESS_RUN_MS","RUN_GAP_MS","CENTROID_MIN","FLATNESS_MIN","LOW_RATIO_MAX"];
+  try {
+    const salvo = JSON.parse(localStorage.getItem(CFG_KEY) || "{}");
+    CFG_NUM.forEach((k) => { if (typeof salvo[k] === "number" && isFinite(salvo[k])) CONFIG[k] = salvo[k]; });
+  } catch (e) {}
+  const DEBUG = new URLSearchParams(location.search).get("debug") === "1";
   const HAPTIC_SSS = [140, 160, 140, 160, 140];   // "3 toques suaves" no pulso
 
   // ---------- Pulseira (Python no Raspberry — pulseira.py) ----------
@@ -969,7 +983,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   let ambientDb = null;
   let rafId = 0, lastTs = 0;
 
-  let listening = false, listenStart = 0, hitMs = 0, soundMs = 0, smooth = 0, lastBuzz = 0;
+  let listening = false, listenStart = 0, hitMs = 0, gapMs = 0, soundMs = 0, smooth = 0, lastBuzz = 0, demoSoundEnd = 0;
 
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -1013,15 +1027,76 @@ html.lt-on .page { padding-bottom: 55vh; }
       camVideo.srcObject = stream;
       camVideo.play().catch(() => {});
     }
-    if (hasMic) setupAnalyser();
+    if (hasMic) { await escolherMicrofone(); setupAnalyser(); }
     updateMediaUI();
+  }
+
+  // ---------- qual microfone usar (lapela KAIDI em vez do microfone da webcam) ----------
+  const MIC_KEY = "lumis_mic_manual";       // só existe se a pessoa escolheu à mão no painel de teste
+  const RE_LAPELA = /kaidi|lapela|lavalier|lavaliere|lav\b|sem fio|wireless/i;
+  const RE_CAMERA = /web\s?cam|c[aâ]mera|camera|video|hd pro|c270|c920/i;
+  let micLista = [];
+
+  async function listarMicrofones() {
+    try {
+      const todos = await navigator.mediaDevices.enumerateDevices();
+      micLista = todos.filter((d) => d.kind === "audioinput");
+    } catch (e) { micLista = []; }
+    return micLista;
+  }
+
+  function melhorMicrofone(lista) {
+    const reais = lista.filter((d) => d.deviceId !== "default" && d.deviceId !== "communications");
+    let manual = null;
+    try { manual = localStorage.getItem(MIC_KEY); } catch (e) {}
+    if (manual && reais.some((d) => d.deviceId === manual)) return manual;
+    const lapela = reais.find((d) => RE_LAPELA.test(d.label));
+    if (lapela) return lapela.deviceId;
+    const usb = reais.find((d) => /usb/i.test(d.label) && !RE_CAMERA.test(d.label));
+    return usb ? usb.deviceId : null;        // null = fica com o microfone padrão do sistema
+  }
+
+  async function trocarMicrofone(deviceId) {
+    if (!stream || !deviceId) return false;
+    const atual = stream.getAudioTracks()[0];
+    const idAtual = atual && atual.getSettings ? atual.getSettings().deviceId : null;
+    if (atual && idAtual === deviceId) return true;
+    try {
+      const novo = await navigator.mediaDevices.getUserMedia({
+        audio: { deviceId: { exact: deviceId }, echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      });
+      const faixa = novo.getAudioTracks()[0];
+      if (!faixa) return false;
+      if (atual) { stream.removeTrack(atual); atual.stop(); }
+      stream.addTrack(faixa);
+      hasMic = true;
+      return true;
+    } catch (e) {
+      return false;                           // não conseguiu: continua com o microfone que já estava
+    }
+  }
+
+  async function escolherMicrofone() {
+    await listarMicrofones();
+    const id = melhorMicrofone(micLista);
+    if (id) await trocarMicrofone(id);
+    pintarPainelMic();
+  }
+
+  if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+    // lapela ligada depois da página aberta: escolhe de novo
+    navigator.mediaDevices.addEventListener("devicechange", async () => {
+      if (!stream || !stream.active) return;
+      await escolherMicrofone();
+      if (analyser) { try { srcNode.disconnect(); } catch (e) {} setupAnalyser(); }
+    });
   }
 
   function stopMedia() {
     if (stream) stream.getTracks().forEach((t) => t.stop());
     if (srcNode) { try { srcNode.disconnect(); } catch (e) {} }
     stream = null; srcNode = null; analyser = null; freqData = null;
-    hasCam = false; hasMic = false; ambientDb = null;
+    hasCam = false; hasMic = false; ambientDb = null; reiniciarBanda();
     camVideo.srcObject = null;
   }
 
@@ -1054,21 +1129,152 @@ html.lt-on .page { padding-bottom: 55vh; }
     srcNode.connect(analyser);               // não liga na caixa de som (sem eco)
   }
 
-  // Mede o som: volume total (dB) e quanto dele está nos agudos (onde mora o "sssss")
+  // =====================================================
+  //  PAINEL DE TESTE (abra a página com ?debug=1): valores ao vivo + ajuste dos limites
+  // =====================================================
+  let painel = null, pSel = null, pVal = null, pUltimo = 0;
+  function reiniciarBanda() { bandTop = 12000; hiStart = 4000; bwFrames = 0; bwHi = 0; bwMid = 0; }
+
+  function reconectarAnalisador() {
+    if (srcNode) { try { srcNode.disconnect(); } catch (e) {} }
+    if (stream && stream.getAudioTracks().length) { reiniciarBanda(); ambientDb = null; setupAnalyser(); }
+  }
+
+  function montarPainel() {
+    const css = document.createElement("style");
+    css.textContent =
+      ".mic-dbg{position:fixed;top:8px;right:8px;z-index:2147482000;width:272px;max-height:calc(100vh - 16px);overflow:auto;" +
+      "background:rgba(10,20,50,.94);color:#e9f0ff;border-radius:14px;padding:10px 12px;font:12px/1.45 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.4)}" +
+      ".mic-dbg h4{margin:0 0 6px;font-size:13px;display:flex;justify-content:space-between;align-items:center}" +
+      ".mic-dbg button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:4px 8px;background:#2b4a9c;color:#fff}" +
+      ".mic-dbg select,.mic-dbg input{font:inherit;width:100%;box-sizing:border-box;border-radius:6px;border:1px solid #3b5aa8;background:#0b1633;color:#fff;padding:3px 5px}" +
+      ".mic-dbg pre{margin:6px 0;white-space:pre-wrap;font:11.5px/1.5 ui-monospace,Consolas,monospace}" +
+      ".mic-dbg .ok{color:#6df0b0}.mic-dbg .no{color:#ff9d9d}" +
+      ".mic-dbg label{display:block;margin-top:5px;color:#b7c8f5}.mic-dbg.min .corpo{display:none}";
+    document.head.appendChild(css);
+    painel = document.createElement("div");
+    painel.className = "mic-dbg";
+    painel.innerHTML =
+      '<h4>Teste do microfone <button type="button" id="micDbgMin">min</button></h4><div class="corpo">' +
+      '<label>Microfone<select id="micDbgSel"></select></label><pre id="micDbgVal">aguardando...</pre><div id="micDbgCfg"></div>' +
+      '<div style="margin-top:8px;display:flex;gap:6px"><button type="button" id="micDbgBanda">Medir banda de novo</button>' +
+      '<button type="button" id="micDbgReset">Zerar ajustes</button></div></div>';
+    document.body.appendChild(painel);
+    pSel = painel.querySelector("#micDbgSel"); pVal = painel.querySelector("#micDbgVal");
+    painel.querySelector("#micDbgMin").onclick = () => painel.classList.toggle("min");
+    painel.querySelector("#micDbgBanda").onclick = () => reiniciarBanda();
+    painel.querySelector("#micDbgReset").onclick = () => { try { localStorage.removeItem(CFG_KEY); } catch (e) {} location.reload(); };
+    const cfg = painel.querySelector("#micDbgCfg");
+    CFG_NUM.forEach((k) => {
+      const l = document.createElement("label"); l.textContent = k;
+      const inp = document.createElement("input"); inp.type = "number"; inp.step = "any"; inp.value = CONFIG[k];
+      inp.onchange = () => {
+        const v = parseFloat(inp.value); if (!isFinite(v)) return;
+        CONFIG[k] = v;
+        try { const s = JSON.parse(localStorage.getItem(CFG_KEY) || "{}"); s[k] = v; localStorage.setItem(CFG_KEY, JSON.stringify(s)); } catch (e) {}
+      };
+      l.appendChild(inp); cfg.appendChild(l);
+    });
+    pSel.onchange = async () => {
+      try {
+        if (pSel.value === "auto") localStorage.removeItem(MIC_KEY); else localStorage.setItem(MIC_KEY, pSel.value);
+      } catch (e) {}
+      if (pSel.value === "auto") await escolherMicrofone(); else await trocarMicrofone(pSel.value);
+      reconectarAnalisador();
+      pintarPainelMic();
+    };
+    pintarPainelMic();
+  }
+
+  function pintarPainelMic() {
+    if (!painel) return;
+    let manual = null; try { manual = localStorage.getItem(MIC_KEY); } catch (e) {}
+    const atual = stream && stream.getAudioTracks()[0];
+    pSel.innerHTML = '<option value="auto">Automático (lapela KAIDI)</option>' +
+      micLista.filter((d) => d.deviceId !== "default" && d.deviceId !== "communications")
+        .map((d) => '<option value="' + d.deviceId + '">' + (d.label || "microfone") .replace(/[<>&"]/g, "") + "</option>").join("");
+    pSel.value = manual && micLista.some((d) => d.deviceId === manual) ? manual : "auto";
+    if (atual) pSel.title = "Em uso: " + atual.label;
+  }
+
+  function pintarPainelValores(m, above, hit, now) {
+    if (!painel || !pVal || now - pUltimo < 100) return;
+    pUltimo = now;
+    const t = (ok, txt) => '<span class="' + (ok ? "ok" : "no") + '">' + txt + "</span>";
+    const atual = stream && stream.getAudioTracks()[0];
+    if (!m) { pVal.textContent = "sem microfone"; return; }
+    const cmin = CONFIG.CENTROID_MIN * (hiStart / 4000);
+    pVal.innerHTML =
+      "em uso: " + (atual ? atual.label.replace(/[<>&]/g, "") : "-") + "\n" +
+      "amostragem " + getCtx().sampleRate + " Hz · banda até " + bandTop + " Hz\n" +
+      t(above > CONFIG.MIN_DB_ABOVE_AMBIENT, "volume  " + above.toFixed(1) + " dB") + " (> " + CONFIG.MIN_DB_ABOVE_AMBIENT + ")\n" +
+      t(m.ratio > CONFIG.HIGH_RATIO, "agudos  " + m.ratio.toFixed(2)) + " (> " + CONFIG.HIGH_RATIO + ")\n" +
+      t(m.centroid >= cmin, "centro  " + Math.round(m.centroid) + " Hz") + " (≥ " + Math.round(cmin) + ")\n" +
+      t(m.flat >= CONFIG.FLATNESS_MIN, "chiado  " + m.flat.toFixed(3)) + " (≥ " + CONFIG.FLATNESS_MIN + ")\n" +
+      t(m.lowRatio <= CONFIG.LOW_RATIO_MAX, "graves  " + m.lowRatio.toFixed(3)) + " (≤ " + CONFIG.LOW_RATIO_MAX + ")\n" +
+      "\"sssss\" agora: " + t(hit, hit ? "SIM" : "não") + "\n" +
+      "seguido: " + Math.round(hitMs) + " / " + CONFIG.SUCCESS_RUN_MS + " ms";
+  }
+  if (DEBUG) montarPainel();
+
+  // Banda útil do microfone: lapela USB entrega até 20 kHz; Bluetooth/headset corta em 4–8 kHz.
+  // Descobre sozinho até onde vai o sinal e ajusta onde começam os "agudos".
+  let bandTop = 12000, hiStart = 4000, bwFrames = 0, bwHi = 0, bwMid = 0;
+  const dbSeguro = (v) => (isFinite(v) ? Math.max(v, -200) : -200);
+  function mediaDb(f0, f1, binHz) {
+    const i0 = Math.floor(f0 / binHz), i1 = Math.min(freqData.length - 1, Math.floor(f1 / binHz));
+    let s = 0, n = 0;
+    for (let i = i0; i <= i1; i++) { s += dbSeguro(freqData[i]); n++; }
+    return n ? s / n : -200;
+  }
+  function fixarBanda(top) {
+    bandTop = top; hiStart = top >= 12000 ? 4000 : top >= 7000 ? 2800 : 1800; bwFrames = 60;
+  }
+  const BANDA_URL = Number(new URLSearchParams(location.search).get("banda")) || 0;   // ex.: ?banda=7500 (força a banda)
+  function estimarBanda(binHz, nyq) {
+    if (BANDA_URL) { if (bwFrames < 60) fixarBanda(BANDA_URL); return; }
+    if (bwFrames >= 60) return;
+    if (nyq < 9000) { fixarBanda(Math.floor(nyq * 0.95)); return; }
+    // só conta quando há sinal nos médios (microfone mudo/"gate" não pode parecer banda curta)
+    if (mediaDb(300, 3000, binHz) < -85) return;
+    bwHi += mediaDb(9000, Math.min(11500, nyq * 0.95), binHz);
+    bwMid += mediaDb(5000, 7500, binHz);
+    if (++bwFrames === 60) {
+      const hi = bwHi / 60, mid = bwMid / 60;
+      if (hi > -105)       fixarBanda(12000);
+      else if (mid > -105) fixarBanda(7500);
+      else                 fixarBanda(3800);
+    }
+  }
+
+  // Mede o som: volume (dB) e o "formato" dele: agudos, centro, chiado e graves
   function measure() {
     analyser.getFloatFrequencyData(freqData);
-    const binHz = getCtx().sampleRate / analyser.fftSize;
-    const lowStart  = Math.floor(100 / binHz);
-    const midStart  = Math.floor(1500 / binHz);
-    const highStart = Math.floor(4000 / binHz);
-    const highEnd   = Math.min(freqData.length - 1, Math.floor(12000 / binHz));
-    let low = 0, mid = 0, high = 0;
+    const sr = getCtx().sampleRate, nyq = sr / 2, binHz = sr / analyser.fftSize;
+    estimarBanda(binHz, nyq);
+    const top      = Math.min(bandTop, nyq * 0.95);
+    const lowStart = Math.floor(100 / binHz);
+    const midStart = Math.floor(1500 / binHz);
+    const highStart = Math.floor(hiStart / binHz);
+    const highEnd  = Math.min(freqData.length - 1, Math.floor(top / binHz));
+    let low = 0, mid = 0, high = 0, cNum = 0, cDen = 0, sumLog = 0, sumP = 0, nFlat = 0;
     for (let i = lowStart; i <= highEnd; i++) {
-      const p = Math.pow(10, freqData[i] / 10);
+      const p = Math.pow(10, dbSeguro(freqData[i]) / 10);
       if (i < midStart) low += p; else if (i < highStart) mid += p; else high += p;
+      if (i >= midStart) { cNum += i * binHz * p; cDen += p; }
+      if (i >= highStart) { sumLog += Math.log(p + 1e-20); sumP += p; nFlat++; }
     }
     const total = low + mid + high + 1e-12;
-    return { db: 10 * Math.log10(total), ratio: high / total };
+    const flat = nFlat ? Math.exp(sumLog / nFlat) / (sumP / nFlat + 1e-20) : 0;
+    return { db: 10 * Math.log10(total), ratio: high / total, lowRatio: low / total,
+             centroid: cNum / (cDen + 1e-20), flat: flat };
+  }
+
+  // é "sssss"? (agudo, alto o bastante, centro agudo, chiado sem tom, quase sem graves)
+  function ehSsss(m, above) {
+    const cmin = CONFIG.CENTROID_MIN * (hiStart / 4000);
+    return m.ratio > CONFIG.HIGH_RATIO && above > CONFIG.MIN_DB_ABOVE_AMBIENT &&
+           m.centroid >= cmin && m.flat >= CONFIG.FLATNESS_MIN && m.lowRatio <= CONFIG.LOW_RATIO_MAX;
   }
 
   // =====================================================
@@ -1217,12 +1423,14 @@ html.lt-on .page { padding-bottom: 55vh; }
     const dt = Math.min(now - lastTs, 100);
     lastTs = now;
 
-    let above = 0, ratio = 0;
+    let above = 0, ratio = 0, hitNow = false, mNow = null;
     if (analyser) {
       const m = measure();
+      mNow = m;
       if (ambientDb === null) ambientDb = m.db;
       above = m.db - ambientDb;
       ratio = m.ratio;
+      hitNow = ehSsss(m, above);
       // aprende o barulho do ambiente enquanto ninguém está fazendo o som
       if (!listening && above < 6) ambientDb += (m.db - ambientDb) * 0.03;
     }
@@ -1232,6 +1440,8 @@ html.lt-on .page { padding-bottom: 55vh; }
       lastFrameCheck = now;
       detectFraming(now);
     }
+
+    if (DEBUG) pintarPainelValores(mNow, above, hitNow, now);
 
     // barrinhas do microfone
     const lv = clamp(above / 30, 0, 1);
@@ -1247,7 +1457,7 @@ html.lt-on .page { padding-bottom: 55vh; }
       soundHit = DEMO !== "erro" && elapsed > 600;
       target = DEMO !== "erro" ? (elapsed > 600 ? 0.97 : 0.3) : 0.02;
     } else {
-      soundHit = ratio > CONFIG.HIGH_RATIO && above > CONFIG.MIN_DB_ABOVE_AMBIENT;
+      soundHit = hitNow && elapsed >= CONFIG.START_GUARD_MS;
       target = clamp((above - 3) / 22, 0, 1) * clamp((ratio - 0.5) / 0.4, 0, 1);
     }
 
@@ -1255,7 +1465,9 @@ html.lt-on .page { padding-bottom: 55vh; }
     const framedNow = framingKnown() ? frameOk === true : true;
     smooth += (target - smooth) * 0.25;
     if (soundHit) soundMs += dt;
-    if (soundHit && framedNow) hitMs += dt;
+    // "sssss" SEGUIDO: pausas curtas são aceitas, pausas longas zeram a contagem
+    if (soundHit && framedNow) { hitMs += dt; gapMs = 0; }
+    else { gapMs += dt; if (gapMs > CONFIG.RUN_GAP_MS) hitMs = 0; }
 
     const pct = Math.round(smooth * 100);
     meterFill.style.width = pct + "%";
@@ -1270,7 +1482,7 @@ html.lt-on .page { padding-bottom: 55vh; }
       vibrarPulseira("toque", 40);
     }
 
-    if (hitMs >= CONFIG.SUCCESS_HIT_MS) {
+    if (hitMs >= CONFIG.SUCCESS_RUN_MS) {
       finish(true);
     } else if (elapsed >= CONFIG.LISTEN_MS) {
       // houve "sssss" suficiente, mas a boca não estava no quadrado -> o problema foi o enquadramento
@@ -1300,12 +1512,23 @@ html.lt-on .page { padding-bottom: 55vh; }
       return;
     }
 
+    // não escuta enquanto o som/vídeo de demonstração toca (a caixa de som entraria no microfone)
+    if (!demoVideo.paused) demoVideo.pause();
+    const resto = demoSoundEnd - performance.now();
+    if (resto > 0) {
+      btnRecord.disabled = true;
+      recText.textContent = "Já já! Esperando o som terminar...";
+      await new Promise((r) => setTimeout(r, resto + 250));
+      recText.textContent = "";
+      btnRecord.disabled = false;
+    }
+
     const ac = getCtx();
     if (ac && ac.state === "suspended") await ac.resume();
 
     listening = true;
     listenStart = performance.now();
-    hitMs = 0; soundMs = 0; smooth = 0; lastBuzz = 0;
+    hitMs = 0; gapMs = 0; soundMs = 0; smooth = 0; lastBuzz = 0;
     setRecordingUI(true);
     startLoop();
   }
@@ -1468,6 +1691,7 @@ html.lt-on .page { padding-bottom: 55vh; }
       if (ac.state === "suspended") ac.resume();
       if (kind === "sucesso") return cheer(ac);
       if (kind === "tentar") return softTry(ac);
+      demoSoundEnd = performance.now() + 2000;
       return hiss(ac, 2);
     } catch (e) {
       /* áudio não suportado: segue sem som */
