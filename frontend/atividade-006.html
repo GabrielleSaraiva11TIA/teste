@@ -339,6 +339,7 @@ html.lt-on, html.lt-on body { overflow: hidden; }
             <span id="btnMicTxt"></span>
           </button>
           <button class="btn-sec" type="button" id="btnSimular"></button>
+          <button class="btn-continuar" type="button" id="btnDeNovo" hidden></button>
         </div>
       </div>
     </section>
@@ -364,9 +365,8 @@ const ALVO = { rotulo:'Sss', texto:'Sssss…', boca:'sorriso', hzMin:3200, hzMax
                dica:'Ponha a mão na frente da boca e sinta o ventinho fresco!' };
 const SENSIBILIDADE = 1.0;    // maior = percebe sons mais fracos
 const RMS_MINIMO = 0.02;      // volume mínimo antes da sensibilidade
-const SEGURAR_MS = 2500;      // tempo total de som para encher a barra
-const DECAIMENTO = 0.5;       // velocidade com que a barra esvazia se a criança para (1 = igual à subida)
-const RITMO_PARCIAL = 0;      // 0 = só o "Sssss" certo avança a barra (voz, palma, apito etc. não contam)
+const JANELA_OUVIR_MS = 5000; // a barra enche sozinha nesse tempo: a criança faz o Sssss e, no fim, o sistema confere
+const ACERTO_MIN_MS = 1500;   // quanto tempo de "Sssss" certo (somado) é preciso dentro da janela para acertar
 /* Detecção do "Sssss" (mesma da atividade 4): chiado agudo, sem tom, quase sem graves, acima do barulho do ambiente */
 const SSSS = {
   HIGH_RATIO: 0.75,            // % da energia que precisa estar nos agudos (4–12 kHz)
@@ -375,17 +375,16 @@ const SSSS = {
   FLATNESS_MIN: 0.06,          // chiado = alto; apito/beep = perto de 0
   LOW_RATIO_MAX: 0.12          // máximo de energia nos graves (fala, batidas)
 };
-const JANELA_MS = 9000;       // sem progresso por esse tempo -> "tentar mais uma vez"
 const T = {
   inicio:'Será que tem uma <b>estrela</b> aqui dentro? Segure o som para abrir a caixa!',
-  ouvindo:'Isso! Segure o som até a barra encher…',
-  tentar:'Vamos tentar mais uma vez?',
+  ouvindo:'Faça o “Sssss…” bem comprido até a barra encher!',
+  tentar:'Quase! Vamos tentar mais uma vez?',
   pausa:'Tudo bem! Quando quiser, toque no microfone.',
   acerto:'Muito bem! Vamos continuar.',
   final:`Olha só! Você ganhou <b>${ESTRELAS_RECOMPENSA} estrelas</b>! Muito bem!`,
   semMic:'Não consegui ouvir o microfone. Use o botão de teste para continuar.',
   esperando:'Esperando seu som…', continue:'Isso, continue!', denovo:'Vamos de novo?', completo:'Estrelas desbloqueadas!',
-  botaoFalar:`Fale: “${ALVO.texto}”`, botaoOuvindo:'Estou ouvindo…', simular:'Simular som certo', continuar:'Continuar a jornada →'
+  botaoFalar:`Fale: “${ALVO.texto}”`, botaoOuvindo:'Estou ouvindo…', simular:'Simular som certo', continuar:'Próximo →', deNovo:'Tente de novo'
 };
 /* ========================================================= */
 
@@ -462,9 +461,12 @@ function barra(p){ $('enche').style.setProperty('--p', p); $('trilho').setAttrib
 falar(T.inicio); micTxt(T.botaoFalar); status(T.esperando); $('dica').textContent = 'Dica: ' + ALVO.dica;
 
 /* microfone: volume (RMS) + centroide espectral */
-let ctx, analyser, stream, tempo, espectro, raf, tAnt, carga, ultimoProg;
+let ctx, analyser, stream, tempo, espectro, raf, tAnt, decorrido, acertoMs;
 $('btnMic').addEventListener('click', ()=> ouvindo ? parar(false) : iniciar());
 $('btnSimular').addEventListener('click', ()=>{ if(!ouvindo && !concluido) sucesso(); });
+$('btnDeNovo').addEventListener('click', ()=>{
+  $('btnDeNovo').hidden = true; $('btnMic').hidden = false; $('btnSimular').hidden = !MOSTRAR_BOTAO_SIMULAR; iniciar();
+});
 
 /* ---- análise do som (agudos, centro, chiado, graves) ---- */
 let ambienteDb = null, bandTop = 12000, hiStart = 4000, bwFrames = 0, bwHi = 0, bwMid = 0;
@@ -521,7 +523,7 @@ async function iniciar(){
     }
     if(ctx.state==='suspended') await ctx.resume();
   }catch(err){ status('Microfone indisponível'); falar(T.semMic); return; }
-  ouvindo = true; carga = 0; tAnt = ultimoProg = performance.now(); barra(0);
+  ouvindo = true; decorrido = 0; acertoMs = 0; tAnt = performance.now(); barra(0);
   $('btnMic').classList.add('ouvindo'); micTxt(T.botaoOuvindo);
   $('orbe').classList.add('ouvindo'); $('bau').classList.add('tremendo');
   $('btnSimular').disabled = true; status(T.esperando); falar(T.ouvindo);
@@ -540,17 +542,15 @@ function laco(agora){
   const certo = ehSsss(m, acima);
   if(!certo && acima < 6) ambienteDb += (m.db - ambienteDb) * 0.03;   // aprende o barulho da sala
   const voz = certo || rms >= RMS_MINIMO/SENSIBILIDADE;
-  const taxa = certo ? 1 : (voz && RITMO_PARCIAL ? RITMO_PARCIAL : -DECAIMENTO);
-  carga = Math.max(0, carga + dt*taxa); if(taxa>0) ultimoProg = agora;
-  const p = Math.min(1, carga/SEGURAR_MS), nivel = Math.min(1, rms*14);
+  decorrido += dt; if(certo) acertoMs += dt;
+  const p = Math.min(1, decorrido/JANELA_OUVIR_MS), nivel = Math.min(1, rms*14);
   barra(p); $('orbe').style.setProperty('--nivel', nivel.toFixed(2));
   if(PULSEIRA_ATIVA){      // vibra enquanto a criança faz o som; para quando ela para
     if(voz){ aoVivoAtivo = true; contAoVivo++; if(contAoVivo % 7 === 0) enviarAoVivo(nivel); }
     else { if(aoVivoAtivo) pararAoVivo(); contAoVivo = 0; }
   }
-  status(taxa>0 ? T.continue : T.esperando);
-  if(p>=1) return sucesso();
-  if(agora - ultimoProg > JANELA_MS) return parar(true);
+  status(certo ? T.continue : T.esperando);
+  if(p>=1) return acertoMs >= ACERTO_MIN_MS ? sucesso() : errou();
   raf = requestAnimationFrame(laco);
 }
 function limparEscuta(){
@@ -559,11 +559,18 @@ function limparEscuta(){
   $('btnMic').classList.remove('ouvindo'); $('orbe').classList.remove('ouvindo'); $('orbe').style.removeProperty('--nivel');
   $('bau').classList.remove('tremendo');
 }
-/* sem nota: só convida a tentar de novo */
-function parar(esgotou){
+/* a criança tocou no microfone de novo para cancelar */
+function parar(){
   limparEscuta(); barra(0); micTxt(T.botaoFalar);
-  $('btnSimular').disabled = false; status(T.denovo);
-  falar(esgotou ? T.tentar : T.pausa); if(esgotou){ try{lumisReg('erro')}catch(e){}; vibrar('toque', 80); }
+  $('btnSimular').disabled = false; status(T.denovo); falar(T.pausa);
+}
+/* a barra terminou e o som não estava certo: aparece "Tente de novo" */
+function errou(){
+  limparEscuta(); try{lumisReg('erro')}catch(e){}; vibrar('toque', 80);
+  $('btnMic').hidden = true; $('btnSimular').hidden = true;
+  $('btnSimular').disabled = false; micTxt(T.botaoFalar);
+  const b = $('btnDeNovo'); b.textContent = T.deNovo; b.hidden = false; b.focus();
+  status(T.denovo); falar(T.tentar);
 }
 
 /* sucesso: o baú abre e a estrela é desbloqueada */
@@ -682,7 +689,7 @@ document.addEventListener('visibilitychange', ()=>{ if(document.hidden && ouvind
       text: 'Será que tem uma estrela aqui dentro? O baú abre quando você segura o som até o fim.' },
     { sels: ['.segurar'], pref: ['top', 'bottom'], align: 'center', r: 20,
       title: 'A barra do som',
-      text: 'Aqui aparece o som que você vai fazer: Sss. A barra vai enchendo enquanto você segura o som. Quando chegar na estrela, o baú abre.' },
+      text: 'Aqui aparece o som que você vai fazer: Sss. A barra vai enchendo com o tempo enquanto você faz o som. Quando ela chegar na estrela, o Lumis confere se o som estava certo. Se estiver, o baú abre!' },
     { sels: ['#btnMic'], pref: ['top', 'bottom'], align: 'center', r: 999,
       title: 'Hora de fazer o som',
       text: 'Toque aqui e faça o som “Sssss…”, bem comprido. Se o aparelho pedir para usar o microfone, peça ajuda a um adulto.' }
