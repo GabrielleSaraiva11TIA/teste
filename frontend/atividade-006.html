@@ -365,8 +365,8 @@ const ALVO = { rotulo:'Sss', texto:'Sssss…', boca:'sorriso', hzMin:3200, hzMax
                dica:'Ponha a mão na frente da boca e sinta o ventinho fresco!' };
 const SENSIBILIDADE = 1.0;    // maior = percebe sons mais fracos
 const RMS_MINIMO = 0.02;      // volume mínimo antes da sensibilidade
-const JANELA_OUVIR_MS = 5000; // a barra enche sozinha nesse tempo: a criança faz o Sssss e, no fim, o sistema confere
-const ACERTO_MIN_MS = 1500;   // quanto tempo de "Sssss" certo (somado) é preciso dentro da janela para acertar
+const JANELA_OUVIR_MS = 3000; // a barra enche sozinha nesse tempo: a criança faz o Sssss e, no fim, o sistema confere
+const ACERTO_MIN_MS = 1000;   // quanto tempo de "Sssss" certo (somado) é preciso dentro da janela para acertar
 /* Detecção do "Sssss" (mesma da atividade 4): chiado agudo, sem tom, quase sem graves, acima do barulho do ambiente */
 const SSSS = {
   HIGH_RATIO: 0.75,            // % da energia que precisa estar nos agudos (4–12 kHz)
