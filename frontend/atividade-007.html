@@ -202,6 +202,124 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 @media (min-width:720px){.lens .face{width:102px;height:102px}}
 @media (max-width:420px){.stage .wind{right:8px;top:50px;font-size:11px;padding:4px 9px}}
 </style>
+<style id="lumis-tutorial-css">
+/* ============================================================
+   TUTORIAL GUIADO — estilos (todas as classes começam com "lt-")
+   ============================================================ */
+/* Cores do tutorial (combinam com o azul desta atividade) */
+:root { --lt-blue: #2563EB; --lt-deep: #003D9B; --lt-soft: #E1E9FF; --lt-ink: #1B2559; --lt-muted: #5A6A9A; }
+
+html.lt-on, html.lt-on body { overflow: hidden; }
+html.lt-on .wrap { padding-bottom: 55vh; }
+
+.lt-shield { position: fixed; inset: 0; z-index: 10000; background: transparent; }
+
+.lt-spot {
+  position: fixed; z-index: 10001; pointer-events: none;
+  border-radius: 28px;
+  box-shadow: 0 0 0 9999px rgba(11, 20, 66, 0.62);
+  transition: top .38s ease, left .38s ease, width .38s ease, height .38s ease, border-radius .38s ease;
+}
+.lt-spot::after {
+  content: ""; position: absolute; inset: -4px; border-radius: inherit;
+  border: 3px solid #fff;
+  animation: lt-pulse 1.7s ease-in-out infinite;
+}
+@keyframes lt-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.02); } }
+
+.lt-tip {
+  position: fixed; z-index: 10002;
+  width: min(340px, calc(100vw - 24px));
+  background: #fff; color: var(--lt-ink);
+  border-radius: 22px; padding: 16px 18px;
+  box-shadow: 0 18px 44px rgba(8, 16, 60, 0.38);
+  font-size: 14px; line-height: 1.4;
+}
+.lt-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.lt-count {
+  font-size: 12px; font-weight: 600; color: var(--lt-deep);
+  background: var(--lt-soft); padding: 4px 10px; border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+.lt-dots { display: flex; gap: 5px; }
+.lt-dots i { width: 7px; height: 7px; border-radius: 99px; background: #cfd8f7; }
+.lt-dots i.on { width: 20px; background: var(--lt-blue); }
+.lt-title { margin: 0 0 6px; font-size: 17px; font-weight: 700; line-height: 1.25; text-wrap: balance; }
+.lt-text { margin: 0; font-size: 14.5px; line-height: 1.5; color: #2c3868; }
+.lt-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.lt-legend span {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 999px; background: #f2f5ff;
+}
+.lt-legend b { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.lt-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+.lt-btn {
+  font: inherit; font-weight: 600; font-size: 14px; cursor: pointer;
+  border: 0; border-radius: 999px; padding: 10px 20px;
+}
+.lt-btn.primary { background: var(--lt-blue); color: #fff; margin-left: auto; }
+.lt-btn.primary:hover { background: var(--lt-deep); }
+.lt-btn.ghost { background: transparent; color: var(--lt-deep); padding-inline: 12px; }
+.lt-btn.ghost:hover { background: #e8eeff; }
+.lt-extra {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-top: 12px; padding-top: 10px; border-top: 1px solid #e6ebfb;
+}
+.lt-link {
+  font: inherit; font-weight: 500; font-size: 12.5px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: 0; border-radius: 999px; padding: 6px 10px;
+  color: var(--lt-muted);
+}
+.lt-link:hover { background: #e8eeff; color: var(--lt-deep); }
+.lt-link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lt-btn:focus-visible, .lt-link:focus-visible, .lt-go:focus-visible, .lt-fin-link:focus-visible, .lt-redo:focus-visible {
+  outline: 3px solid #ffb64d; outline-offset: 2px;
+}
+
+.lt-arrow { position: absolute; width: 24px; height: 24px; pointer-events: none; }
+.lt-arrow svg { width: 24px; height: 24px; display: block; animation: lt-nudge 1s ease-in-out infinite; filter: drop-shadow(0 2px 3px rgba(8,16,60,.35)); }
+@keyframes lt-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.lt-tip.pl-bottom .lt-arrow { top: -29px; transform: none; }
+.lt-tip.pl-top .lt-arrow { bottom: -29px; transform: rotate(180deg); }
+.lt-tip.pl-right .lt-arrow { left: -29px; transform: rotate(-90deg); }
+.lt-tip.pl-left .lt-arrow { right: -29px; transform: rotate(90deg); }
+
+.lt-finale {
+  position: fixed; z-index: 10002; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(380px, calc(100vw - 32px));
+  background: #fff; border-radius: 28px; padding: 28px 24px 20px; text-align: center;
+  box-shadow: 0 22px 54px rgba(8, 16, 60, 0.4);
+}
+.lt-badge {
+  width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px;
+  background: var(--lt-soft); color: var(--lt-blue); display: grid; place-items: center;
+}
+.lt-badge svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lt-finale h3 { margin: 0 0 8px; font-size: 22px; font-weight: 700; text-wrap: balance; }
+.lt-finale p { margin: 0 0 18px; color: #2c3868; line-height: 1.5; font-size: 14.5px; }
+.lt-go {
+  font: inherit; font-weight: 700; font-size: 17px; cursor: pointer;
+  width: 100%; border: 0; border-radius: 999px; padding: 14px 24px;
+  background: var(--lt-blue); color: #fff;
+}
+.lt-go:hover { background: var(--lt-deep); }
+.lt-fin-links { display: flex; justify-content: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.lt-fin-link {
+  font: inherit; font-weight: 600; font-size: 14px; cursor: pointer;
+  background: none; border: 0; color: var(--lt-deep); padding: 8px 12px; border-radius: 999px;
+}
+.lt-fin-link:hover { background: #e8eeff; }
+
+.lt-redo svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.lt-redo:hover { background: #eef3ff; }
+
+/* Esta página tem 3 pílulas no topo: deixa quebrar linha em telas estreitas */
+.topbar { flex-wrap: wrap; }
+.lt-redo { font-family: inherit; }
+
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -461,6 +579,253 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     pararPulseira();
   });
 })();
+</script>
+<!-- ============================================================
+     TUTORIAL GUIADO — elementos (ficam escondidos até o tutorial começar)
+     ============================================================ -->
+<div class="lt-shield" id="ltShield" hidden></div>
+<div class="lt-spot" id="ltSpot" hidden></div>
+
+<div class="lt-tip" id="ltTip" role="dialog" aria-live="polite" aria-label="Tutorial" hidden>
+  <div class="lt-arrow" id="ltArrow"><svg viewBox="0 0 24 24"><path d="M12 2 21.5 13H15v8.5H9V13H2.5Z" fill="#fff" stroke="#2563EB" stroke-width="2" stroke-linejoin="round"/></svg></div>
+  <div id="ltBody"></div>
+</div>
+
+<div class="lt-finale" id="ltFinale" role="dialog" aria-label="Fim do tutorial" hidden>
+  <div class="lt-badge"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.400 2.900 1-6.100L3.200 9.500l6.100-.9z"/></svg></div>
+  <h3>Agora você já sabe como tudo funciona!</h3>
+  <p>Olhe as duas pistas, sinta cada uma na pulseira e escolha a sua conclusão de detetive. Sem pressa!</p>
+  <button class="lt-go" id="ltGo" type="button">Vamos lá!</button>
+  <div class="lt-fin-links">
+    <button class="lt-fin-link" id="ltFinBack" type="button">Voltar</button>
+    <button class="lt-fin-link" id="ltFinRepeat" type="button">Repetir tutorial</button>
+  </div>
+</div>
+
+
+<script id="lumis-tutorial-js">
+/* ============================================================
+   TUTORIAL GUIADO — só explica a interface; não executa nada da fase.
+   Tudo roda dentro desta função, sem mexer nas variáveis da atividade.
+   ============================================================ */
+(function () {
+  // true  = o tutorial abre sozinho só na primeira visita do aparelho
+  // false = abre toda vez que a página é carregada
+  var SO_NA_PRIMEIRA_VEZ = false;
+  var CHAVE_VISTO = 'lumis_tutorial_atividade007_visto';
+
+  var q = function (s) { return document.querySelector(s); };
+  var root = document.documentElement;
+  var shield = q('#ltShield'), spot = q('#ltSpot'), tip = q('#ltTip'), tBody = q('#ltBody'),
+      tArrow = q('#ltArrow'), finale = q('#ltFinale');
+
+  // Botão "Repetir tutorial": entra na linha de cima da página, entre "Voltar para a Missão" e as estrelas
+  var redo = document.createElement('button');
+  redo.id = 'ltRedo'; redo.type = 'button'; redo.className = 'pill lt-redo'; redo.hidden = true;
+  redo.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Repetir tutorial';
+  var linhaTopo = q('.topbar');
+  if (linhaTopo) linhaTopo.insertBefore(redo, linhaTopo.lastElementChild);
+  else document.body.appendChild(redo);
+  var PAD = 8, GAP = 30, M = 12;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Cada etapa aponta para elementos reais da atividade (sels = lista; o destaque cobre todos juntos)
+  var STEPS = [
+    { sels: ['.intro'], pref: ['bottom', 'top'], align: 'center', r: 22,
+      title: 'O Lumis precisa de um detetive',
+      text: 'O Lumis pergunta: o que ele fez primeiro é igual à segunda tentativa? Você vai ser o detetive!' },
+    { sels: ['.hints'], pref: ['bottom', 'top'], align: 'center', r: 18,
+      title: 'As duas pistas',
+      text: 'A pista visual é olhar os lábios e os dentes na lupa. A pista tátil é sentir a pulseira vibrar para comparar.' },
+    { sels: ['.clue.a'], pref: ['bottom', 'top', 'left', 'right'], align: 'center', r: 26,
+      title: '1. Modelo do Lumis',
+      text: 'Esta é a pista original. Toque em “Rever Pista” ou em “Sentir Pulseira” para ver a carinha se mexer e sentir a vibração no pulso.' },
+    { sels: ['.clue.b'], pref: ['bottom', 'top', 'right', 'left'], align: 'center', r: 26,
+      title: '2. Tentativa misteriosa',
+      text: 'Esta é a tentativa para comparar. Toque em “Tocar Movimento” ou em “Sentir Pulseira” e compare com a primeira.' },
+    { sels: ['.ask', '.opts'], pref: ['top', 'bottom'], align: 'center', r: 22,
+      title: 'Sua conclusão de detetive',
+      text: 'Depois de comparar, toque na conclusão que você escolher. Se precisar, o Lumis ajuda você a investigar mais uma vez.' }
+  ];
+
+  var cur = 0, active = false;
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function rectOf(step) {
+    var l = 1e9, t = 1e9, r = -1e9, b = -1e9;
+    var lista = (step.narrowSels && root.clientWidth < 520) ? step.narrowSels : step.sels;
+    lista.forEach(function (s) {
+      document.querySelectorAll(s).forEach(function (el) {
+        var c = el.getBoundingClientRect();
+        l = Math.min(l, c.left); t = Math.min(t, c.top); r = Math.max(r, c.right); b = Math.max(b, c.bottom);
+      });
+    });
+    return { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t };
+  }
+
+  function geom(pl, r, tw, th, vw, vh, align, dy) {
+    var left, top, fits, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    if (pl === 'bottom' || pl === 'top') {
+      left = clamp(cx - tw / 2, M, vw - tw - M);
+      top = pl === 'bottom' ? r.bottom + PAD + GAP : r.top - PAD - GAP - th;
+      fits = top >= M && top + th <= vh - M;
+    } else {
+      left = pl === 'right' ? r.right + PAD + GAP : r.left - PAD - GAP - tw;
+      var t;
+      if (align === 'end') t = r.bottom + PAD - th;
+      else if (align === 'start') t = r.top - PAD;
+      else t = cy - th / 2;
+      top = clamp(t + (dy || 0), M, vh - th - M);
+      fits = left >= M && left + tw <= vw - M;
+    }
+    return { pl: pl, left: left, top: top, fits: fits, cx: cx, cy: cy };
+  }
+
+  function setSpot(l, t, w, h, rad, instant) {
+    if (instant) spot.style.transition = 'none';
+    spot.style.left = l + 'px'; spot.style.top = t + 'px';
+    spot.style.width = w + 'px'; spot.style.height = h + 'px';
+    spot.style.borderRadius = rad + 'px';
+    if (instant) { void spot.offsetWidth; spot.style.transition = ''; }
+  }
+
+  function render(i, instant) {
+    var s = STEPS[i];
+    finale.hidden = true;
+    tip.hidden = false;
+
+    var dots = '';
+    for (var k = 0; k < STEPS.length; k++) dots += '<i' + (k === i ? ' class="on"' : '') + '></i>';
+    tBody.innerHTML =
+      '<div class="lt-top"><span class="lt-count">' + (i + 1) + ' de ' + STEPS.length + '</span><span class="lt-dots" aria-hidden="true">' + dots + '</span></div>' +
+      '<h3 class="lt-title">' + s.title + '</h3>' +
+      '<p class="lt-text">' + s.text + '</p>' + (s.extra || '') +
+      '<div class="lt-nav">' +
+        (i > 0 ? '<button class="lt-btn ghost" id="ltBack" type="button">Voltar</button>' : '') +
+        '<button class="lt-btn primary" id="ltNext" type="button">Próximo</button>' +
+      '</div>' +
+      '<div class="lt-extra">' +
+        '<button class="lt-link" id="ltSkip" type="button"><svg viewBox="0 0 24 24"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></svg>Pular tutorial</button>' +
+        (i > 0 ? '<button class="lt-link" id="ltRepeat" type="button"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Repetir tutorial</button>' : '') +
+      '</div>';
+
+    var vw = root.clientWidth, vh = window.innerHeight;
+    var r = rectOf(s);
+    if (vw < 720 || r.top < M + PAD || r.bottom > vh - M - PAD) {
+      var y = window.scrollY + r.top - Math.max(M + PAD, (vh - r.height) / 2);
+      window.scrollTo(0, Math.max(0, y));
+      r = rectOf(s);
+    }
+    var tw = tip.offsetWidth, th = tip.offsetHeight, chosen = null, n;
+    for (n = 0; n < s.pref.length; n++) {
+      var g = geom(s.pref[n], r, tw, th, vw, vh, s.align, s.dy);
+      if (g.fits) { chosen = g; break; }
+    }
+    if (!chosen) {
+      var need = (r.bottom + PAD + GAP + th + M) - vh;
+      var allow = r.top - PAD - M;
+      var d = Math.max(0, Math.min(need, allow));
+      if (d > 0) { window.scrollBy(0, d); r = rectOf(s); }
+      var gb = geom('bottom', r, tw, th, vw, vh, s.align, s.dy);
+      var gt = geom('top', r, tw, th, vw, vh, s.align, s.dy);
+      chosen = gb.fits ? gb : (gt.fits ? gt : gb);
+      chosen.top = clamp(chosen.top, M, vh - th - M);
+    }
+
+    setSpot(r.left - PAD, r.top - PAD, r.width + PAD * 2, r.height + PAD * 2,
+            Math.min(s.r + PAD, (r.height + PAD * 2) / 2), instant);
+
+    tip.style.left = chosen.left + 'px';
+    tip.style.top = chosen.top + 'px';
+    tip.className = 'lt-tip pl-' + chosen.pl;
+    tArrow.style.left = tArrow.style.top = '';
+    if (chosen.pl === 'top' || chosen.pl === 'bottom') {
+      tArrow.style.left = (clamp(chosen.cx - chosen.left, 30, tw - 30) - 12) + 'px';
+    } else {
+      tArrow.style.top = (clamp(chosen.cy - chosen.top, 30, th - 30) - 12) + 'px';
+    }
+
+    if (!reduce && tip.animate) {
+      tip.animate([{ opacity: 0, translate: '0 6px' }, { opacity: 1, translate: '0 0' }], { duration: 220, easing: 'ease-out' });
+    }
+    var nb = q('#ltNext'); if (nb) nb.focus({ preventScroll: true, focusVisible: false });
+  }
+
+  function showFinale() {
+    cur = STEPS.length;
+    tip.hidden = true;
+    setSpot(root.clientWidth / 2, window.innerHeight / 2, 0, 0, 0, false);
+    finale.hidden = false;
+    q('#ltGo').focus({ preventScroll: true, focusVisible: false });
+  }
+
+  function go(i) {
+    if (i >= STEPS.length) { showFinale(); return; }
+    cur = Math.max(0, i);
+    render(cur, false);
+  }
+
+  function marcarVisto() {
+    try { localStorage.setItem(CHAVE_VISTO, '1'); } catch (e) {}
+  }
+
+  function start() {
+    active = true; cur = 0;
+    redo.hidden = true;
+    root.classList.add('lt-on');
+    window.scrollTo(0, 0);
+    shield.hidden = false; spot.hidden = false;
+    render(0, true);
+  }
+
+  // Encerra o tutorial e deixa a criança na atividade, pronta para responder
+  function finish() {
+    marcarVisto();
+    active = false;
+    shield.hidden = true; spot.hidden = true; tip.hidden = true; finale.hidden = true;
+    root.classList.remove('lt-on');
+    redo.hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  tip.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'ltNext') go(cur + 1);
+    if (b.id === 'ltBack') go(cur - 1);
+    if (b.id === 'ltSkip') finish();
+    if (b.id === 'ltRepeat') start();
+  });
+  q('#ltGo').addEventListener('click', finish);
+  q('#ltFinBack').addEventListener('click', function () { go(STEPS.length - 1); });
+  q('#ltFinRepeat').addEventListener('click', start);
+  redo.addEventListener('click', start);
+
+  document.addEventListener('keydown', function (e) {
+    if (!active) return;
+    if (e.key === 'ArrowRight' && cur < STEPS.length) go(cur + 1);
+    if (e.key === 'ArrowLeft' && cur > 0) go(cur - 1);
+  });
+
+  var rt;
+  window.addEventListener('resize', function () {
+    if (!active) return;
+    clearTimeout(rt);
+    rt = setTimeout(function () { if (cur >= STEPS.length) showFinale(); else render(cur, true); }, 80);
+  });
+
+  function jaViu() {
+    try { return localStorage.getItem(CHAVE_VISTO) === '1'; } catch (e) { return false; }
+  }
+  function boot() {
+    if (SO_NA_PRIMEIRA_VEZ && jaViu()) { redo.hidden = false; return; }
+    start();
+  }
+  if (document.fonts && document.fonts.ready) {
+    Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 1200); })]).then(boot);
+  } else { boot(); }
+})();
+
 </script>
 <!-- Reconectar o aparelho do Lumis: gera um código novo, a fono digita no celular -->
 <style>
