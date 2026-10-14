@@ -365,8 +365,9 @@ const ALVO = { rotulo:'Sss', texto:'Sssss…', boca:'sorriso', hzMin:3200, hzMax
                dica:'Ponha a mão na frente da boca e sinta o ventinho fresco!' };
 const SENSIBILIDADE = 1.0;    // maior = percebe sons mais fracos
 const RMS_MINIMO = 0.02;      // volume mínimo antes da sensibilidade
-const JANELA_OUVIR_MS = 3000; // a barra enche sozinha nesse tempo: a criança faz o Sssss e, no fim, o sistema confere
-const ACERTO_MIN_MS = 1000;   // quanto tempo de "Sssss" certo (somado) é preciso dentro da janela para acertar
+const FALAR_MS = 2000;        // a barra: quanto tempo a criança precisa fazer som (ela só anda enquanto há som no microfone)
+const ESPERA_MAX_MS = 8000;   // se ninguém fizer som por esse tempo -> "Tente de novo"
+const ACERTO_MIN_MS = 1000;   // dentro desse tempo falado, quanto precisa ser "Sssss" certo para acertar
 /* Detecção do "Sssss" (mesma da atividade 4): chiado agudo, sem tom, quase sem graves, acima do barulho do ambiente */
 const SSSS = {
   HIGH_RATIO: 0.75,            // % da energia que precisa estar nos agudos (4–12 kHz)
@@ -377,7 +378,7 @@ const SSSS = {
 };
 const T = {
   inicio:'Será que tem uma <b>estrela</b> aqui dentro? Segure o som para abrir a caixa!',
-  ouvindo:'Faça o “Sssss…” bem comprido até a barra encher!',
+  ouvindo:'Faça o “Sssss…” até a barra encher!',
   tentar:'Quase! Vamos tentar mais uma vez?',
   pausa:'Tudo bem! Quando quiser, toque no microfone.',
   acerto:'Muito bem! Vamos continuar.',
@@ -461,7 +462,7 @@ function barra(p){ $('enche').style.setProperty('--p', p); $('trilho').setAttrib
 falar(T.inicio); micTxt(T.botaoFalar); status(T.esperando); $('dica').textContent = 'Dica: ' + ALVO.dica;
 
 /* microfone: volume (RMS) + centroide espectral */
-let ctx, analyser, stream, tempo, espectro, raf, tAnt, decorrido, acertoMs;
+let ctx, analyser, stream, tempo, espectro, raf, tAnt, decorrido, acertoMs, prepMs, falouMs, menorS;
 $('btnMic').addEventListener('click', ()=> ouvindo ? parar(false) : iniciar());
 $('btnSimular').addEventListener('click', ()=>{ if(!ouvindo && !concluido) sucesso(); });
 $('btnDeNovo').addEventListener('click', ()=>{
@@ -534,19 +535,36 @@ function ehSsss(m, acima){
          m.centroid >= cmin && m.flat >= SSSS.FLATNESS_MIN && m.lowRatio <= SSSS.LOW_RATIO_MAX;
 }
 
+/* qual microfone usar: a lapela (ou um microfone USB que não seja a webcam) em vez do padrão do sistema */
+const RE_LAPELA = /kaidi|lapela|lavalier|lavaliere|lav\b|sem fio|wireless/i;
+const RE_CAMERA = /web\s?cam|c[aâ]mera|camera|video|hd pro|c270|c920/i;
+async function escolherMicrofone(){
+  try{
+    const todos = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput' && d.deviceId !== 'default' && d.deviceId !== 'communications');
+    const d = todos.find(x => RE_LAPELA.test(x.label)) || todos.find(x => /usb/i.test(x.label) && !RE_CAMERA.test(x.label));
+    if(!d) return;
+    const atual = stream.getAudioTracks()[0];
+    if(atual && atual.getSettings && atual.getSettings().deviceId === d.deviceId) return;
+    const novo = await navigator.mediaDevices.getUserMedia({audio:{deviceId:{exact:d.deviceId},echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    if(atual){ stream.removeTrack(atual); atual.stop(); }
+    stream.addTrack(novo.getAudioTracks()[0]);
+  }catch(e){ /* continua com o microfone padrão */ }
+}
+
 async function iniciar(){
   if(concluido) return;
   try{
     if(!stream){
       stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+      await escolherMicrofone();
       ctx = new (window.AudioContext||window.webkitAudioContext)();
-      analyser = ctx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = .4;
+      analyser = ctx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = .2;
       ctx.createMediaStreamSource(stream).connect(analyser);
       tempo = new Float32Array(analyser.fftSize); espectro = new Float32Array(analyser.frequencyBinCount);
     }
     if(ctx.state==='suspended') await ctx.resume();
   }catch(err){ status('Microfone indisponível'); falar(T.semMic); return; }
-  ouvindo = true; decorrido = 0; acertoMs = 0; tAnt = performance.now(); barra(0);
+  ouvindo = true; decorrido = 0; acertoMs = 0; falouMs = 0; prepMs = 0; menorS = null; ambienteDb = null; tAnt = performance.now(); barra(0);
   $('btnMic').classList.add('ouvindo'); micTxt(T.botaoOuvindo);
   $('orbe').classList.add('ouvindo'); $('bau').classList.add('tremendo');
   $('btnSimular').disabled = true; status(T.esperando); falar(T.ouvindo);
@@ -560,25 +578,37 @@ function laco(agora){
   let soma = 0; for(const v of tempo) soma += v*v;
   const rms = Math.sqrt(soma/tempo.length);
   const m = medir();
-  if(ambienteDb === null) ambienteDb = m.db;
+  /* primeiros ~0,35 s: só "escuta a sala" para saber o barulho de fundo (a barra ainda não anda) */
+  const PREP_MS = 450;
+  if(prepMs < PREP_MS){
+    prepMs += dt;
+    if(ehSsss(m, 99)){ menorS = menorS === null ? m.db : Math.min(menorS, m.db); }       // já parece "Sssss": não conta como fundo
+    else ambienteDb = ambienteDb === null ? m.db : Math.min(ambienteDb, m.db);
+    if(prepMs >= PREP_MS && ambienteDb === null && menorS !== null) ambienteDb = menorS - 20;   // criança já começou: assume sala quieta
+    pintarPainel(m, 0, false, rms, 'preparando… (escutando a sala)');
+    status(T.esperando); raf = requestAnimationFrame(laco); return;
+  }
   const acima = m.db - ambienteDb;
   const certo = ehSsss(m, acima);
   if(!certo && acima < 6) ambienteDb += (m.db - ambienteDb) * 0.03;   // aprende o barulho da sala
   const voz = certo || rms >= RMS_MINIMO/SENSIBILIDADE;
-  decorrido += dt; if(certo) acertoMs += dt;
+  /* a barra começa a contar quando a criança fala no microfone e só anda enquanto há som */
+  const temSom = certo || acima > 6 || rms >= RMS_MINIMO/SENSIBILIDADE;
+  decorrido += dt; if(temSom) falouMs += dt; if(certo) acertoMs += dt;
   pintarPainel(m, acima, certo, rms);
-  const p = Math.min(1, decorrido/JANELA_OUVIR_MS), nivel = Math.min(1, rms*14);
+  const p = Math.min(1, falouMs/FALAR_MS), nivel = Math.min(1, rms*14);
   barra(p); $('orbe').style.setProperty('--nivel', nivel.toFixed(2));
   if(PULSEIRA_ATIVA){      // vibra enquanto a criança faz o som; para quando ela para
     if(voz){ aoVivoAtivo = true; contAoVivo++; if(contAoVivo % 7 === 0) enviarAoVivo(nivel); }
     else { if(aoVivoAtivo) pararAoVivo(); contAoVivo = 0; }
   }
-  status(certo ? T.continue : T.esperando);
-  if(p>=1){
+  status(falouMs > 0 ? T.continue : T.esperando);
+  if(p >= 1){                       // a barra encheu: agora confere se foi o "Sssss" certo
     const ok = acertoMs >= ACERTO_MIN_MS;
-    pintarPainel(m, acima, certo, rms, 'RESULTADO: ' + (ok ? 'CERTO' : 'ERRADO') + ' (' + Math.round(acertoMs) + ' ms de Sssss)');
+    pintarPainel(m, acima, certo, rms, 'RESULTADO: ' + (ok ? 'CERTO' : 'ERRADO') + ' (' + Math.round(acertoMs) + ' ms de Sssss em ' + FALAR_MS + ')');
     return ok ? sucesso() : errou();
   }
+  if(falouMs === 0 && decorrido >= ESPERA_MAX_MS) return errou();
   raf = requestAnimationFrame(laco);
 }
 function limparEscuta(){
@@ -717,7 +747,7 @@ document.addEventListener('visibilitychange', ()=>{ if(document.hidden && ouvind
       text: 'Será que tem uma estrela aqui dentro? O baú abre quando você segura o som até o fim.' },
     { sels: ['.segurar'], pref: ['top', 'bottom'], align: 'center', r: 20,
       title: 'A barra do som',
-      text: 'Aqui aparece o som que você vai fazer: Sss. A barra vai enchendo com o tempo enquanto você faz o som. Quando ela chegar na estrela, o Lumis confere se o som estava certo. Se estiver, o baú abre!' },
+      text: 'Aqui aparece o som que você vai fazer: Sss. A barra começa a encher quando você faz o som e vai contando o tempo. Quando ela chegar na estrela, o Lumis confere se foi o “Sssss” certo. Se foi, o baú abre!' },
     { sels: ['#btnMic'], pref: ['top', 'bottom'], align: 'center', r: 999,
       title: 'Hora de fazer o som',
       text: 'Toque aqui e faça o som “Sssss…”, bem comprido. Se o aparelho pedir para usar o microfone, peça ajuda a um adulto.' }
