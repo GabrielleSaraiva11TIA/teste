@@ -337,7 +337,7 @@
         <div id="dica" hidden></div>
       </div>
       <div class="base"><div class="status" id="status" aria-live="polite"></div>
-        <div class="controles" id="controles"><button class="btn-mic" id="btnMic" disabled><span id="btnMicTxt"></span></button><button class="btn-sec" id="btnSimular" disabled></button></div></div>
+        <div class="controles" id="controles"><button class="btn-mic" id="btnMic" disabled><span id="btnMicTxt"></span></button></div></div>
     </section>
   <div class="intro" id="intro">
       <div class="luz" id="luz"></div>
@@ -390,7 +390,6 @@ const TITULO_ETAPA = 'Tesouro do Lumis';
 const ESTRELAS_INICIAIS = 125;
 const ESTRELAS_BONUS_FINAL = 3;
 const PULSEIRA_ATIVA = true;
-const MOSTRAR_BOTAO_SIMULAR = true;   // deixe false na versão final
 const URL_VOLTAR = '../mapa.html', URL_PROXIMA = '#';
 const URL_HOME = '../mapa.html';  // depois da jornada completa volta para o mapa
 const ILHA_ID = 1;                // ilha "Ssss": concluir esta jornada desbloqueia a próxima ilha
@@ -399,8 +398,10 @@ const GRAVACAO_MS = 10000;   // duração máxima do vídeo do desafio
 const CONTAGEM = 3;           // contagem regressiva antes de gravar
 const MEDALHA = `Explorador do ${SOM}`;
 const SENSIBILIDADE = 1.0, RMS_MINIMO = 0.02;
-const VOZ_MS = 2000;                  // tempo de voz (qualquer som) para fechar a jornada
-const JANELA_MS = 9000;               // sem voz por esse tempo -> "tentar mais uma vez"
+const ACERTO_MIN_MS = 1000;           // quanto tempo de "Sssss" certo (somado) a criança precisa fazer para acertar
+/* Detecção do "Sssss" (a mesma da atividade 6), baseada no que a literatura de acústica usa para separar o /s/:
+   pico do espectro agudo, inclinação (agudos x faixa da voz), chiado (não apito) e agudos acima do barulho de fundo */
+const SSSS = { RISE_MIN: 8, TILT_MIN: 5, PEAK_MIN: 4200, PROM_MAX: 15 };
 
 /* As 7 etapas anteriores. ativo:false esconde a estrela (ex.: sem câmera, a fono desligou o Espelho). */
 const I = {
@@ -427,7 +428,7 @@ const T = {
   final:`Muito bem! Você ganhou a medalha <b>${MEDALHA}</b> e <b>${ESTRELAS_BONUS_FINAL} estrelas</b>! Vamos continuar.`,
   semMic:'Não consegui ouvir o microfone. Use o botão de teste para continuar.',
   dica1:'Dica: toque em cada estrela, na ordem que quiser.', dica2:'Dica: qualquer som seu faz a mágica acontecer.', dica3:'Você fez uma jornada incrível!',
-  botaoToque:'Toque nas estrelas', botaoFalar:`Fale: “${SOM}…”`, botaoOuvindo:'Estou ouvindo…', simular:'Simular voz', concluir:'Concluir jornada →'
+  botaoToque:'Toque nas estrelas', botaoFalar:`Fale: “${SOM}…”`, botaoOuvindo:'Estou ouvindo…', concluir:'Concluir jornada →'
 };
 /* ========================================================= */
 
@@ -483,8 +484,6 @@ $('tituloEtapa').textContent = `Etapa ${ETAPA_ATUAL} de 8: ${TITULO_ETAPA}`;
 $('etapas').innerHTML = ETAPAS.map((n,i)=>{ const k=i+1; return `<div class="etapa ${k<ETAPA_ATUAL?'feita':k===ETAPA_ATUAL?'atual':''}"><i></i>${k}. ${n}</div>`; }).join('');
 $('qtdEstrelas').textContent = estrelas;
 if(!PULSEIRA_ATIVA) $('vibra').hidden = true;
-if(!MOSTRAR_BOTAO_SIMULAR) $('btnSimular').hidden = true;
-$('btnSimular').textContent = T.simular;
 
 
 const CAM = '<path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="4"/>';
@@ -500,9 +499,72 @@ const NOME_ARQUIVO = 'meu-som-lumis';
 let pulou = false, midia, gravador, pedacos = [], urlVideo, arquivo, actx, analyserG, tmp, rafG;
 $('chip').textContent = SOM; 
 $('sem').innerHTML = svg(CAM); $('frase').innerHTML = [...'Desafio Final'].map((c,i)=>`<span style="animation-delay:${i*70}ms">${c===' '?'&nbsp;':c}</span>`).join('');
+/* ===== detecção do "Sssss" ===== */
+let analyserS, espectro, ambienteDb = null, recentes = [], acertoMs = 0, okSom = false, fundoAtivo = false, fundoSoma = 0, fundoN = 0;
+let bandTop = 12000, hiStart = 4000, bwFrames = 0, bwHi = 0, bwMid = 0;
+const dbSeguro = v => (isFinite(v) ? Math.max(v, -200) : -200);
+function mediaDb(f0, f1, binHz){
+  const i0 = Math.floor(f0/binHz), i1 = Math.min(espectro.length-1, Math.floor(f1/binHz));
+  let s = 0, n = 0; for(let i = i0; i <= i1; i++){ s += dbSeguro(espectro[i]); n++; }
+  return n ? s/n : -200;
+}
+function fixarBanda(top){ bandTop = top; hiStart = top >= 12000 ? 4000 : top >= 7000 ? 2800 : 1800; bwFrames = 60; }
+/* descobre até onde o microfone "ouve" (Bluetooth/webcam podem cortar os agudos) */
+function estimarBanda(binHz, nyq){
+  if(bwFrames >= 60) return;
+  if(nyq < 9000){ fixarBanda(Math.floor(nyq*0.95)); return; }
+  if(mediaDb(300, 3000, binHz) < -85) return;
+  bwHi += mediaDb(9000, Math.min(11500, nyq*0.95), binHz); bwMid += mediaDb(5000, 7500, binHz);
+  if(++bwFrames === 60){
+    const hi = bwHi/60, mid = bwMid/60;
+    if(hi > -105) fixarBanda(12000); else if(mid > -105) fixarBanda(7500); else fixarBanda(3800);
+  }
+}
+function medirSom(){
+  const sr = actx.sampleRate, nyq = sr/2, binHz = sr/analyserS.fftSize;
+  estimarBanda(binHz, nyq);
+  const top = Math.min(bandTop, nyq*0.95), n = espectro.length;
+  const pot = i => Math.pow(10, dbSeguro(espectro[i])/10);
+  const mediaPot = (f0, f1) => { let s = 0, k = 0; const i1 = Math.min(n-1, Math.floor(f1/binHz)); for(let i = Math.floor(f0/binHz); i <= i1; i++){ s += pot(i); k++; } return k ? s/k : 1e-20; };
+  const hiDb = 10*Math.log10(mediaPot(hiStart, top) + 1e-20);
+  const lmDb = 10*Math.log10(mediaPot(800, Math.min(2500, hiStart-200)) + 1e-20);
+  const i0 = Math.floor(1500/binHz), i1 = Math.min(n-5, Math.floor(top/binHz));
+  let melhor = -1, pico = i0, maxBin = 0;
+  for(let i = i0; i <= i1; i++){
+    let s = 0; for(let k = -4; k <= 4; k++) s += pot(i+k);
+    if(s > melhor){ melhor = s; pico = i; }
+    const q = pot(i); if(q > maxBin) maxBin = q;
+  }
+  return { hiDb, tilt: hiDb - 10*Math.log10(mediaPot(800, Math.min(2500, hiStart-200)) + 1e-20), peak: pico*binHz, prom: 10*Math.log10(maxBin + 1e-20) - hiDb };
+}
+function ehSsss(m, acima){
+  const k = hiStart/4000;
+  return acima >= SSSS.RISE_MIN && m.tilt >= SSSS.TILT_MIN && m.peak >= SSSS.PEAK_MIN*k && m.prom <= SSSS.PROM_MAX;
+}
+/* aprende o barulho de fundo durante a contagem (3, 2, 1), antes de a criança fazer o som */
+function iniciarFundo(){
+  fundoAtivo = true; fundoSoma = 0; fundoN = 0; ambienteDb = null; recentes = [];
+  (function f(){ if(!fundoAtivo) return; analyserS.getFloatFrequencyData(espectro); const m = medirSom(); fundoSoma += m.hiDb; fundoN++; ambienteDb = fundoSoma/fundoN; requestAnimationFrame(f); })();
+}
+function pararFundo(){ fundoAtivo = false; }
+/* qual microfone usar: a lapela (ou um microfone USB que não seja a webcam) em vez do padrão do sistema */
+const RE_LAPELA = /kaidi|lapela|lavalier|lavaliere|lav\b|sem fio|wireless/i;
+const RE_CAMERA = /web\s?cam|c[aâ]mera|camera|video|hd pro|c270|c920/i;
+async function escolherMicrofone(){
+  try{
+    const todos = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput' && d.deviceId !== 'default' && d.deviceId !== 'communications');
+    const d = todos.find(x => RE_LAPELA.test(x.label)) || todos.find(x => /usb/i.test(x.label) && !RE_CAMERA.test(x.label));
+    if(!d) return;
+    const atual = midia.getAudioTracks()[0];
+    if(atual && atual.getSettings && atual.getSettings().deviceId === d.deviceId) return;
+    const novo = await navigator.mediaDevices.getUserMedia({audio:{deviceId:{exact:d.deviceId},echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    if(atual){ midia.removeTrack(atual); atual.stop(); }
+    midia.addTrack(novo.getAudioTracks()[0]);
+  }catch(e){ /* continua com o microfone padrão */ }
+}
 function controles(lista){
   $('controles').innerHTML = lista.map(([a,t,c,l])=>`<button class="${c||'btn-sec'}" type="button" data-a="${a}"${l?` aria-label="${l}" title="${l}"`:''}>${t}</button>`).join('')
-    + (MOSTRAR_BOTAO_SIMULAR && fase<9 ? '<button class="btn-sec" type="button" data-a="simular">Simular</button>' : '');
+    ;
 }
 $('controles').addEventListener('click', e=>{ const a = e.target.closest('button')?.dataset.a; if(a) acoes[a]?.(); });
 /* guarda no aparelho que a ilha foi concluída (o mapa lê isto para desbloquear a próxima) */
@@ -514,7 +576,7 @@ function salvarProgresso(){
     localStorage.setItem('lumis_progresso', JSON.stringify(p));
   }catch(e){}
 }
-const acoes = { comecar, terminei:()=>gravador?.state==='recording'&&gravador.stop(), compartilhar, repetir:()=>{ fase=5; comecar(); }, pronto:()=>prontoRes?.(), concluir:fimJornada, simular:()=>{ celebrar(); setTimeout(fimJornada,3800); },
+const acoes = { comecar, terminei:()=>gravador?.state==='recording'&&gravador.stop(), compartilhar, repetir:()=>{ fase=5; comecar(); }, pronto:()=>prontoRes?.(), concluir:fimJornada,
   sair:()=>{ if(URL_HOME!=='#') location.href = URL_HOME; parent.postMessage({lumis:'ir-para-inicio'},'*'); } };
 
 /* ===== abertura no escuro ===== */
@@ -560,24 +622,46 @@ async function comecar(){
   try{
     midia = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:640,height:480},audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
   }catch(e){ falar(U.semCam); status('Câmera indisponível'); controles([['comecar','Tentar de novo','btn-mic']]); return; }
+  await escolherMicrofone();
   const v = $('vid'); v.classList.add('espelho'); v.muted = true; v.loop = false; v.removeAttribute('src'); v.srcObject = midia; await v.play().catch(()=>{}); $('sem').style.display = 'none';
   actx = actx || new (window.AudioContext||window.webkitAudioContext)(); await actx.resume();
-  analyserG = actx.createAnalyser(); analyserG.fftSize = 1024; actx.createMediaStreamSource(midia).connect(analyserG); tmp = new Float32Array(analyserG.fftSize);
+  const fonte = actx.createMediaStreamSource(midia);
+  analyserG = actx.createAnalyser(); analyserG.fftSize = 1024; fonte.connect(analyserG); tmp = new Float32Array(analyserG.fftSize);
+  analyserS = actx.createAnalyser(); analyserS.fftSize = 2048; analyserS.smoothingTimeConstant = .2; fonte.connect(analyserS); espectro = new Float32Array(analyserS.frequencyBinCount);
+  bwFrames = 0; bwHi = 0; bwMid = 0; bandTop = 12000; hiStart = 4000;
   
   await enquadrar(); $('tit').textContent = 'Sinta a vibração'; falar(U.sinta); $('ondas').classList.add('on'); vibrar([300,150,300,150,300], "sss"); await aguardar(2600); $('ondas').classList.remove('on');
-  $('tit').textContent = 'Agora é a sua vez!'; falar(U.vez);
+  await suaVez();
+}
+/* contagem 3-2-1 e depois grava a tentativa; se o "Sssss" não estiver certo, volta aqui e tenta de novo */
+async function suaVez(){
+  $('tit').textContent = 'Agora é a sua vez!'; falar(U.vez); iniciarFundo();
   for(let n=CONTAGEM;n>0;n--){ const c=$('conta'); c.textContent = n; c.classList.remove('on'); void c.offsetWidth; c.classList.add('on'); vibrar(60, "toque"); await aguardar(1000); }
-  gravar();
+  pararFundo(); gravar();
+}
+/* a tentativa não teve "Sssss" suficiente: descarta o vídeo e tenta mais uma vez */
+async function tentarDeNovo(){
+  parar(); fase = 5; try{lumisReg('erro')}catch(e){}; vibrar([80], "toque");
+  $('tit').textContent = 'Vamos de novo!'; falar(U.tentar); status(''); controles([]);
+  await aguardar(2200); suaVez();
 }
 function gravar(){
   const tipos = ['video/mp4','video/webm;codecs=vp9,opus','video/webm'], mime = tipos.find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t))||'';
   pedacos = []; gravador = new MediaRecorder(midia, mime?{mimeType:mime}:undefined);
   gravador.ondataavailable = e=>{ if(e.data.size) pedacos.push(e.data); };
-  gravador.onstop = ()=>revisar(gravador.mimeType||mime||'video/webm');
+  okSom = false; acertoMs = 0; recentes = [];
+  gravador.onstop = ()=>{ if(okSom) revisar(gravador.mimeType||mime||'video/webm'); else tentarDeNovo(); };
   gravador.start(); fase = 6; ouvindo = true; aoVivoAtivo = true; $('rec').classList.add('on'); $('orbe').classList.add('ouvindo'); falar(U.gravando); status('');
   controles([['terminei','Terminei','btn-mic']]); const fim = setTimeout(()=>gravador.state==='recording'&&gravador.stop(), GRAVACAO_MS); gravador.addEventListener('stop',()=>clearTimeout(fim));
-  var contAoVivo = 0;
+  var contAoVivo = 0, tAntS = performance.now();
   (function laco(){ if(!ouvindo) return; analyserG.getFloatTimeDomainData(tmp); let sm=0; for(const x of tmp) sm+=x*x;
+    /* confere se é o "Sssss" certo: acumula o tempo de som certo; ao chegar no mínimo, a tentativa termina com sucesso */
+    const agora = performance.now(), dtS = agora - tAntS; tAntS = agora;
+    analyserS.getFloatFrequencyData(espectro); const m = medirSom(), acima = ambienteDb === null ? 0 : m.hiDb - ambienteDb;
+    recentes.push(ehSsss(m, acima)); if(recentes.length > 5) recentes.shift();
+    const certo = recentes.filter(Boolean).length >= 3;
+    if(certo) acertoMs += dtS; else if(acima < 6 && ambienteDb !== null) ambienteDb += (m.hiDb - ambienteDb) * 0.03;
+    if(acertoMs >= ACERTO_MIN_MS && !okSom){ okSom = true; if(gravador.state==='recording') gravador.stop(); }
     const nv = Math.min(1, Math.sqrt(sm/tmp.length)*14); $('quadro').style.setProperty('--nivel',nv.toFixed(2)); $('orbe').style.setProperty('--nivel',nv.toFixed(2));
     contAoVivo++; if(contAoVivo % 7 === 0) enviarAoVivo(nv);
     rafG = requestAnimationFrame(laco); })();
