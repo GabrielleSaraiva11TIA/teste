@@ -818,6 +818,12 @@ html.lt-on .page { padding-bottom: 55vh; }
   };
 
   const params  = new URLSearchParams(location.search);
+  // TESTE DE DESEMPENHO (Raspberry): câmera na MENOR resolução e detector olhando uma imagem minúscula.
+  // Mude pela URL, ex.: ?cam=320x240  (padrão 160x120). Se o Pi aguentar, vá subindo.
+  const CAM_RES = (params.get("cam") || "160x120").split("x").map(Number);
+  const CAM_W = CAM_RES[0] || 160, CAM_H = CAM_RES[1] || 120;
+  const DET_W = Math.min(CAM_W, 192), DET_H = Math.round(DET_W * CAM_H / CAM_W);   // imagem entregue ao detector
+  let detMs = 0, detEvery = 0;       // tempo médio de cada detecção e intervalo atual (aparecem no painel ?debug=1)
   const DEMO    = params.get("demo");              // "ok" | "erro" | null
   const PREVIEW = params.has("preview");
 
@@ -997,7 +1003,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     // ruído/eco desligados: senão o navegador "limpa" o sssss achando que é barulho
     const audio = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
     const tries = [
-      { audio, video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } },
+      { audio, video: { facingMode: "user", width: { ideal: CAM_W, max: 320 }, height: { ideal: CAM_H, max: 240 }, frameRate: { ideal: 15, max: 15 } } },
       { audio },
       { video: { facingMode: "user" } },
     ];
@@ -1205,10 +1211,12 @@ html.lt-on .page { padding-bottom: 55vh; }
     const kk = hiStart / 4000;
     pVal.innerHTML =
       "em uso: " + (atual ? atual.label.replace(/[<>&]/g, "") : "-") + "\n" +
+      "câmera pedida " + CAM_W + "x" + CAM_H + " · real " + (camVideo.videoWidth || "-") + "x" + (camVideo.videoHeight || "-") + " · detector " + DET_W + "x" + DET_H + "\n" +
+      "detecção " + Math.round(detMs) + " ms · confere a cada " + (detEvery || CONFIG.FRAME_EVERY_MS) + " ms\n" +
       "amostragem " + getCtx().sampleRate + " Hz · banda até " + bandTop + " Hz\n" +
       "agudos " + m.hiDb.toFixed(1) + " dB · fundo " + (ambientDb === null ? "-" : ambientDb.toFixed(1)) + " dB\n" +
       t(above >= CONFIG.RISE_MIN, "acima do fundo  " + above.toFixed(1) + " dB") + " (≥ " + CONFIG.RISE_MIN + ")\n" +
-      t(m.tilt >= CONFIG.TILT_MIN, "inclinação  " + m.tilt.toFixed(1) + " dB") + " (≥ " + CONFIG.TILT_MIN + ")\n" +
+      t(m.tilt >= Math.max(-3, CONFIG.TILT_MIN - Math.max(0, above - CONFIG.RISE_MIN - 4) * 0.5), "inclinação  " + m.tilt.toFixed(1) + " dB") + " (≥ " + Math.max(-3, CONFIG.TILT_MIN - Math.max(0, above - CONFIG.RISE_MIN - 4) * 0.5).toFixed(1) + ")\n" +
       t(m.peak >= CONFIG.PEAK_MIN * kk, "pico  " + Math.round(m.peak) + " Hz") + " (≥ " + Math.round(CONFIG.PEAK_MIN * kk) + ")\n" +
       t(m.prom <= CONFIG.PROM_MAX, "pico x resto  " + m.prom.toFixed(1) + " dB") + " (≤ " + CONFIG.PROM_MAX + ")\n" +
       "\"sssss\" agora: " + t(hit, hit ? "SIM" : "não") + "\n" +
@@ -1276,7 +1284,10 @@ html.lt-on .page { padding-bottom: 55vh; }
   // é "sssss"? (agudos bem acima do fundo, mais agudo que a fala, pico alto, chiado e não apito)
   function ehSsss(m, above) {
     const k = hiStart / 4000;
-    return above >= CONFIG.RISE_MIN && m.tilt >= CONFIG.TILT_MIN &&
+    // soprando forte, o vento do ar no microfone enche os médios e a "inclinação" cai:
+    // quanto mais os agudos sobem acima do fundo, menos inclinação exigimos
+    const tiltMin = Math.max(-3, CONFIG.TILT_MIN - Math.max(0, above - CONFIG.RISE_MIN - 4) * 0.5);
+    return above >= CONFIG.RISE_MIN && m.tilt >= tiltMin &&
            m.peak >= CONFIG.PEAK_MIN * k && m.prom <= CONFIG.PROM_MAX;
   }
 
@@ -1285,6 +1296,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   //  Usa o MediaPipe Face Landmarker: acha os pontos dos lábios no vídeo
   //  e confere se todos cabem dentro do quadrado tracejado.
   // =====================================================
+  let detCanvas = null, detCtx = null;
   let lmState = "idle";                 // idle | loading | ready | failed
   let landmarker = null, lipIdx = null;
   let frameOk = null;                   // null = ainda não sei | true | false
@@ -1360,7 +1372,14 @@ html.lt-on .page { padding-bottom: 55vh; }
   function detectFraming(now) {
     if (camVideo.readyState < 2 || !camVideo.videoWidth) return;
     let res;
-    try { res = landmarker.detectForVideo(camVideo, now); } catch (e) { console.warn("detectForVideo falhou", e); frameHint = "Erro do detector: " + String((e && e.message) || e).slice(0, 70); paintFraming(); return; }
+    const t0 = performance.now();
+    try {
+      if (!detCanvas) { detCanvas = document.createElement("canvas"); detCanvas.width = DET_W; detCanvas.height = DET_H; detCtx = detCanvas.getContext("2d", { willReadFrequently: false }); }
+      detCtx.drawImage(camVideo, 0, 0, DET_W, DET_H);
+      res = landmarker.detectForVideo(detCanvas, now); } catch (e) { console.warn("detectForVideo falhou", e); frameHint = "Erro do detector: " + String((e && e.message) || e).slice(0, 70); paintFraming(); return; }
+    const dur = performance.now() - t0;
+    detMs = detMs ? detMs * 0.7 + dur * 0.3 : dur;
+    detEvery = Math.max(CONFIG.FRAME_EVERY_MS, Math.round(detMs * 2));   // no Pi lento: confere mais devagar, sem travar a tela
     const lm = res && res.faceLandmarks && res.faceLandmarks[0];
 
     let r;
@@ -1375,7 +1394,8 @@ html.lt-on .page { padding-bottom: 55vh; }
 
     // evita piscar: vale o que aconteceu na maioria das últimas 5 conferências
     frameHist.push(r);
-    if (frameHist.length > 5) frameHist.shift();
+    const janela = detEvery > 300 ? 3 : 5;      // lento: menos conferências para decidir
+    while (frameHist.length > janela) frameHist.shift();
     const okCount = frameHist.filter((x) => x.ok).length;
     frameOk = okCount >= Math.ceil(frameHist.length * 0.6);
     frameHint = frameOk ? "" : [...frameHist].reverse().find((x) => !x.ok).hint;
@@ -1391,6 +1411,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     else if (frameOk === true) { text = "Enquadramento OK"; }
     else { text = frameHint || "Procurando seu rostinho..."; warn = frameOk === false; }
 
+    if (DEBUG && detMs && lmState === "ready") text += " · " + Math.round(detMs) + " ms";
     chipFrameText.textContent = text;
     chipFrame.classList.toggle("is-off", warn);
     const known = framingKnown();
@@ -1423,7 +1444,7 @@ html.lt-on .page { padding-bottom: 55vh; }
 
   function loop(now) {
     rafId = requestAnimationFrame(loop);
-    const dt = Math.min(now - lastTs, 100);
+    const dt = Math.min(now - lastTs, 500);
     lastTs = now;
 
     let above = 0, ratio = 0, hitNow = false, mNow = null;
@@ -1432,7 +1453,7 @@ html.lt-on .page { padding-bottom: 55vh; }
       mNow = m;
       if (ambientDb === null) ambientDb = m.hiDb;
       above = m.hiDb - ambientDb;
-      ratio = clamp(m.tilt / 10, 0, 1);
+      ratio = clamp((m.tilt + 3) / 10, 0, 1);
       // suavização: 3 dos últimos 5 quadros precisam parecer "s" (evita falhas por 1 quadro ruim)
       const cru = ehSsss(m, above);
       recentes.push(cru ? 1 : 0); if (recentes.length > 5) recentes.shift();
@@ -1442,7 +1463,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     }
 
     // confere se a boca está no quadrado (10x por segundo)
-    if (landmarker && hasCam && now - lastFrameCheck >= CONFIG.FRAME_EVERY_MS) {
+    if (landmarker && hasCam && now - lastFrameCheck >= (detEvery || CONFIG.FRAME_EVERY_MS)) {
       lastFrameCheck = now;
       detectFraming(now);
     }
