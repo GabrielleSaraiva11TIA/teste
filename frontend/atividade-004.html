@@ -749,13 +749,12 @@ html.lt-on .page { padding-bottom: 55vh; }
   const CONFIG = {
     LISTEN_MS: 4500,              // tempo máximo ouvindo a tentativa
     SUCCESS_HIT_MS: 1200,         // quanto tempo de "sssss" é preciso detectar
-    HIGH_RATIO: 0.75,             // % da energia do som que precisa estar nos agudos (4–12 kHz)
-    MIN_DB_ABOVE_AMBIENT: 8,      // quão mais alto que o barulho do ambiente (em dB)
     SUCCESS_RUN_MS: 900,          // "sssss" SEGUIDO que precisa ser detectado (aceita pausas curtas)
     RUN_GAP_MS: 150,              // pausa máxima dentro do "sssss" sem zerar a contagem
-    CENTROID_MIN: 4500,           // "centro" do som (Hz): o "s" fica agudo; o "sh" fica mais grave
-    FLATNESS_MIN: 0.06,           // chiado (sem tom) = alto; apito/beep = perto de 0
-    LOW_RATIO_MAX: 0.12,          // máximo de energia nos graves (< 1,5 kHz): fala/batidas
+    RISE_MIN: 8,                  // agudos precisam subir tantos dB acima do barulho do ambiente
+    TILT_MIN: 5,                  // agudos vs. médios (dB): o "s" é muito mais agudo que a fala
+    PEAK_MIN: 4200,               // onde fica o pico do som (Hz): "s" ~5–9 kHz, "sh" ~2–4 kHz
+    PROM_MAX: 15,                 // pico x resto (dB): apito/beep tem pico muito fino, "s" é chiado
     START_GUARD_MS: 350,          // ignora o começo (toque no botão, fim do som da demonstração)
     STARS_REWARD: 3,              // estrelas pelo acerto (só na 1ª vez)
     MAX_TRIES_BEFORE_SKIP: 3,     // depois de N erros aparece "Continuar a Aventura"
@@ -768,7 +767,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   };
   // ajustes feitos no painel de teste (?debug=1) ficam guardados neste aparelho
   const CFG_KEY = "lumis_mic_cfg";
-  const CFG_NUM = ["HIGH_RATIO","MIN_DB_ABOVE_AMBIENT","SUCCESS_RUN_MS","RUN_GAP_MS","CENTROID_MIN","FLATNESS_MIN","LOW_RATIO_MAX"];
+  const CFG_NUM = ["RISE_MIN","TILT_MIN","PEAK_MIN","PROM_MAX","SUCCESS_RUN_MS","RUN_GAP_MS"];
   try {
     const salvo = JSON.parse(localStorage.getItem(CFG_KEY) || "{}");
     CFG_NUM.forEach((k) => { if (typeof salvo[k] === "number" && isFinite(salvo[k])) CONFIG[k] = salvo[k]; });
@@ -980,7 +979,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   // =====================================================
   let stream = null, srcNode = null, analyser = null, freqData = null;
   let hasMic = false, hasCam = false;
-  let ambientDb = null;
+  let ambientDb = null, recentes = [];
   let rafId = 0, lastTs = 0;
 
   let listening = false, listenStart = 0, hitMs = 0, gapMs = 0, soundMs = 0, smooth = 0, lastBuzz = 0, demoSoundEnd = 0;
@@ -1156,7 +1155,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     painel.className = "mic-dbg";
     painel.innerHTML =
       '<h4>Teste do microfone <button type="button" id="micDbgMin">min</button></h4><div class="corpo">' +
-      '<label>Microfone<select id="micDbgSel"></select></label><pre id="micDbgVal">aguardando...</pre><div id="micDbgCfg"></div>' +
+      '<label>Microfone<select id="micDbgSel"></select></label><pre id="micDbgVal">Os números aparecem na etapa 2 (&quot;Agora Você!&quot;): toque em &quot;Agora é a minha vez!&quot; e permita câmera e microfone.</pre><div id="micDbgCfg"></div>' +
       '<div style="margin-top:8px;display:flex;gap:6px"><button type="button" id="micDbgBanda">Medir banda de novo</button>' +
       '<button type="button" id="micDbgReset">Zerar ajustes</button></div></div>';
     document.body.appendChild(painel);
@@ -1203,15 +1202,15 @@ html.lt-on .page { padding-bottom: 55vh; }
     const t = (ok, txt) => '<span class="' + (ok ? "ok" : "no") + '">' + txt + "</span>";
     const atual = stream && stream.getAudioTracks()[0];
     if (!m) { pVal.textContent = "sem microfone"; return; }
-    const cmin = CONFIG.CENTROID_MIN * (hiStart / 4000);
+    const kk = hiStart / 4000;
     pVal.innerHTML =
       "em uso: " + (atual ? atual.label.replace(/[<>&]/g, "") : "-") + "\n" +
       "amostragem " + getCtx().sampleRate + " Hz · banda até " + bandTop + " Hz\n" +
-      t(above > CONFIG.MIN_DB_ABOVE_AMBIENT, "volume  " + above.toFixed(1) + " dB") + " (> " + CONFIG.MIN_DB_ABOVE_AMBIENT + ")\n" +
-      t(m.ratio > CONFIG.HIGH_RATIO, "agudos  " + m.ratio.toFixed(2)) + " (> " + CONFIG.HIGH_RATIO + ")\n" +
-      t(m.centroid >= cmin, "centro  " + Math.round(m.centroid) + " Hz") + " (≥ " + Math.round(cmin) + ")\n" +
-      t(m.flat >= CONFIG.FLATNESS_MIN, "chiado  " + m.flat.toFixed(3)) + " (≥ " + CONFIG.FLATNESS_MIN + ")\n" +
-      t(m.lowRatio <= CONFIG.LOW_RATIO_MAX, "graves  " + m.lowRatio.toFixed(3)) + " (≤ " + CONFIG.LOW_RATIO_MAX + ")\n" +
+      "agudos " + m.hiDb.toFixed(1) + " dB · fundo " + (ambientDb === null ? "-" : ambientDb.toFixed(1)) + " dB\n" +
+      t(above >= CONFIG.RISE_MIN, "acima do fundo  " + above.toFixed(1) + " dB") + " (≥ " + CONFIG.RISE_MIN + ")\n" +
+      t(m.tilt >= CONFIG.TILT_MIN, "inclinação  " + m.tilt.toFixed(1) + " dB") + " (≥ " + CONFIG.TILT_MIN + ")\n" +
+      t(m.peak >= CONFIG.PEAK_MIN * kk, "pico  " + Math.round(m.peak) + " Hz") + " (≥ " + Math.round(CONFIG.PEAK_MIN * kk) + ")\n" +
+      t(m.prom <= CONFIG.PROM_MAX, "pico x resto  " + m.prom.toFixed(1) + " dB") + " (≤ " + CONFIG.PROM_MAX + ")\n" +
       "\"sssss\" agora: " + t(hit, hit ? "SIM" : "não") + "\n" +
       "seguido: " + Math.round(hitMs) + " / " + CONFIG.SUCCESS_RUN_MS + " ms";
   }
@@ -1247,34 +1246,38 @@ html.lt-on .page { padding-bottom: 55vh; }
     }
   }
 
-  // Mede o som: volume (dB) e o "formato" dele: agudos, centro, chiado e graves
+  // Mede o som: energia dos agudos, inclinação (agudos x médios), posição do pico e "finura" do pico.
+  // (estudos de fricativas: o /s/ tem o pico em ~5–9 kHz e é um chiado; o /ʃ/ "sh" pico em ~2–4 kHz)
   function measure() {
     analyser.getFloatFrequencyData(freqData);
     const sr = getCtx().sampleRate, nyq = sr / 2, binHz = sr / analyser.fftSize;
     estimarBanda(binHz, nyq);
-    const top      = Math.min(bandTop, nyq * 0.95);
-    const lowStart = Math.floor(100 / binHz);
-    const midStart = Math.floor(1500 / binHz);
-    const highStart = Math.floor(hiStart / binHz);
-    const highEnd  = Math.min(freqData.length - 1, Math.floor(top / binHz));
-    let low = 0, mid = 0, high = 0, cNum = 0, cDen = 0, sumLog = 0, sumP = 0, nFlat = 0;
-    for (let i = lowStart; i <= highEnd; i++) {
-      const p = Math.pow(10, dbSeguro(freqData[i]) / 10);
-      if (i < midStart) low += p; else if (i < highStart) mid += p; else high += p;
-      if (i >= midStart) { cNum += i * binHz * p; cDen += p; }
-      if (i >= highStart) { sumLog += Math.log(p + 1e-20); sumP += p; nFlat++; }
+    const top = Math.min(bandTop, nyq * 0.95), n = freqData.length;
+    const pot = (i) => Math.pow(10, dbSeguro(freqData[i]) / 10);
+    const mediaPot = (f0, f1) => {
+      const i0 = Math.max(1, Math.floor(f0 / binHz)), i1 = Math.min(n - 1, Math.floor(f1 / binHz));
+      let s = 0, c = 0; for (let i = i0; i <= i1; i++) { s += pot(i); c++; }
+      return c ? s / c : 0;
+    };
+    const hiDb = 10 * Math.log10(mediaPot(hiStart, top) + 1e-20);
+    const lmDb = 10 * Math.log10(mediaPot(800, Math.min(2500, hiStart - 200)) + 1e-20);
+    // pico (média de 9 bins) entre 1,5 kHz e o topo da banda
+    const b0 = Math.max(5, Math.floor(1500 / binHz)), b1 = Math.min(n - 5, Math.floor(top / binHz));
+    let pico = b0, melhor = -1, maxBin = 0;
+    for (let i = b0; i <= b1; i++) {
+      let a = 0; for (let k = -4; k <= 4; k++) a += pot(i + k);
+      a /= 9; if (a > melhor) { melhor = a; pico = i; }
+      const p = pot(i); if (p > maxBin) maxBin = p;
     }
-    const total = low + mid + high + 1e-12;
-    const flat = nFlat ? Math.exp(sumLog / nFlat) / (sumP / nFlat + 1e-20) : 0;
-    return { db: 10 * Math.log10(total), ratio: high / total, lowRatio: low / total,
-             centroid: cNum / (cDen + 1e-20), flat: flat };
+    return { db: hiDb, hiDb, lmDb, tilt: hiDb - lmDb, peak: pico * binHz,
+             prom: 10 * Math.log10(maxBin + 1e-20) - hiDb };
   }
 
-  // é "sssss"? (agudo, alto o bastante, centro agudo, chiado sem tom, quase sem graves)
+  // é "sssss"? (agudos bem acima do fundo, mais agudo que a fala, pico alto, chiado e não apito)
   function ehSsss(m, above) {
-    const cmin = CONFIG.CENTROID_MIN * (hiStart / 4000);
-    return m.ratio > CONFIG.HIGH_RATIO && above > CONFIG.MIN_DB_ABOVE_AMBIENT &&
-           m.centroid >= cmin && m.flat >= CONFIG.FLATNESS_MIN && m.lowRatio <= CONFIG.LOW_RATIO_MAX;
+    const k = hiStart / 4000;
+    return above >= CONFIG.RISE_MIN && m.tilt >= CONFIG.TILT_MIN &&
+           m.peak >= CONFIG.PEAK_MIN * k && m.prom <= CONFIG.PROM_MAX;
   }
 
   // =====================================================
@@ -1427,12 +1430,15 @@ html.lt-on .page { padding-bottom: 55vh; }
     if (analyser) {
       const m = measure();
       mNow = m;
-      if (ambientDb === null) ambientDb = m.db;
-      above = m.db - ambientDb;
-      ratio = m.ratio;
-      hitNow = ehSsss(m, above);
-      // aprende o barulho do ambiente enquanto ninguém está fazendo o som
-      if (!listening && above < 6) ambientDb += (m.db - ambientDb) * 0.03;
+      if (ambientDb === null) ambientDb = m.hiDb;
+      above = m.hiDb - ambientDb;
+      ratio = clamp(m.tilt / 10, 0, 1);
+      // suavização: 3 dos últimos 5 quadros precisam parecer "s" (evita falhas por 1 quadro ruim)
+      const cru = ehSsss(m, above);
+      recentes.push(cru ? 1 : 0); if (recentes.length > 5) recentes.shift();
+      hitNow = recentes.reduce((a, b) => a + b, 0) >= 3;
+      // aprende o barulho do ambiente (agudos) enquanto ninguém está fazendo o som
+      if (!listening && !cru && above < 6 && now > demoSoundEnd) ambientDb += (m.hiDb - ambientDb) * 0.03;
     }
 
     // confere se a boca está no quadrado (10x por segundo)
@@ -1458,7 +1464,7 @@ html.lt-on .page { padding-bottom: 55vh; }
       target = DEMO !== "erro" ? (elapsed > 600 ? 0.97 : 0.3) : 0.02;
     } else {
       soundHit = hitNow && elapsed >= CONFIG.START_GUARD_MS;
-      target = clamp((above - 3) / 22, 0, 1) * clamp((ratio - 0.5) / 0.4, 0, 1);
+      target = clamp((above - 3) / 22, 0, 1) * ratio;
     }
 
     // o ventinho só vale se a boca estiver dentro do quadrado
