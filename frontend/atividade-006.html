@@ -368,13 +368,16 @@ const RMS_MINIMO = 0.02;      // volume mínimo antes da sensibilidade
 const FALAR_MS = 2000;        // a barra: quanto tempo a criança precisa fazer som (ela só anda enquanto há som no microfone)
 const ESPERA_MAX_MS = 8000;   // se ninguém fizer som por esse tempo -> "Tente de novo"
 const ACERTO_MIN_MS = 1000;   // dentro desse tempo falado, quanto precisa ser "Sssss" certo para acertar
-/* Detecção do "Sssss" (mesma da atividade 4): chiado agudo, sem tom, quase sem graves, acima do barulho do ambiente */
+/* Detecção do "Sssss", baseada no que a literatura de acústica usa para separar o /s/ de outros sons:
+   - pico do espectro bem agudo (o /s/ tem o pico em ~5–9 kHz; o "sh" fica em ~2–4 kHz)
+   - muito mais energia nos agudos do que na faixa da voz (inclinação do espectro)
+   - chiado (ruído) e não apito (tom puro): o pico não pode "saltar" demais do resto
+   - agudos acima do barulho da sala (medido só na faixa aguda, que quase não sofre com ruído de sala nem com sopro) */
 const SSSS = {
-  HIGH_RATIO: 0.75,            // % da energia que precisa estar nos agudos (4–12 kHz)
-  MIN_DB_ABOVE_AMBIENT: 8,     // quão mais alto que o barulho da sala (dB)
-  CENTROID_MIN: 4500,          // "centro" do som (Hz): o "s" é agudo; o "sh" é mais grave
-  FLATNESS_MIN: 0.06,          // chiado = alto; apito/beep = perto de 0
-  LOW_RATIO_MAX: 0.12          // máximo de energia nos graves (fala, batidas)
+  RISE_MIN: 8,        // dB: agudos acima do barulho de fundo
+  TILT_MIN: 5,        // dB: agudos (4–12 kHz) menos a faixa da voz (0,8–2,5 kHz)
+  PEAK_MIN: 4200,     // Hz: onde fica o pico do espectro
+  PROM_MAX: 15        // dB: quanto o pico pode se destacar do resto dos agudos (apito/tom puro se destaca muito)
 };
 const T = {
   inicio:'Será que tem uma <b>estrela</b> aqui dentro? Segure o som para abrir a caixa!',
@@ -462,7 +465,7 @@ function barra(p){ $('enche').style.setProperty('--p', p); $('trilho').setAttrib
 falar(T.inicio); micTxt(T.botaoFalar); status(T.esperando); $('dica').textContent = 'Dica: ' + ALVO.dica;
 
 /* microfone: volume (RMS) + centroide espectral */
-let ctx, analyser, stream, tempo, espectro, raf, tAnt, decorrido, acertoMs, prepMs, falouMs, menorS;
+let ctx, analyser, stream, tempo, espectro, raf, tAnt, decorrido, acertoMs, prepMs, falouMs, menorS, prepSoma, prepN, recentes = [];
 $('btnMic').addEventListener('click', ()=> ouvindo ? parar(false) : iniciar());
 $('btnSimular').addEventListener('click', ()=>{ if(!ouvindo && !concluido) sucesso(); });
 $('btnDeNovo').addEventListener('click', ()=>{
@@ -492,20 +495,26 @@ function estimarBanda(binHz, nyq){
 function medir(){
   const sr = ctx.sampleRate, nyq = sr/2, binHz = sr/analyser.fftSize;
   estimarBanda(binHz, nyq);
-  const top = Math.min(bandTop, nyq*0.95);
-  const lowStart = Math.floor(100/binHz), midStart = Math.floor(1500/binHz), highStart = Math.floor(hiStart/binHz);
-  const highEnd = Math.min(espectro.length-1, Math.floor(top/binHz));
-  let low = 0, mid = 0, high = 0, cNum = 0, cDen = 0, sumLog = 0, sumP = 0, nFlat = 0;
-  for(let i = lowStart; i <= highEnd; i++){
-    const p = Math.pow(10, dbSeguro(espectro[i])/10);
-    if(i < midStart) low += p; else if(i < highStart) mid += p; else high += p;
-    if(i >= midStart){ cNum += i*binHz*p; cDen += p; }
-    if(i >= highStart){ sumLog += Math.log(p + 1e-20); sumP += p; nFlat++; }
+  const top = Math.min(bandTop, nyq*0.95), n = espectro.length;
+  const pot = i => Math.pow(10, dbSeguro(espectro[i])/10);
+  const mediaPot = (f0, f1) => { let s = 0, k = 0; const i1 = Math.min(n-1, Math.floor(f1/binHz)); for(let i = Math.floor(f0/binHz); i <= i1; i++){ s += pot(i); k++; } return k ? s/k : 1e-20; };
+  const hiDb = 10*Math.log10(mediaPot(hiStart, top) + 1e-20);
+  const lmDb = 10*Math.log10(mediaPot(800, Math.min(2500, hiStart-200)) + 1e-20);
+  /* pico do espectro suavizado (9 bins) entre 1,5 kHz e o topo */
+  const i0 = Math.floor(1500/binHz), i1 = Math.min(n-5, Math.floor(top/binHz));
+  let melhor = -1, pico = i0, maxBin = 0;
+  for(let i = i0; i <= i1; i++){
+    let s = 0; for(let k = -4; k <= 4; k++) s += pot(i+k);
+    if(s > melhor){ melhor = s; pico = i; }
+    const q = pot(i); if(q > maxBin) maxBin = q;
   }
-  const total = low + mid + high + 1e-12;
-  const flat = nFlat ? Math.exp(sumLog/nFlat)/(sumP/nFlat + 1e-20) : 0;
-  return { db: 10*Math.log10(total), ratio: high/total, lowRatio: low/total, centroid: cNum/(cDen + 1e-20), flat };
+  return { db: 10*Math.log10(mediaPot(100, top) + 1e-20), hiDb, lmDb, tilt: hiDb - lmDb, peak: pico*binHz, prom: 10*Math.log10(maxBin + 1e-20) - hiDb };
 }
+function ehSsss(m, acima){
+  const k = hiStart/4000;
+  return acima >= SSSS.RISE_MIN && m.tilt >= SSSS.TILT_MIN && m.peak >= SSSS.PEAK_MIN*k && m.prom <= SSSS.PROM_MAX;
+}
+
 /* painel de teste: abra a atividade com ?debug=1 no final do endereço */
 const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
 let painel = null, ultimoPainel = 0;
@@ -522,17 +531,11 @@ function pintarPainel(m, acima, certo, rms, extra){
   painel.textContent =
     'mic: ' + (trk ? trk.label : '?') + '\n' +
     'amostragem ' + (ctx ? ctx.sampleRate : '?') + ' Hz · banda até ' + bandTop + ' Hz\n' +
-    'volume ' + m.db.toFixed(1) + ' dB · ambiente ' + (ambienteDb === null ? '-' : ambienteDb.toFixed(1)) + ' dB · acima ' + acima.toFixed(1) + ' (precisa >' + SSSS.MIN_DB_ABOVE_AMBIENT + ') ' + ok(acima > SSSS.MIN_DB_ABOVE_AMBIENT) + '\n' +
-    'agudos ' + (m.ratio*100).toFixed(0) + '% (precisa >' + (SSSS.HIGH_RATIO*100) + '%) ' + ok(m.ratio > SSSS.HIGH_RATIO) + '\n' +
-    'centro ' + m.centroid.toFixed(0) + ' Hz (precisa >=' + Math.round(SSSS.CENTROID_MIN*hiStart/4000) + ') ' + ok(m.centroid >= SSSS.CENTROID_MIN*hiStart/4000) + '\n' +
-    'chiado ' + m.flat.toFixed(2) + ' (precisa >=' + SSSS.FLATNESS_MIN + ') ' + ok(m.flat >= SSSS.FLATNESS_MIN) + '\n' +
-    'graves ' + (m.lowRatio*100).toFixed(0) + '% (precisa <=' + (SSSS.LOW_RATIO_MAX*100) + '%) ' + ok(m.lowRatio <= SSSS.LOW_RATIO_MAX) + '\n' +
+    'agudos ' + m.hiDb.toFixed(1) + ' dB · fundo ' + (ambienteDb === null ? '-' : ambienteDb.toFixed(1)) + ' dB · acima ' + acima.toFixed(1) + ' (precisa >=' + SSSS.RISE_MIN + ') ' + ok(acima >= SSSS.RISE_MIN) + '\n' +
+    'inclinação ' + m.tilt.toFixed(1) + ' dB (precisa >=' + SSSS.TILT_MIN + ') ' + ok(m.tilt >= SSSS.TILT_MIN) + '\n' +
+    'pico ' + m.peak.toFixed(0) + ' Hz (precisa >=' + Math.round(SSSS.PEAK_MIN*hiStart/4000) + ') ' + ok(m.peak >= SSSS.PEAK_MIN*hiStart/4000) + '\n' +
+    'pico x resto ' + m.prom.toFixed(1) + ' dB (precisa <=' + SSSS.PROM_MAX + ') ' + ok(m.prom <= SSSS.PROM_MAX) + '\n' +
     '=> Sssss agora: ' + (certo ? 'SIM' : 'nao') + ' · acumulado ' + Math.round(acertoMs||0) + ' ms de ' + ACERTO_MIN_MS + (extra ? '\n' + extra : '');
-}
-function ehSsss(m, acima){
-  const cmin = SSSS.CENTROID_MIN * (hiStart/4000);
-  return m.ratio > SSSS.HIGH_RATIO && acima > SSSS.MIN_DB_ABOVE_AMBIENT &&
-         m.centroid >= cmin && m.flat >= SSSS.FLATNESS_MIN && m.lowRatio <= SSSS.LOW_RATIO_MAX;
 }
 
 /* qual microfone usar: a lapela (ou um microfone USB que não seja a webcam) em vez do padrão do sistema */
@@ -564,7 +567,7 @@ async function iniciar(){
     }
     if(ctx.state==='suspended') await ctx.resume();
   }catch(err){ status('Microfone indisponível'); falar(T.semMic); return; }
-  ouvindo = true; decorrido = 0; acertoMs = 0; falouMs = 0; prepMs = 0; menorS = null; ambienteDb = null; tAnt = performance.now(); barra(0);
+  ouvindo = true; decorrido = 0; acertoMs = 0; falouMs = 0; prepMs = 0; prepSoma = 0; prepN = 0; recentes = []; menorS = null; ambienteDb = null; tAnt = performance.now(); barra(0);
   $('btnMic').classList.add('ouvindo'); micTxt(T.botaoOuvindo);
   $('orbe').classList.add('ouvindo'); $('bau').classList.add('tremendo');
   $('btnSimular').disabled = true; status(T.esperando); falar(T.ouvindo);
@@ -582,18 +585,20 @@ function laco(agora){
   const PREP_MS = 450;
   if(prepMs < PREP_MS){
     prepMs += dt;
-    if(ehSsss(m, 99)){ menorS = menorS === null ? m.db : Math.min(menorS, m.db); }       // já parece "Sssss": não conta como fundo
-    else ambienteDb = ambienteDb === null ? m.db : Math.min(ambienteDb, m.db);
+    if(ehSsss(m, 99)){ menorS = menorS === null ? m.hiDb : Math.min(menorS, m.hiDb); }       // já parece "Sssss": não conta como fundo
+    else { prepSoma += m.hiDb; prepN++; ambienteDb = prepSoma/prepN; }          // média do fundo
     if(prepMs >= PREP_MS && ambienteDb === null && menorS !== null) ambienteDb = menorS - 20;   // criança já começou: assume sala quieta
     pintarPainel(m, 0, false, rms, 'preparando… (escutando a sala)');
     status(T.esperando); raf = requestAnimationFrame(laco); return;
   }
-  const acima = m.db - ambienteDb;
-  const certo = ehSsss(m, acima);
-  if(!certo && acima < 6) ambienteDb += (m.db - ambienteDb) * 0.03;   // aprende o barulho da sala
+  const acima = m.hiDb - ambienteDb;
+  /* "certo" suavizado: vale se passou em ao menos 3 dos últimos 5 quadros (o som real oscila um pouco) */
+  recentes.push(ehSsss(m, acima)); if(recentes.length > 5) recentes.shift();
+  const certo = recentes.filter(Boolean).length >= 3;
+  if(!certo && acima < 6) ambienteDb += (m.hiDb - ambienteDb) * 0.03;   // aprende o barulho da sala
   const voz = certo || rms >= RMS_MINIMO/SENSIBILIDADE;
   /* a barra começa a contar quando a criança fala no microfone e só anda enquanto há som */
-  const temSom = certo || acima > 6 || rms >= RMS_MINIMO/SENSIBILIDADE;
+  const temSom = certo || acima > 12 || rms >= RMS_MINIMO/SENSIBILIDADE;
   decorrido += dt; if(temSom) falouMs += dt; if(certo) acertoMs += dt;
   pintarPainel(m, acima, certo, rms);
   const p = Math.min(1, falouMs/FALAR_MS), nivel = Math.min(1, rms*14);
