@@ -270,6 +270,7 @@ button:disabled { cursor: not-allowed; }
 .meter__bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #36c6ff, #0b4fd1); transition: width .12s linear; }
 
 .mirror__hint { text-align: center; font-weight: 600; margin: 4px 0 12px; }
+.camera.sem-guia .camera__guide { display: none; }   /* depois de "Estou pronta!" o quadrado some para a criança se ver melhor */
 .mirror__hint--aviso { background: #fff7e0; border: 2px solid #ffc93c; color: #6b4a00; border-radius: 16px; padding: 10px 14px; }
 
 .btn-record {
@@ -1436,11 +1437,13 @@ html.lt-on .page { padding-bottom: 55vh; }
   function resetPronta() {
     btnReady.hidden = false;
     btnRecord.hidden = true;
+    camera.classList.remove("sem-guia");
     avisoEnquadro.innerHTML = AVISO_1;
   }
   btnReady.addEventListener("click", () => {
     btnReady.hidden = true;
     btnRecord.hidden = false;
+    camera.classList.add("sem-guia");
     avisoEnquadro.innerHTML = AVISO_2;
     try { btnRecord.focus({ preventScroll: true }); } catch (e) {}
   });
