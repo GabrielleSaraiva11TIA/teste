@@ -2391,17 +2391,17 @@ body{
 
 /* ---------- tela 1: QR ---------- */
 .qr-head{display:flex;justify-content:space-between;align-items:flex-start;gap:calc(var(--u)*1)}
-.qr-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;justify-items:center;gap:calc(var(--u)*1.5);min-height:0}
+.qr-body{display:grid;grid-template-columns:auto auto;justify-content:center;align-items:center;justify-items:center;gap:calc(var(--u)*2.2);min-height:0}
 .qr-col{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.6);min-height:0}
 .qr-frame{
-  width:calc(var(--u)*11.5);height:calc(var(--u)*11.5);max-height:100%;aspect-ratio:1;
-  background:#fff;border-radius:calc(var(--u)*1.1);padding:calc(var(--u)*.9);
+  width:calc(var(--u)*18.5);height:calc(var(--u)*18.5);max-height:100%;aspect-ratio:1;   /* QR é o principal da tela: grande */
+  background:#fff;border-radius:calc(var(--u)*1.3);padding:calc(var(--u)*1);
   box-shadow:0 0 calc(var(--u)*2.2) rgba(47,99,238,.32), 0 0 0 1px rgba(47,99,238,.08);
 }
 #qrSlot{width:100%;height:100%;display:grid;place-items:center}
 #qrSlot svg,#qrSlot img,#qrSlot canvas{width:100%;height:100%;display:block}
 .qr-dev{font-size:calc(var(--u)*.6);color:var(--ink-mute);text-decoration:underline;font-weight:600}
-.steps{display:flex;flex-direction:column;gap:calc(var(--u)*.7);width:min(100%,calc(var(--u)*17))}
+.steps{display:flex;flex-direction:column;gap:calc(var(--u)*.7);width:min(100%,calc(var(--u)*15))}
 .step{
   display:flex;align-items:center;gap:calc(var(--u)*.8);
   background:#eef3ff;border-radius:calc(var(--u)*1);padding:calc(var(--u)*.8) calc(var(--u)*.9);
@@ -2507,8 +2507,8 @@ body{
   .screen{height:auto;min-height:100dvh}
   .card{padding:calc(var(--u)*1.2)}
   .qr-head{flex-direction:column}
-  .qr-body,.l-body{grid-template-columns:1fr}
-  .qr-frame{width:calc(var(--u)*14);height:calc(var(--u)*14)}
+  .qr-body,.l-body{grid-template-columns:1fr;justify-content:stretch}
+  .qr-frame{width:min(calc(var(--u)*23),72vw);height:min(calc(var(--u)*23),72vw);max-height:none}
   .flow{transform:rotate(90deg)}
   .stepper{grid-template-columns:1fr;justify-items:start}
   .stepper .line{display:none}
