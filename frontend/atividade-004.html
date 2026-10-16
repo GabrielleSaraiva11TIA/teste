@@ -270,6 +270,7 @@ button:disabled { cursor: not-allowed; }
 .meter__bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #36c6ff, #0b4fd1); transition: width .12s linear; }
 
 .mirror__hint { text-align: center; font-weight: 600; margin: 4px 0 12px; }
+.mirror__hint--aviso { background: #fff7e0; border: 2px solid #ffc93c; color: #6b4a00; border-radius: 16px; padding: 10px 14px; }
 
 .btn-record {
   display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 auto;
@@ -618,7 +619,7 @@ html.lt-on .page { padding-bottom: 55vh; }
           <span class="chip" id="chipMic">🎙️ <span id="chipMicText">Microfone Ativo</span>
             <span class="level" id="micLevel" aria-hidden="true"><i></i><i></i><i></i></span>
           </span>
-          <span class="chip" id="chipFrame">🔲 <span id="chipFrameText">Enquadramento OK</span></span>
+          <span class="chip" id="chipFrame">🔲 <span id="chipFrameText">Encaixe a boca no quadrado</span></span>
           <span class="chip chip--right">↻ Feedback Háptico Pronto</span>
         </div>
 
@@ -632,7 +633,7 @@ html.lt-on .page { padding-bottom: 55vh; }
             <button class="btn-soft" id="btnAllow" type="button" hidden>Permitir câmera e microfone</button>
           </div>
 
-          <div class="camera__guide" id="guideBox" aria-hidden="true"><span>Desafie seu sorriso aqui</span></div>
+          <div class="camera__guide" id="guideBox" aria-hidden="true"><span>Encaixe sua boca aqui</span></div>
 
           <div class="meter" id="meter">
             <span class="meter__icon">
@@ -648,11 +649,11 @@ html.lt-on .page { padding-bottom: 55vh; }
           </div>
         </div>
 
-        <p class="mirror__hint">Faça o som do ventinho quando estiver pronto! Lembre do sorriso do Lumis. 🍃</p>
+        <p class="mirror__hint mirror__hint--aviso" id="avisoEnquadro">📍 Encaixe a boca dentro do quadrado tracejado. Quando estiver no lugar, toque em <b>“Estou pronta!”</b> e faça o Sssss. 🍃</p>
 
         <button class="btn-record" id="btnRecord" type="button">
           <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="6.5" cy="9.5" rx="2" ry="2.6"/><ellipse cx="12" cy="6.5" rx="2" ry="2.8"/><ellipse cx="17.5" cy="9.5" rx="2" ry="2.6"/><path d="M12 11c-3 0-5.5 3.2-5.5 5.4 0 1.6 1.2 2.6 2.7 2.6 1 0 1.8-.5 2.8-.5s1.8.5 2.8.5c1.5 0 2.7-1 2.7-2.6C17.5 14.2 15 11 12 11Z"/></svg>
-          <span>Gravar Minha Tentativa</span>
+          <span>Estou pronta!</span>
           <span class="btn-record__wave" id="recWave" hidden>〰</span>
         </button>
 
@@ -728,7 +729,7 @@ html.lt-on .page { padding-bottom: 55vh; }
 /* =====================================================
    Lumis • Atividade 4 — Espelho do Lumis
    Etapa 1: Primeiro o Lumis (vídeo + pista tátil)
-   Etapa 2: Agora Você! (câmera + microfone + "Gravar Minha Tentativa")
+   Etapa 2: Agora Você! (câmera + microfone + botão "Estou pronta!")
    Etapa 3: Feedback Carinhoso (acertou / tentar de novo)
 
    PRIVACIDADE: a câmera serve só de "espelho" e o microfone só é
@@ -1301,7 +1302,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   let frameHint = "", frameHist = [], lastFrameCheck = 0;
 
   // só dá para exigir o enquadramento se o detector estiver pronto (ou no modo de teste)
-  const framingKnown = () => (DEMO ? true : lmState === "ready" && hasCam);
+  const framingKnown = () => false;   // enquadramento manual (sem detector de rosto)
 
   async function loadFaceLandmarker() {
     if (landmarker || lmState === "loading") return;
@@ -1418,20 +1419,10 @@ html.lt-on .page { padding-bottom: 55vh; }
   }
 
   function paintFraming() {
-    let text, warn = false;
-    if (DEMO) { text = frameOk ? "Enquadramento OK" : frameHint; warn = !frameOk; }
-    else if (!hasCam) { text = "Aguardando câmera"; warn = true; }
-    else if (lmState === "failed") { text = "Enquadramento: não consegui conferir"; warn = true; }
-    else if (lmState !== "ready") { text = "Enquadramento: carregando..."; }
-    else if (frameOk === true) { text = "Enquadramento OK"; }
-    else { text = frameHint || "Procurando seu rostinho..."; warn = frameOk === false; }
-
-    if (DEBUG && detMs && lmState === "ready") text += " · " + Math.round(detMs) + " ms";
-    chipFrameText.textContent = text;
-    chipFrame.classList.toggle("is-off", warn);
-    const known = framingKnown();
-    camera.classList.toggle("is-framed", known && frameOk === true);
-    camera.classList.toggle("is-misframed", known && frameOk === false);
+    // enquadramento manual: só mostra o aviso fixo; quem confere é a criança (com ajuda de um adulto)
+    chipFrameText.textContent = "Encaixe a boca no quadrado";
+    chipFrame.classList.remove("is-off");
+    camera.classList.remove("is-framed", "is-misframed");
   }
 
   function enterMirror() {
@@ -1442,7 +1433,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     updateMediaUI();
     startLoop();
     ensureMedia();
-    if (!DEMO) loadFaceLandmarker();
+    // enquadramento manual: a criança encaixa a boca no quadrado e toca em "Estou pronta!" (sem detector de rosto)
   }
 
   function leaveMirror() {
@@ -1528,7 +1519,7 @@ html.lt-on .page { padding-bottom: 55vh; }
       finish(true);
     } else if (elapsed >= CONFIG.LISTEN_MS) {
       // houve "sssss" suficiente, mas a boca não estava no quadrado -> o problema foi o enquadramento
-      finish(false, soundMs >= CONFIG.SUCCESS_HIT_MS * 0.7 ? "frame" : "sound");
+      finish(false, "sound");
     }
   }
 
