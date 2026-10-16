@@ -649,11 +649,16 @@ html.lt-on .page { padding-bottom: 55vh; }
           </div>
         </div>
 
-        <p class="mirror__hint mirror__hint--aviso" id="avisoEnquadro">📍 Encaixe a boca dentro do quadrado tracejado. Quando estiver no lugar, toque em <b>“Estou pronta!”</b> e faça o Sssss. 🍃</p>
+        <p class="mirror__hint mirror__hint--aviso" id="avisoEnquadro">📍 Encaixe a boca dentro do quadrado tracejado. Quando estiver no lugar, toque em <b>“Estou pronta!”</b>. 🍃</p>
 
-        <button class="btn-record" id="btnRecord" type="button">
+        <button class="btn-record" id="btnReady" type="button">
           <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="6.5" cy="9.5" rx="2" ry="2.6"/><ellipse cx="12" cy="6.5" rx="2" ry="2.8"/><ellipse cx="17.5" cy="9.5" rx="2" ry="2.6"/><path d="M12 11c-3 0-5.5 3.2-5.5 5.4 0 1.6 1.2 2.6 2.7 2.6 1 0 1.8-.5 2.8-.5s1.8.5 2.8.5c1.5 0 2.7-1 2.7-2.6C17.5 14.2 15 11 12 11Z"/></svg>
           <span>Estou pronta!</span>
+        </button>
+
+        <button class="btn-record" id="btnRecord" hidden type="button">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="6.5" cy="9.5" rx="2" ry="2.6"/><ellipse cx="12" cy="6.5" rx="2" ry="2.8"/><ellipse cx="17.5" cy="9.5" rx="2" ry="2.6"/><path d="M12 11c-3 0-5.5 3.2-5.5 5.4 0 1.6 1.2 2.6 2.7 2.6 1 0 1.8-.5 2.8-.5s1.8.5 2.8.5c1.5 0 2.7-1 2.7-2.6C17.5 14.2 15 11 12 11Z"/></svg>
+          <span>Tentar falar o Sssss!</span>
           <span class="btn-record__wave" id="recWave" hidden>〰</span>
         </button>
 
@@ -846,7 +851,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   const chipMic = $("chipMic"), chipMicText = $("chipMicText"), chipFrame = $("chipFrame"), chipFrameText = $("chipFrameText");
   const micLevel = $("micLevel").querySelectorAll("i");
   const meterText = $("meterText"), meterFill = $("meterFill");
-  const btnRecord = $("btnRecord"), recWave = $("recWave"), recBar = $("recBar"), recFill = $("recFill"), recText = $("recText");
+  const btnReady = $("btnReady"), avisoEnquadro = $("avisoEnquadro"), btnRecord = $("btnRecord"), recWave = $("recWave"), recBar = $("recBar"), recFill = $("recFill"), recText = $("recText");
   const btnReview = $("btnReview"), coachImg = $("coachImg");
 
   // etapa 3
@@ -1425,7 +1430,23 @@ html.lt-on .page { padding-bottom: 55vh; }
     camera.classList.remove("is-framed", "is-misframed");
   }
 
+  // passo 1: "Estou pronta!" (boca no quadrado)  ->  passo 2: botão "Tentar falar o Sssss!"
+  const AVISO_1 = "📍 Encaixe a boca dentro do quadrado tracejado. Quando estiver no lugar, toque em <b>“Estou pronta!”</b>. 🍃";
+  const AVISO_2 = "👏 Muito bem! Agora toque em <b>“Tentar falar o Sssss!”</b> e faça o ventinho. 🍃";
+  function resetPronta() {
+    btnReady.hidden = false;
+    btnRecord.hidden = true;
+    avisoEnquadro.innerHTML = AVISO_1;
+  }
+  btnReady.addEventListener("click", () => {
+    btnReady.hidden = true;
+    btnRecord.hidden = false;
+    avisoEnquadro.innerHTML = AVISO_2;
+    try { btnRecord.focus({ preventScroll: true }); } catch (e) {}
+  });
+
   function enterMirror() {
+    resetPronta();
     resetMeter();
     recText.textContent = "";
     recText.classList.remove("is-warn");
