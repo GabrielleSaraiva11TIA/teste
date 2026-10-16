@@ -763,7 +763,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     FRAME_PAD: 0.10,              // folga ao redor do quadrado (10% do tamanho dele)
     MOUTH_MIN: 0.28,              // boca menor que isso (vs. largura do quadrado) = longe demais
     MOUTH_MAX: 1.0,               // boca maior que isso = perto demais
-    FRAME_EVERY_MS: 100,          // confere o enquadramento 10x por segundo
+    FRAME_EVERY_MS: 250,          // confere 4x por segundo para reduzir a carga no Raspberry Pi 3
   };
   // ajustes feitos no painel de teste (?debug=1) ficam guardados neste aparelho
   const CFG_KEY = "lumis_mic_cfg";
@@ -818,12 +818,10 @@ html.lt-on .page { padding-bottom: 55vh; }
   };
 
   const params  = new URLSearchParams(location.search);
-  // TESTE DE DESEMPENHO (Raspberry): câmera na MENOR resolução e detector olhando uma imagem minúscula.
-  // Mude pela URL, ex.: ?cam=320x240  (padrão 160x120). Se o Pi aguentar, vá subindo.
-  const CAM_RES = (params.get("cam") || "160x120").split("x").map(Number);
-  const CAM_W = CAM_RES[0] || 160, CAM_H = CAM_RES[1] || 120;
-  const DET_W = Math.min(CAM_W, 192), DET_H = Math.round(DET_W * CAM_H / CAM_W);   // imagem entregue ao detector
-  let detMs = 0, detEvery = 0;       // tempo médio de cada detecção e intervalo atual (aparecem no painel ?debug=1)
+  // Resolução da câmera (padrão 640x480). Para testar outra pela URL, ex.: ?cam=320x240
+  const CAM_RES = (params.get("cam") || "640x480").split("x").map(Number);
+  const CAM_W = CAM_RES[0] || 640, CAM_H = CAM_RES[1] || 480;
+    let detMs = 0, detEvery = 0;       // tempo médio de cada detecção e intervalo atual (aparecem no painel ?debug=1)
   const DEMO    = params.get("demo");              // "ok" | "erro" | null
   const PREVIEW = params.has("preview");
 
@@ -1003,7 +1001,8 @@ html.lt-on .page { padding-bottom: 55vh; }
     // ruído/eco desligados: senão o navegador "limpa" o sssss achando que é barulho
     const audio = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
     const tries = [
-      { audio, video: { facingMode: "user", width: { ideal: CAM_W, max: 320 }, height: { ideal: CAM_H, max: 240 }, frameRate: { ideal: 15, max: 15 } } },
+      { audio, // Resolução moderada para não sobrecarregar o Raspberry Pi 3 (1 GB RAM).
+      video: { facingMode: "user", width: { ideal: CAM_W }, height: { ideal: CAM_H }, frameRate: { ideal: 15, max: 20 } } },
       { audio },
       { video: { facingMode: "user" } },
     ];
@@ -1211,7 +1210,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     const kk = hiStart / 4000;
     pVal.innerHTML =
       "em uso: " + (atual ? atual.label.replace(/[<>&]/g, "") : "-") + "\n" +
-      "câmera pedida " + CAM_W + "x" + CAM_H + " · real " + (camVideo.videoWidth || "-") + "x" + (camVideo.videoHeight || "-") + " · detector " + DET_W + "x" + DET_H + "\n" +
+      "câmera pedida " + CAM_W + "x" + CAM_H + " · real " + (camVideo.videoWidth || "-") + "x" + (camVideo.videoHeight || "-") + "\n" +
       "detecção " + Math.round(detMs) + " ms · confere a cada " + (detEvery || CONFIG.FRAME_EVERY_MS) + " ms\n" +
       "amostragem " + getCtx().sampleRate + " Hz · banda até " + bandTop + " Hz\n" +
       "agudos " + m.hiDb.toFixed(1) + " dB · fundo " + (ambientDb === null ? "-" : ambientDb.toFixed(1)) + " dB\n" +
@@ -1296,7 +1295,6 @@ html.lt-on .page { padding-bottom: 55vh; }
   //  Usa o MediaPipe Face Landmarker: acha os pontos dos lábios no vídeo
   //  e confere se todos cabem dentro do quadrado tracejado.
   // =====================================================
-  let detCanvas = null, detCtx = null;
   let lmState = "idle";                 // idle | loading | ready | failed
   let landmarker = null, lipIdx = null;
   let frameOk = null;                   // null = ainda não sei | true | false
@@ -1312,16 +1310,23 @@ html.lt-on .page { padding-bottom: 55vh; }
     try {
       const { FaceLandmarker, FilesetResolver } = await import(MEDIAPIPE.LIB + "/vision_bundle.mjs");
       const fileset = await FilesetResolver.forVisionTasks(MEDIAPIPE.LIB + "/wasm");
-      const make = (delegate) => FaceLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: MEDIAPIPE.MODEL, delegate },
+      // CPU é mais estável em alguns navegadores/driver gráficos do Raspberry Pi 3.
+      // Evita iniciar o delegate GPU, que pode abortar o módulo WASM em certos sistemas.
+      landmarker = await FaceLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: MEDIAPIPE.MODEL, delegate: "CPU" },
         runningMode: "VIDEO",
         numFaces: 1,
+        minFaceDetectionConfidence: 0.5,
+        minFacePresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5,
       });
-      landmarker = await make("CPU");
       lipIdx = [...new Set(FaceLandmarker.FACE_LANDMARKS_LIPS.flatMap((c) => [c.start, c.end]))];
       lmState = "ready";
     } catch (e) {
-      lmState = "failed";               // sem internet / bloqueado: a atividade segue sem exigir o enquadramento
+      console.warn("Lumis: detector facial indisponível; a atividade continuará sem verificar o enquadramento.", e);
+      landmarker = null;
+      lipIdx = null;
+      lmState = "failed";               // a atividade segue sem exigir o enquadramento
     }
     paintFraming();
   }
@@ -1374,9 +1379,19 @@ html.lt-on .page { padding-bottom: 55vh; }
     let res;
     const t0 = performance.now();
     try {
-      if (!detCanvas) { detCanvas = document.createElement("canvas"); detCanvas.width = DET_W; detCanvas.height = DET_H; detCtx = detCanvas.getContext("2d", { willReadFrequently: false }); }
-      detCtx.drawImage(camVideo, 0, 0, DET_W, DET_H);
-      res = landmarker.detectForVideo(detCanvas, now); } catch (e) { console.warn("detectForVideo falhou", e); frameHint = "Erro do detector: " + String((e && e.message) || e).slice(0, 70); paintFraming(); return; }
+      res = landmarker.detectForVideo(camVideo, now);
+    } catch (e) {
+      // Se o WASM abortar, desliga apenas o detector; câmera, microfone e atividade continuam disponíveis.
+      console.warn("Lumis: falha durante a detecção facial; continuando sem enquadramento automático.", e);
+      try { landmarker.close(); } catch (_) {}
+      landmarker = null;
+      lipIdx = null;
+      lmState = "failed";
+      frameOk = null;
+      frameHint = "";
+      paintFraming();
+      return;
+    }
     const dur = performance.now() - t0;
     detMs = detMs ? detMs * 0.7 + dur * 0.3 : dur;
     detEvery = Math.max(CONFIG.FRAME_EVERY_MS, Math.round(detMs * 2));   // no Pi lento: confere mais devagar, sem travar a tela
