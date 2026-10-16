@@ -2342,14 +2342,14 @@ body{
 }
 .screen{
   height:100dvh; width:100%;
-  display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr);
+  display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr);
   gap:calc(var(--u)*.8);
   padding:calc(var(--u)*1) calc(var(--u)*1.2) calc(var(--u)*1.2);
   padding-top:max(calc(var(--u)*1), env(safe-area-inset-top));
 }
 
 /* ---------- barra superior ---------- */
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--u)*.8)}
+.topbar{display:none}   /* barra LUMIS / VIBROTÁTIL / wifi removida (o elemento fica no HTML só porque o script usa o #wifi) */
 .pill{
   display:inline-flex;align-items:center;gap:calc(var(--u)*.5);
   height:calc(var(--u)*2.1);padding:0 calc(var(--u)*.9);border-radius:999px;
@@ -2498,6 +2498,22 @@ body{
   font-size:calc(var(--u)*.7);font-weight:700;color:#12306e;text-align:center;
 }
 .banner svg{width:calc(var(--u)*.8);height:calc(var(--u)*.8);color:var(--blue);flex:none}
+
+/* ---------- tela do QR: textos maiores (o QR Code não muda) ---------- */
+#viewQR .h-title{font-size:calc(var(--u)*1.5)}
+#viewQR .h-sub{font-size:calc(var(--u)*1.0)}
+#viewQR .btn-soft{height:calc(var(--u)*2.6);font-size:calc(var(--u)*.95);padding:0 calc(var(--u)*1.1)}
+#viewQR .btn-soft svg{width:calc(var(--u)*1.1);height:calc(var(--u)*1.1)}
+#viewQR .qr-dev{font-size:calc(var(--u)*.8)}
+#viewQR .steps{width:min(100%,calc(var(--u)*18))}
+#viewQR .step b{font-size:calc(var(--u)*1.05)}
+#viewQR .step span{font-size:calc(var(--u)*.88)}
+#viewQR .step .ic{width:calc(var(--u)*2.5);height:calc(var(--u)*2.5)}
+#viewQR .hint-pink{font-size:calc(var(--u)*.9)}
+#viewQR .hint-pink svg{width:calc(var(--u)*1);height:calc(var(--u)*1)}
+#viewQR .waiting{font-size:calc(var(--u)*.92)}
+#viewQR .code-wrap{font-size:calc(var(--u)*.9)}
+#viewQR .code{font-size:calc(var(--u)*1.05)}
 
 :focus-visible{outline:3px solid #7fb0ff;outline-offset:3px}
 
