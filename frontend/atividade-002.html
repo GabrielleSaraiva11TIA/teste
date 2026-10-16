@@ -397,9 +397,10 @@ html.lt-on .app { padding-bottom: 55vh; }
         </div>
       </div>
 
-      <!-- Só aparece se o rosto não for detectado automaticamente -->
+      <!-- Enquadramento manual: a criança encaixa o rosto no círculo -> "Estou pronta!" -> "Ir para a tentativa" -->
       <div class="actions" id="mirrorActions" hidden>
-        <button class="btn" id="btnManualFrame">Já estou no lugar</button>
+        <button class="btn primary" id="btnManualFrame">Estou pronta!</button>
+        <button class="btn primary" id="btnTry" hidden>Ir para a tentativa →</button>
       </div>
 
       <div class="privacy">
@@ -617,41 +618,6 @@ let detector = null;                 // async (video) => {x,y,width,height} | nu
 let detectorState = 'loading';       // loading | ready | unavailable
 let framed = false, okStreak = 0, lostSince = 0, framingTimer = null, manualTimer = null, flashTimer = null;
 
-async function initDetector(){
-  const F = CONFIG.framing;
-  // 0) detector próprio (se informado)
-  if (typeof CONFIG.customDetector === 'function'){ detector = CONFIG.customDetector; detectorState = 'ready'; return; }
-  // 1) FaceDetector nativo do navegador (offline), se funcionar
-  try{
-    if ('FaceDetector' in window){
-      const fd = new FaceDetector({ fastMode:true, maxDetectedFaces:1 });
-      const probe = document.createElement('canvas'); probe.width = probe.height = 32;
-      await fd.detect(probe);                       // lança erro se a plataforma não suportar
-      detector = async v => { const r = await fd.detect(v); return r[0] ? r[0].boundingBox : null; };
-      detectorState = 'ready'; return;
-    }
-  }catch(e){ /* tenta o próximo */ }
-  // 2) MediaPipe Face Detector (baixado em tempo de execução)
-  try{
-    const mod = await import(CONFIG.mediapipe.bundle);
-    const vision = await mod.FilesetResolver.forVisionTasks(CONFIG.mediapipe.wasm);
-    const make = delegate => mod.FaceDetector.createFromOptions(vision, {
-      baseOptions:{ modelAssetPath: CONFIG.mediapipe.model, delegate },
-      runningMode:'VIDEO', minDetectionConfidence:0.5
-    });
-    let fd; try{ fd = await make('GPU'); }catch(e){ fd = await make('CPU'); }
-    detector = async v => {
-      const d = fd.detectForVideo(v, performance.now()).detections[0];
-      if (!d) return null;
-      const b = d.boundingBox; return { x:b.originX, y:b.originY, width:b.width, height:b.height };
-    };
-    detectorState = 'ready';
-  }catch(e){
-    detectorState = 'unavailable';
-    if (phase === 'mirror' && camStream) $('mirrorActions').hidden = false;
-  }
-}
-
 function setHint(text, kind){
   mHint.textContent = text;
   mHint.classList.toggle('warn', kind === 'warn');
@@ -662,105 +628,37 @@ function setStage(state){                    // none | adjust | ok
   mStage.classList.toggle('s-ok', state === 'ok');
 }
 
-// Converte a caixa do rosto (pixels do vídeo) para o espaço do palco (espelhado, object-fit: cover)
-// e compara com o círculo do desenho.
-function evaluateFace(box){
-  if (!box) return { state:'none' };
-  const F = CONFIG.framing;
-  const sr = mStage.getBoundingClientRect(), gr = ring.getBoundingClientRect();
-  const vw = cam.videoWidth, vh = cam.videoHeight;
-  const sc = Math.max(sr.width / vw, sr.height / vh);
-  const dx = (sr.width - vw * sc) / 2, dy = (sr.height - vh * sc) / 2;
-  const cx = sr.width - ((box.x + box.width / 2) * sc + dx);     // espelhado
-  const cy = (box.y + box.height / 2) * sc + dy;
-  const R = gr.width / 2, gx = gr.left - sr.left + R, gy = gr.top - sr.top + gr.height / 2;
-  const nx = (cx - gx) / R, ny = (cy - gy) / R, size = (box.height * sc) / (2 * R);
-  if (size < F.minSize) return { state:'far' };
-  if (size > F.maxSize) return { state:'near' };
-  if (Math.hypot(nx, ny) > F.maxOffset){
-    if (Math.abs(nx) >= Math.abs(ny)) return { state:'off', dir: nx < 0 ? 'right' : 'left' };
-    return { state:'off', dir: ny < 0 ? 'down' : 'up' };
-  }
-  return { state:'ok' };
-}
-const OFF_TEXT = { left:'← Mova para a esquerda', right:'Mova para a direita →', up:'↑ Mova para cima', down:'Mova para baixo ↓' };
-
-function showFramed(manual){
-  framed = true; okStreak = 0; lostSince = 0;
-  mStage.classList.add('framed');                   // o desenho some
-  setStage('ok'); setHint(HINT_DEFAULT, 'ok');
-  setTimeout(() => setHint(HINT_DEFAULT), 2500);
-  const f = $('okFlash'); f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop');
-  $('mirrorActions').hidden = true;
-  clearTimeout(manualTimer);
-  // Feedback sem nota: só incentivo depois de um tempo tentando com o rosto enquadrado.
-  clearTimeout(reflectionTimer);
-  reflectionTimer = setTimeout(()=>{
-    if (phase !== 'mirror') return;
-    setFeedback('😊','Muito bem! Você está tentando com bastante atenção! 🌟',
-                'Cada repetição no seu ritmo ajuda o Lumis a entender seu jeitinho.', true);
-    comemorarAcerto();
-  }, CONFIG.reflectionSeconds * 1000);
-}
-function showGuideAgain(){
-  framed = false; okStreak = 0; lostSince = 0;
-  mStage.classList.remove('framed');
-  setStage('none'); setHint('Coloque o rosto dentro do desenho', 'warn');
-}
-
-function handleFace(res){
-  const F = CONFIG.framing, now = performance.now();
-  if (res.state === 'ok'){
-    lostSince = 0; okStreak++;
-    if (!framed){
-      if (okStreak >= F.holdFrames) showFramed(false);
-      else { setStage('ok'); setHint('Muito bem! Fique assim', 'ok'); }
-    }
-    return;
-  }
-  okStreak = 0;
-  if (framed){                                       // já enquadrado: só volta o desenho se sair por muito tempo
-    if (!lostSince) lostSince = now;
-    if (now - lostSince > F.lostMs) showGuideAgain();
-    return;
-  }
-  if (res.state === 'none'){ setStage('none'); setHint('Coloque o rosto dentro do desenho', 'warn'); }
-  else if (res.state === 'far'){ setStage('adjust'); setHint('Chegue um pouquinho mais perto', 'warn'); }
-  else if (res.state === 'near'){ setStage('adjust'); setHint('Afaste um pouquinho', 'warn'); }
-  else { setStage('adjust'); setHint(OFF_TEXT[res.dir], 'warn'); }
-}
-
-async function framingLoop(){
-  if (phase !== 'mirror' || !camStream) return;
-  if (detectorState === 'ready'){
-    if (cam.readyState >= 2 && cam.videoWidth){
-      try{ handleFace(evaluateFace(await detector(cam))); }
-      catch(e){ detectorState = 'unavailable'; }
-    }
-  } else if (detectorState === 'loading'){
-    if (!framed) setHint('Preparando o espelho...');
-  }
-  if (detectorState === 'unavailable' && !framed){
-    setStage('none'); setHint('Posicione o rosto dentro do desenho', 'warn');
-    $('mirrorActions').hidden = false;
-  }
-  framingTimer = setTimeout(framingLoop, framed ? 300 : 140);
-}
-
+/* Enquadramento MANUAL (sem detector de rosto e sem acerto automático):
+   1) a criança encaixa o rosto no círculo e toca em "Estou pronta!" (o círculo some para ela se ver melhor)
+   2) aparece "Ir para a tentativa" -> ela faz o movimento -> toca em "Terminei!" para continuar */
+const HINT_ENQUADRAR = 'Encaixe o rosto dentro do círculo e toque em “Estou pronta!”';
 function startFraming(){
   resetFraming();
-  setHint('Coloque o rosto dentro do desenho', 'warn');
-  framingLoop();
-  manualTimer = setTimeout(()=>{ if (!framed && phase === 'mirror') $('mirrorActions').hidden = false; }, CONFIG.framing.manualAfterMs);
+  setHint(HINT_ENQUADRAR);
+  $('mirrorActions').hidden = false;
 }
 function resetFraming(){
-  clearTimeout(framingTimer); clearTimeout(manualTimer);
-  framed = false; okStreak = 0; lostSince = 0;
+  framed = false;
   mStage.classList.remove('framed','s-adjust','s-ok');
   $('mirrorActions').hidden = true;
+  $('btnManualFrame').hidden = false; $('btnTry').hidden = true;
   setHint(HINT_DEFAULT);
 }
-$('btnManualFrame').addEventListener('click', ()=>showFramed(true));
+$('btnManualFrame').addEventListener('click', ()=>{
+  framed = true;
+  mStage.classList.add('framed');                   // o círculo some para a criança se ver melhor
+  $('btnManualFrame').hidden = true; $('btnTry').hidden = false;
+  setHint('Muito bem! Agora toque em “Ir para a tentativa”', 'ok');
+  const f = $('okFlash'); f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop');
+  try { $('btnTry').focus({ preventScroll: true }); } catch (e) {}
+});
+$('btnTry').addEventListener('click', ()=>{
+  $('mirrorActions').hidden = true;
+  setHint(HINT_DEFAULT);
+  setFeedback('😊','Agora é a sua vez!','Faça o movimento do Sss... bem devagar, no seu ritmo. Quando terminar, toque em “Terminei!”.', true);
+  $('btnNext').textContent = 'Terminei! Vamos continuar →';
+  $('btnNext').hidden = false;
+});
 
 /* ---------- Fases ---------- */
 function goObserve(){
@@ -783,12 +681,12 @@ async function goMirror(){
   $('panelMirror').classList.remove('dim'); $('panelMirror').classList.add('focus');
   $('panelDemo').classList.remove('focus');
   $('instructionText').textContent = 'Agora é a sua vez! Olhe a sua boca no espelho e faça igualzinho.';
-  $('btnNext').hidden = true;      // só aparece depois que a criança acerta (comemoração)
-  setFeedback('👀','Olhe a sua boquinha no espelho.','Faça o movimento devagar, no seu ritmo.', false);
+  $('btnNext').hidden = true;      // só aparece depois que a criança toca em “Ir para a tentativa”
+  setFeedback('👀','Encaixe o seu rosto no círculo.','Quando estiver no lugar, toque em “Estou pronta!”.', false);
   $('camPlaceholder').classList.add('hidden');      // o aviso some assim que o Passo 2 começa
   clearTimeout(reflectionTimer);
   if (await openCamera()){
-    if (phase === 'mirror') startFraming();   // a comemoração e o botão "continuar" aparecem depois de enquadrar
+    if (phase === 'mirror') startFraming();   // a criança se encaixa no círculo e toca em “Estou pronta!”
   } else if (phase === 'mirror'){
     $('btnNext').textContent = 'Muito bem! Vamos continuar →'; $('btnNext').hidden = false;   // sem câmera: pode seguir mesmo assim
   }
@@ -825,19 +723,15 @@ function somSucesso(){
     });
   }catch(e){}
 }
-// acertou o exercício: comemora e libera o botão "Vamos continuar"
-function comemorarAcerto(){
+// Não há acerto automático: o progresso só é registrado quando a criança toca em "Terminei!"
+function registrarConclusao(){
   if(!window.__regA2){ window.__regA2=1; try{lumisReg('acerto')}catch(e){} }
-  confete(); somSucesso();
-  vibrarPulseira("comemorar");
-  $('btnNext').textContent = 'Muito bem! Vamos continuar →';
-  $('btnNext').hidden = false;
 }
 
 /* ---------- Eventos ---------- */
 $('btnNext').addEventListener('click', ()=>{
   if (phase === 'observe') goMirror();
-  else { closeCamera(); CONFIG.onContinue(); }
+  else { registrarConclusao(); closeCamera(); CONFIG.onContinue(); }
 });
 $('btnReplay').addEventListener('click', playDemo);
 demo.addEventListener('click', playDemo);    // tocar no vídeo também faz ele rodar
@@ -851,7 +745,6 @@ window.addEventListener('pagehide', closeCamera);
 /* ---------- Início ---------- */
 if (CONFIG.videoSrc) loadDemo(CONFIG.videoSrc);
 playDemo();
-initDetector();               // carrega o detector de rosto enquanto a criança assiste à demonstração
 </script>
 <!-- ============================================================
      TUTORIAL GUIADO — elementos (ficam escondidos até o tutorial começar)
@@ -915,7 +808,7 @@ initDetector();               // carrega o detector de rosto enquanto a criança
       text: 'Toque em “Repetir movimento” para ver o vídeo outra vez. Toque em “Sentir na pulseira” para sentir o Sss vibrando no pulso.' },
     { sels: ['#panelMirror'], pref: ['left', 'bottom', 'top', 'right'], align: 'center', r: 24,
       title: 'Seu espelho mágico',
-      text: 'Aqui você vai se ver ao vivo para fazer o movimento igualzinho. Ele abre no Passo 2 e a câmera funciona só como espelho: nada é gravado.' },
+      text: 'Aqui você vai se ver ao vivo. No Passo 2, encaixe o rosto no círculo e toque em “Estou pronta!”. Depois, toque em “Ir para a tentativa” e faça o movimento. A câmera funciona só como espelho: nada é gravado.' },
     { sels: ['.footer .left'], pref: ['top', 'right', 'bottom'], align: 'center', r: 24,
       title: 'Mais botões',
       text: 'A setinha ↻ volta ao Passo 1 e mostra o vídeo de novo. “Testar vibração na pulseira” faz a pulseira vibrar para você conferir.' },
