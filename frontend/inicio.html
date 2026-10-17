@@ -2872,11 +2872,6 @@ body{
   }
 
   /* ===== Botões ===== */
-  $("testBtn").addEventListener("click", function(){
-    buzz([120, 70, 120]);
-    var b = $("testBtn"); b.classList.add("done"); $("testTxt").textContent = "Toque enviado!";
-    setTimeout(function(){ b.classList.remove("done"); $("testTxt").textContent = "Testar toque"; }, 1600);
-  });
   $("novoQrBtn").addEventListener("click", function(){
     if (concluido) return;
     clearTimeout(pollTimer); store(KEY_PAR, null);
