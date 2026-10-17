@@ -46,8 +46,7 @@ button:disabled { cursor: not-allowed; }
 .topbar {
   display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
   padding: 10px 18px;
-  background: rgba(255,255,255,.85);
-  backdrop-filter: blur(6px);
+  background: rgba(255,255,255,.97);
   border-bottom: 1px solid #dbe5fa;
   position: sticky; top: 0; z-index: 10;
 }
@@ -397,7 +396,6 @@ html.lt-on .page { padding-bottom: 55vh; }
 .lt-spot::after {
   content: ""; position: absolute; inset: -4px; border-radius: inherit;
   border: 3px solid #fff;
-  animation: lt-pulse 1.7s ease-in-out infinite;
 }
 @keyframes lt-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.02); } }
 
@@ -452,7 +450,7 @@ html.lt-on .page { padding-bottom: 55vh; }
 }
 
 .lt-arrow { position: absolute; width: 24px; height: 24px; pointer-events: none; }
-.lt-arrow svg { width: 24px; height: 24px; display: block; animation: lt-nudge 1s ease-in-out infinite; filter: drop-shadow(0 2px 3px rgba(8,16,60,.35)); }
+.lt-arrow svg { width: 24px; height: 24px; display: block; animation: lt-nudge 1s ease-in-out infinite; }
 @keyframes lt-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 .lt-tip.pl-bottom .lt-arrow { top: -29px; transform: none; }
 .lt-tip.pl-top .lt-arrow { bottom: -29px; transform: rotate(180deg); }
@@ -587,7 +585,7 @@ html.lt-on .page { padding-bottom: 55vh; }
              O JavaScript percebe sozinho, mostra o vídeo e esconde o desenho de "ventinho".
              Dica: use  poster="assets/capa-video.jpg"  para a imagem de capa. -->
         <div class="demo" id="demo">
-          <video class="demo__video" id="demoVideo" playsinline preload="auto" aria-label="Boca fazendo o som Sssss">
+          <video class="demo__video" id="demoVideo" playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-label="Boca fazendo o som Sssss">
             <!-- o navegador tenta cada arquivo na ordem até achar um que exista -->
             <source src="assets/video.boca.mp4" type="video/mp4" />
             <source src="assets/video.boca.webm" type="video/webm" />
@@ -1502,6 +1500,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   }
 
   // ---------- laço de análise (a cada quadro) ----------
+  let lastUi = 0;
   function startLoop() { if (!rafId) { lastTs = performance.now(); rafId = requestAnimationFrame(loop); } }
   function stopLoop()  { cancelAnimationFrame(rafId); rafId = 0; }
 
@@ -1533,11 +1532,15 @@ html.lt-on .page { padding-bottom: 55vh; }
 
     if (DEBUG) pintarPainelValores(mNow, above, hitNow, now);
 
-    // barrinhas do microfone
-    const lv = clamp(above / 30, 0, 1);
-    micLevel[0].style.height = 20 + lv * 70 + "%";
-    micLevel[1].style.height = 20 + lv * 100 + "%";
-    micLevel[2].style.height = 20 + lv * 60 + "%";
+    // barrinhas do microfone (a tela é atualizada ~15x por segundo; a análise do som continua a cada quadro)
+    const uiDue = now - lastUi >= 66;
+    if (uiDue) {
+      lastUi = now;
+      const lv = clamp(above / 30, 0, 1);
+      micLevel[0].style.height = 20 + lv * 70 + "%";
+      micLevel[1].style.height = 20 + lv * 100 + "%";
+      micLevel[2].style.height = 20 + lv * 60 + "%";
+    }
 
     if (!listening) return;
 
@@ -1560,11 +1563,13 @@ html.lt-on .page { padding-bottom: 55vh; }
     else { gapMs += dt; if (gapMs > CONFIG.RUN_GAP_MS) hitMs = 0; }
 
     const pct = Math.round(smooth * 100);
-    meterFill.style.width = pct + "%";
-    meterText.textContent = pct < 8 ? "Ouvindo..."
-      : framedNow ? `Ventinho detectado: ${pct}% 🍃`
-      : (frameHint || "Leve a boca para o quadrado");
-    recFill.style.width = Math.min(100, (elapsed / CONFIG.LISTEN_MS) * 100) + "%";
+    if (uiDue) {
+      meterFill.style.width = pct + "%";
+      meterText.textContent = pct < 8 ? "Ouvindo..."
+        : framedNow ? `Ventinho detectado: ${pct}% 🍃`
+        : (frameHint || "Leve a boca para o quadrado");
+      recFill.style.width = Math.min(100, (elapsed / CONFIG.LISTEN_MS) * 100) + "%";
+    }
 
     // carinho no pulso enquanto o ventinho está saindo
     if (soundHit && framedNow && now - lastBuzz > 700) {
@@ -2384,12 +2389,15 @@ html.lt-on .page { padding-bottom: 55vh; }
       }).catch(function(){});
   }
 
+  var ultimo = null, buscando = false;
   function carregar(){
-    var t = tok(); if (!t) return Promise.resolve();
+    var t = tok(); if (!t || buscando) return Promise.resolve();
+    buscando = true;
     return fetch(API + "/api/dispositivo/me", { headers:{ authorization:"Bearer " + t } })
       .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){ if (d){ info = d; pintar(); sincronizarMapa(); } })
-      .catch(function(){});
+      .then(function(d){ if (d){ var novo = JSON.stringify(d); if (novo !== ultimo){ ultimo = novo; info = d; pintar(); } sincronizarMapa(); } })
+      .catch(function(){})
+      .then(function(){ buscando = false; });
   }
 
   function linha(t, v){ return v ? "<dt>" + t + "</dt><dd>" + String(v).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }) + "</dd>" : ""; }
@@ -2419,7 +2427,7 @@ html.lt-on .page { padding-bottom: 55vh; }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", montar); else montar();
   carregar();
-  setInterval(carregar, 4000);
+  setInterval(function(){ if (!document.hidden) carregar(); }, 4000);   // a cada 4 s; sem sobrepor pedidos e sem redesenhar se nada mudou
   document.addEventListener("visibilitychange", function(){ if (!document.hidden) carregar(); });
 })();
 </script>
