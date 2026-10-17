@@ -199,10 +199,10 @@
 html.lt-on, html.lt-on body { overflow: hidden; }
 html.lt-on .app { padding-bottom: 55vh; }
 
-.lt-shield { position: fixed; inset: 0; z-index: 10000; background: transparent; }
+.lt-shield { position: fixed; inset: 0; z-index: 2147483004; background: transparent; }
 
 .lt-spot {
-  position: fixed; z-index: 10001; pointer-events: none;
+  position: fixed; z-index: 2147483005; pointer-events: none;
   border-radius: 28px;
   box-shadow: 0 0 0 9999px rgba(11, 20, 66, 0.62);
   transition: top .38s ease, left .38s ease, width .38s ease, height .38s ease, border-radius .38s ease;
@@ -215,7 +215,7 @@ html.lt-on .app { padding-bottom: 55vh; }
 @keyframes lt-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.02); } }
 
 .lt-tip {
-  position: fixed; z-index: 10002;
+  position: fixed; z-index: 2147483006;
   width: min(340px, calc(100vw - 24px));
   background: #fff; color: var(--lt-ink);
   border-radius: 22px; padding: 16px 18px;
@@ -273,7 +273,7 @@ html.lt-on .app { padding-bottom: 55vh; }
 .lt-tip.pl-left .lt-arrow { right: -29px; transform: rotate(90deg); }
 
 .lt-finale {
-  position: fixed; z-index: 10002; left: 50%; top: 50%;
+  position: fixed; z-index: 2147483006; left: 50%; top: 50%;
   transform: translate(-50%, -50%);
   width: min(380px, calc(100vw - 32px));
   background: #fff; border-radius: 28px; padding: 28px 24px 20px; text-align: center;
@@ -817,6 +817,31 @@ playDemo();
       text: 'Quando terminar de observar, toque aqui para abrir o espelho. Se o aparelho pedir para usar a câmera, peça ajuda a um adulto.' }
   ];
 
+  // Passos da 2ª tela (espelho). Entram sozinhos na primeira vez que os botões do espelho aparecem.
+  var STEPS_ESPELHO = [
+    { sels: ['#mirrorStage'], pref: ['left', 'right', 'bottom', 'top'], align: 'center', r: 22,
+      title: 'Seu espelho',
+      text: 'Você aparece aqui. Encaixe o rosto dentro do círculo tracejado. A câmera funciona só como espelho: nada é gravado.' },
+    { sels: ['#mirrorActions'], pref: ['top', 'bottom', 'left', 'right'], align: 'center', r: 18,
+      title: 'Estou pronta!',
+      text: 'Quando o rosto estiver no círculo, toque em “Estou pronta!”. O círculo some para você se ver melhor. Depois toque em “Ir para a tentativa” e faça o movimento.' },
+    { sels: ['.feedback'], pref: ['top', 'bottom'], align: 'center', r: 22,
+      title: 'O Lumis ajuda você',
+      text: 'Aqui o Lumis diz o que fazer em cada momento. Quando terminar o movimento, toque em “Terminei!”.' }
+  ];
+  var STEPS_PRINCIPAL = STEPS;
+  var FIM_PRINCIPAL = finale.querySelector('p').textContent;
+  var FIM_ESPELHO = 'Encaixe o rosto no círculo, toque em “Estou pronta!” e faça o movimento no seu ritmo. Sem pressa!';
+  var espelhoJaViu = false;
+
+  // só usa os passos cujo alvo está na tela agora
+  function visivel(s) {
+    return s.sels.some(function (sel) {
+      var el = document.querySelector(sel);
+      return el && el.getClientRects().length > 0;
+    });
+  }
+
   var cur = 0, active = false;
 
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
@@ -939,7 +964,12 @@ playDemo();
     try { localStorage.setItem(CHAVE_VISTO, '1'); } catch (e) {}
   }
 
-  function start() {
+  function start(qual) {
+    var chip2 = q('#chip2');
+    if (qual === undefined) qual = (chip2 && chip2.classList.contains('active')) ? 'espelho' : 'principal';
+    STEPS = (qual === 'espelho') ? STEPS_ESPELHO.filter(visivel) : STEPS_PRINCIPAL;
+    if (!STEPS.length) { STEPS = STEPS_PRINCIPAL; qual = 'principal'; }
+    finale.querySelector('p').textContent = (qual === 'espelho') ? FIM_ESPELHO : FIM_PRINCIPAL;
     active = true; cur = 0;
     redo.hidden = true;
     root.classList.add('lt-on');
@@ -963,12 +993,12 @@ playDemo();
     if (b.id === 'ltNext') go(cur + 1);
     if (b.id === 'ltBack') go(cur - 1);
     if (b.id === 'ltSkip') finish();
-    if (b.id === 'ltRepeat') start();
+    if (b.id === 'ltRepeat') start(STEPS_ESPELHO.indexOf(STEPS[0]) >= 0 ? 'espelho' : 'principal');
   });
   q('#ltGo').addEventListener('click', finish);
   q('#ltFinBack').addEventListener('click', function () { go(STEPS.length - 1); });
-  q('#ltFinRepeat').addEventListener('click', start);
-  redo.addEventListener('click', start);
+  q('#ltFinRepeat').addEventListener('click', function () { start(STEPS_ESPELHO.indexOf(STEPS[0]) >= 0 ? 'espelho' : 'principal'); });
+  redo.addEventListener('click', function () { start(); });
 
   document.addEventListener('keydown', function (e) {
     if (!active) return;
@@ -988,7 +1018,17 @@ playDemo();
   }
   function boot() {
     if (SO_NA_PRIMEIRA_VEZ && jaViu()) { redo.hidden = false; return; }
-    start();
+    start('principal');
+  }
+  // Primeira vez que os botões do espelho aparecem (câmera liberada): mostra os passos da tela do espelho
+  var acoesEsp = q('#mirrorActions');
+  if (acoesEsp && window.MutationObserver) {
+    new MutationObserver(function () {
+      if (!acoesEsp.hidden && !espelhoJaViu && !active) {
+        espelhoJaViu = true;
+        setTimeout(function () { if (!acoesEsp.hidden && !active) start('espelho'); }, 600);
+      }
+    }).observe(acoesEsp, { attributes: true, attributeFilter: ['hidden'] });
   }
   if (document.fonts && document.fonts.ready) {
     Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 1200); })]).then(boot);
