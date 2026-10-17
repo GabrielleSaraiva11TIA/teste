@@ -28,6 +28,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body { max-width: 100%; overflow-x: hidden; }
+/* tela de toque: texto não é selecionado/copiado ao arrastar */
+html, body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea { -webkit-user-select: text; user-select: text; }
 body {
   font-family: "Baloo 2", system-ui, sans-serif;
   background: var(--bg);
@@ -721,27 +724,37 @@ html.lt-on .page { padding-bottom: 55vh; }
   }
 
   (function () {
-  const alvo = document.scrollingElement || document.documentElement;
-  let ativo = false, yIni = 0, scrollIni = 0, moveu = false;
+    const alvo = document.scrollingElement || document.documentElement;
+    let ativo = false, yIni = 0, scrollIni = 0, moveu = false;
 
-  addEventListener('pointerdown', e => {
-    ativo = true; moveu = false;
-    yIni = e.clientY; scrollIni = alvo.scrollTop;
-  }, true);
-  addEventListener('pointermove', e => {
-    if (!ativo) return;
-    const dy = e.clientY - yIni;
-    if (Math.abs(dy) > 8) moveu = true;
-    if (moveu) alvo.scrollTop = scrollIni - dy;
-  }, true);
-  addEventListener('pointerup', () => { ativo = false; }, true);
-  addEventListener('pointercancel', () => { ativo = false; }, true);
+    function fim() {
+      ativo = false;
+      document.documentElement.style.userSelect = '';
+      setTimeout(() => { moveu = false; }, 0);
+    }
 
-  // se foi arrasto, cancela o clique pra não apertar botão sem querer
-  addEventListener('click', e => {
-    if (moveu) { e.stopPropagation(); e.preventDefault(); moveu = false; }
-  }, true);
-})();
+    addEventListener('pointerdown', e => {
+      ativo = true; moveu = false;
+      yIni = e.clientY; scrollIni = alvo.scrollTop;
+    }, true);
+    addEventListener('pointermove', e => {
+      if (!ativo) return;
+      const dy = e.clientY - yIni;
+      if (!moveu && Math.abs(dy) > 8) {
+        moveu = true;
+        document.documentElement.style.userSelect = 'none';
+        const sel = getSelection && getSelection(); if (sel) sel.removeAllRanges();
+      }
+      if (moveu) alvo.scrollTop = scrollIni - dy;
+    }, true);
+    addEventListener('pointerup', fim, true);
+    addEventListener('pointercancel', fim, true);
+
+    // se foi arrasto, cancela o clique pra não apertar botão sem querer
+    addEventListener('click', e => {
+      if (moveu) { e.stopPropagation(); e.preventDefault(); }
+    }, true);
+  })();
 
   let touches = 1;            // começa em 1, como na imagem
   let feeling = false;
@@ -1405,15 +1418,12 @@ html.lt-on .page { padding-bottom: 55vh; }
   } else { boot(); }
 })();
 </script>
-<!-- Reconectar o aparelho do Lumis: gera um código novo, a fono digita no celular -->
+<!-- Sair do aparelho: volta para o QR Code -->
 <style>
 .lumis-dock{position:fixed;left:12px;bottom:12px;z-index:2147483000;display:flex;gap:8px}
 .lumis-sair-btn{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.94);color:#b3382e;font:700 13px/1 system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 4px 14px rgba(20,60,160,.18)}
 .lumis-sair-btn:active{transform:scale(.97)}
 .lumis-sair-btn svg{width:15px;height:15px}
-.lumis-rec-btn{position:static;z-index:auto;appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.94);color:#0b4fd1;font:700 13px/1 system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 4px 14px rgba(20,60,160,.18)}
-.lumis-rec-btn:active{transform:scale(.97)}
-.lumis-rec-btn svg{width:15px;height:15px}
 .lumis-sair-bg{position:fixed;inset:0;z-index:2147483002;display:none;place-items:center;padding:16px;background:rgba(11,31,77,.5);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 .lumis-sair-bg.on{display:grid}
 .lumis-sair-box{width:min(100%,320px);background:#fff;color:#0b1f4d;border-radius:22px;padding:22px 18px 16px;text-align:center;box-shadow:0 20px 50px rgba(11,31,77,.35)}
@@ -1422,37 +1432,13 @@ html.lt-on .page { padding-bottom: 55vh; }
 .lumis-sair-box .acts{display:flex;gap:10px}
 .lumis-sair-box .acts button{flex:1;appearance:none;border:0;cursor:pointer;border-radius:12px;padding:12px 10px;font:700 15px system-ui,sans-serif;background:#e5eeff;color:#0b4fd1}
 .lumis-sair-box .acts .sim{background:#b3382e;color:#fff}
-.lumis-rec-bg{position:fixed;inset:0;z-index:2147483001;display:none;place-items:center;padding:16px;background:rgba(11,31,77,.5);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-.lumis-rec-bg.on{display:grid}
-.lumis-rec-box{width:min(100%,360px);background:#fff;color:#0b1f4d;border-radius:22px;padding:20px 18px 16px;text-align:center;box-shadow:0 20px 50px rgba(11,31,77,.35)}
-.lumis-rec-box h3{margin:0 0 8px;font-size:19px}
-.lumis-rec-box p{margin:0 0 12px;font-size:14px;line-height:1.4;color:#5b6b92}
-.lumis-rec-code{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border-radius:14px;background:#0b4fd1;color:#fff;font:800 24px/1 system-ui,sans-serif;letter-spacing:.04em;box-shadow:0 4px 10px rgba(10,86,214,.3)}
-.lumis-rec-st{margin:12px 0 14px;font-size:13px;font-weight:700;color:#0b4fd1;min-height:18px}
-.lumis-rec-st.err{color:#b3382e}
-.lumis-rec-sair{appearance:none;border:0;cursor:pointer;margin-top:14px;background:none;color:#b3382e;font:700 13px system-ui,sans-serif;text-decoration:underline;padding:6px}
-.lumis-rec-box .acts{display:flex;gap:8px;justify-content:center}
-.lumis-rec-box .acts button{appearance:none;border:0;cursor:pointer;border-radius:12px;padding:11px 16px;font:700 14px system-ui,sans-serif;background:#e5eeff;color:#0b4fd1}
 </style>
-<div class="lumis-dock"><button type="button" class="lumis-rec-btn" id="lumisRecBtn" aria-label="Reconectar o aparelho do Lumis">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
-  Reconectar
-</button><button type="button" class="lumis-sair-btn" id="lumisSairBtn" aria-label="Sair e voltar para o QR Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Sair</button></div>
+<div class="lumis-dock"><button type="button" class="lumis-sair-btn" id="lumisSairBtn" aria-label="Sair e voltar para o QR Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Sair</button></div>
 <div class="lumis-sair-bg" id="lumisSairBg">
   <div class="lumis-sair-box" role="alertdialog" aria-modal="true" aria-labelledby="lumisSairT">
     <h3 id="lumisSairT">Sair do Lumis?</h3>
-    <p>Vamos voltar para o QR Code. Para entrar de novo, é só conectar com o código.</p>
+    <p>Vamos voltar para o QR Code. Para entrar de novo, é só ler o QR Code outra vez.</p>
     <div class="acts"><button type="button" id="lumisSairNao">Ficar</button><button type="button" class="sim" id="lumisSairSim">Sair</button></div>
-  </div>
-</div>
-<div class="lumis-rec-bg" id="lumisRecBg">
-  <div class="lumis-rec-box" role="dialog" aria-modal="true" aria-labelledby="lumisRecT">
-    <h3 id="lumisRecT">Reconectar o Lumis</h3>
-    <p>No celular, abra o portal do Lumis, escolha <b>Conectar aparelho do Lumis</b> e digite o código:</p>
-    <button type="button" class="lumis-rec-code" id="lumisRecCode" title="Copiar código"><span id="lumisRecCodeTxt">LUMIS-····</span></button>
-    <div class="lumis-rec-st" id="lumisRecSt" role="status"></div>
-    <div class="acts"><button type="button" id="lumisRecNovo" hidden>Gerar novo código</button><button type="button" id="lumisRecFechar">Cancelar</button></div>
-    <button type="button" class="lumis-rec-sair" id="lumisRecSair">Sair do aparelho</button>
   </div>
 </div>
 <script>
@@ -1460,69 +1446,16 @@ html.lt-on .page { padding-bottom: 55vh; }
   var h = location.hostname, p = location.port;
   var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
   var $ = function(i){ return document.getElementById(i); };
-  var bg = $("lumisRecBg"), codeTxt = $("lumisRecCodeTxt"), st = $("lumisRecSt"), novo = $("lumisRecNovo");
-  var par = null, timer = null, vivo = false;
-
-  function msg(t, erro){ st.textContent = t; st.className = "lumis-rec-st" + (erro ? " err" : ""); }
-  function parar(){ vivo = false; clearTimeout(timer); }
-  function fechar(){ parar(); bg.classList.remove("on"); }
-
-  function criar(){
-    parar(); novo.hidden = true; codeTxt.textContent = "LUMIS-····"; msg("Gerando código…");
-    fetch(API + "/api/pareamentos", { method:"POST", headers:{ "content-type":"application/json" } })
-      .then(function(r){ return r.json().then(function(d){ if (r.status !== 201) throw new Error(); return d; }); })
-      .then(function(d){
-        par = d; codeTxt.textContent = d.codigo; msg("Aguardando o celular…"); vivo = true; consultar();
-      })
-      .catch(function(){ msg("Sem conexão com o servidor. Tente de novo.", true); novo.hidden = false; });
-  }
-
-  function consultar(){
-    if (!vivo || !par) return;
-    fetch(API + "/api/pareamentos/status", { headers:{ "x-segredo": par.segredo } })
-      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { s:r.status, d:d }; }); })
-      .then(function(r){
-        if (!vivo) return;
-        if (r.s === 410 || r.s === 404){ parar(); msg("O código expirou.", true); novo.hidden = false; return; }
-        if (r.s === 200 && r.d.status === "concluido" && r.d.deviceToken){
-          parar();
-          try{ localStorage.setItem("lumis_device_token", r.d.deviceToken); }catch(e){}
-          msg("Reconectado! ✓");
-          var recarregar = function(){ location.reload(); };
-          fetch(API + "/api/dispositivo/progresso", { headers:{ authorization:"Bearer " + r.d.deviceToken } })
-            .then(function(x){ return x.ok ? x.json() : null; })
-            .then(function(d){ if (d && d.ilhas && d.ilhas.length){ try{ localStorage.setItem("lumis_progresso", JSON.stringify({ ilhas: d.ilhas })); }catch(e){} } })
-            .catch(function(){}).then(function(){ setTimeout(recarregar, 900); });
-          return;
-        }
-        if (r.s === 200 && r.d.status && r.d.status !== "aguardando") msg("Celular conectado… finalizando");
-        timer = setTimeout(consultar, 2000);
-      })
-      .catch(function(){ if (vivo) timer = setTimeout(consultar, 3000); });
-  }
-
-  $("lumisRecBtn").addEventListener("click", function(){ bg.classList.add("on"); criar(); });
   function sairAparelho(){
     try{ localStorage.removeItem("lumis_device_token"); localStorage.removeItem("lumis_fila_tent"); localStorage.removeItem("lumis_crianca_ativa"); }catch(e){}
     location.replace(location.pathname.indexOf("/frontend/") > -1 ? "inicio.html?reset=1" : "frontend/inicio.html?reset=1");
   }
-  $("lumisRecSair").addEventListener("click", pedirSair);
   var sairBg = $("lumisSairBg");
-  function pedirSair(){ bg.classList.remove("on"); parar(); sairBg.classList.add("on"); }
+  function pedirSair(){ sairBg.classList.add("on"); }
   $("lumisSairBtn").addEventListener("click", pedirSair);
   $("lumisSairNao").addEventListener("click", function(){ sairBg.classList.remove("on"); });
   $("lumisSairSim").addEventListener("click", sairAparelho);
   sairBg.addEventListener("click", function(e){ if (e.target === sairBg) sairBg.classList.remove("on"); });
-  $("lumisRecFechar").addEventListener("click", fechar);
-  novo.addEventListener("click", criar);
-  bg.addEventListener("click", function(e){ if (e.target === bg) fechar(); });
-  $("lumisRecCode").addEventListener("click", function(){
-    if (!par) return;
-    var c = par.codigo;
-    function ok(){ codeTxt.textContent = "Copiado!"; setTimeout(function(){ if (par) codeTxt.textContent = c; }, 1200); }
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(ok, function(){});
-    else ok();
-  });
 })();
 </script>
 <script>

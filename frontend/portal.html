@@ -481,7 +481,6 @@ svg.i.f{fill:currentColor;stroke:none}
       </div>
 
       <div class="pair-note note" id="pairNote" hidden><svg class="i"><use href="#i-lock"/></svg>Dispositivo Lumis emparelhado com segurança via Bluetooth e Nuvem protegida.</div>
-      <button class="help-link" type="button" id="btnAjuda"><svg class="i"><use href="#i-help"/></svg>Precisa de ajuda com o pareamento?</button>
     </section>
 
     <!-- ===================== LOGIN / CADASTRO ===================== -->
@@ -531,7 +530,6 @@ svg.i.f{fill:currentColor;stroke:none}
 
       <p class="auth-foot" id="footLogin">Ainda não tem uma conta? <button type="button" class="link" id="goCadastro">Cadastre-se</button></p>
       <p class="auth-foot" id="footCadastro" hidden>Já possui uma conta? <button type="button" class="link" id="goLogin">Entrar</button></p>
-      <button class="help-link" type="button" id="btnCodigoAuth"><svg class="i"><use href="#i-link"/></svg>Digitar código do aparelho</button>
     </section>
 
     <!-- ===================== MENU DO RESPONSÁVEL ===================== -->
@@ -747,7 +745,6 @@ svg.i.f{fill:currentColor;stroke:none}
       </div>
       <div class="done-actions">
         <button class="btn" type="button" id="prontoGeral"><span>Ir para a Visão Geral</span><svg class="i"><use href="#i-right"/></svg></button>
-        <button class="btn soft" type="button" id="prontoCodigo" hidden><svg class="i"><use href="#i-link"/></svg>Digitar código do aparelho</button>
         <button class="logout" type="button" data-logout style="margin-top:6px"><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
       </div>
     </section>
@@ -825,21 +822,6 @@ svg.i.f{fill:currentColor;stroke:none}
   </main>
 </div>
 
-<!-- Ajuda com o pareamento / digitar código -->
-<div class="sheet-bg" id="sheetCodigo" hidden>
-  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shCodT">
-    <h2 id="shCodT">Conectar ao aparelho do Lumis</h2>
-    <ol>
-      <li>No aparelho, deixe aberta a tela do <b>QR Code</b>.</li>
-      <li>Aponte a câmera do celular para ele — ou digite o código que aparece no canto da tela, como <b>LUMIS-8820</b>.</li>
-    </ol>
-    <label class="lbl" for="codigoInput">Código do aparelho</label>
-    <div class="field"><svg class="i"><use href="#i-link"/></svg><input id="codigoInput" type="text" maxlength="10" autocapitalize="characters" autocomplete="off" placeholder="LUMIS-0000"></div>
-    <p class="ferr" id="codigoErr" hidden></p>
-    <div class="row"><button class="btn ghost" type="button" data-close style="flex:1">Fechar</button><button class="btn" type="button" id="codigoOk" style="flex:1.4">Conectar</button></div>
-  </div>
-</div>
-
 <!-- Menu da fonoaudióloga -->
 <div class="sheet-bg" id="sheetRespConta" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shRcT">
@@ -847,7 +829,6 @@ svg.i.f{fill:currentColor;stroke:none}
     <p id="rcQuem"></p>
     <div class="row" style="flex-direction:column">
       <button class="btn soft" type="button" id="rcDados"><svg class="i"><use href="#i-smile"/></svg>Dados da criança e privacidade</button>
-      <button class="btn soft" type="button" id="rcAparelho"><svg class="i"><use href="#i-link"/></svg><span id="rcAparelhoTxt">Conectar aparelho do Lumis</span></button>
       <button class="btn ghost" type="button" id="rcSair"><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
     </div>
     <div class="row"><button class="btn ghost" type="button" data-close style="flex:1">Fechar</button></div>
@@ -861,7 +842,6 @@ svg.i.f{fill:currentColor;stroke:none}
     <div class="row" style="flex-direction:column">
       <button class="btn soft" type="button" id="faLista"><svg class="i"><use href="#i-doc"/></svg>Pacientes</button>
       <button class="btn soft" type="button" id="faNovo"><svg class="i"><use href="#i-users"/></svg>Cadastrar novo paciente</button>
-      <button class="btn soft" type="button" id="faAparelho"><svg class="i"><use href="#i-link"/></svg><span id="faAparelhoTxt">Conectar aparelho do Lumis</span></button>
       <button class="btn ghost" type="button" id="faSair"><svg class="i"><use href="#i-logout"/></svg>Sair da conta</button>
     </div>
     <div class="row"><button class="btn ghost" type="button" data-close style="flex:1">Fechar</button></div>
@@ -1017,7 +997,7 @@ svg.i.f{fill:currentColor;stroke:none}
   }
 
   /* ============================================================
-     PAREAMENTO (QR / código)
+     PAREAMENTO (QR Code)
      ============================================================ */
   function limparPar(){ S.par = null; ssSet(K_PAR, null); atualizarConexao(); }
 
@@ -1057,40 +1037,6 @@ svg.i.f{fill:currentColor;stroke:none}
     $("faConnTxt").textContent = S.linked ? "Lumis conectado" : "Sem aparelho";
   }
 
-  function abrirCodigo(){ $("codigoErr").hidden = true; $("codigoInput").value = ""; $("sheetCodigo").hidden = false; setTimeout(function(){ $("codigoInput").focus(); }, 50); }
-  $("btnAjuda").addEventListener("click", abrirCodigo);
-  $("prontoCodigo").addEventListener("click", abrirCodigo);
-  $("btnCodigoAuth").addEventListener("click", abrirCodigo);
-
-  $("codigoOk").addEventListener("click", function(){
-    var btn = $("codigoOk");
-    ocupado(btn, async function(){
-      var err = $("codigoErr"); err.hidden = true;
-      try{
-        var r = await api("/api/pareamentos/resolver", { method:"POST", auth:false, body:{ codigo: $("codigoInput").value } });
-        await api("/api/pareamentos/" + r.token + "/escaneado", { method:"POST", auth:false });
-        S.par = r.token; ssSet(K_PAR, r.token); atualizarConexao();
-        $("sheetCodigo").hidden = true;
-        if (S.me) toast("Aparelho conectado!");
-        if (S.me && S.me.usuario.papel === "responsavel"){
-          await sincronizarProgresso();
-          if (S.me.status.completo && current === "pronto") finalizar();
-        } else if (S.me && S.me.usuario.papel === "profissional"){
-          await sincronizarProgresso();
-          finalizar();
-        } else if (!S.me){
-          // sem login: leva direto para a tela de entrar (do último perfil usado) para terminar de conectar
-          var ult = lsGet("lumis_ultimo_papel");
-          if (current === "perfil" && (ult === "responsavel" || ult === "profissional")){
-            S.papel = ult; progresso(30); modoAuth("login"); go("auth");
-            toast("Aparelho conectado! Agora entre na sua conta.");
-          } else if (current === "perfil") toast("Aparelho conectado! Escolha como quer entrar.");
-          else toast("Aparelho conectado! Agora entre na sua conta.");
-        }
-      }catch(e){ err.textContent = e.message; err.hidden = false; }
-    });
-  });
-  $("codigoInput").addEventListener("keydown", function(e){ if (e.key === "Enter") $("codigoOk").click(); });
   $$("[data-close]").forEach(function(b){ b.addEventListener("click", function(){ b.closest(".sheet-bg").hidden = true; }); });
   $$(".sheet-bg").forEach(function(bg){ bg.addEventListener("click", function(e){ if (e.target === bg) bg.hidden = true; }); });
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") $$(".sheet-bg").forEach(function(b){ b.hidden = true; }); });
@@ -1214,11 +1160,9 @@ svg.i.f{fill:currentColor;stroke:none}
   });
   $("geralMenu").addEventListener("click", function(){
     $("rcQuem").textContent = S.me ? (S.me.usuario.nome + " · " + S.me.usuario.email) : "";
-    $("rcAparelhoTxt").textContent = S.linked ? "Reconectar aparelho do Lumis" : "Conectar aparelho do Lumis";
     $("sheetRespConta").hidden = false;
   });
   $("rcDados").addEventListener("click", function(){ $("sheetRespConta").hidden = true; go("menu"); });
-  $("rcAparelho").addEventListener("click", function(){ $("sheetRespConta").hidden = true; abrirCodigo(); });
   $("rcSair").addEventListener("click", function(){ $("sheetRespConta").hidden = true; sair(false); });
 
   /* ============================================================
@@ -1475,7 +1419,6 @@ svg.i.f{fill:currentColor;stroke:none}
     $("sdTitulo").textContent = tipo === "ok" ? "Aparelho liberado" : tipo === "carregando" ? "Liberando o Lumis" : "Falta conectar o aparelho";
     $("sdTexto").textContent = texto;
     el.querySelector("svg use").setAttribute("href", tipo === "ok" ? "#i-check" : "#i-link");
-    $("prontoCodigo").hidden = tipo === "ok" || tipo === "carregando";
     $("prontoLead").textContent = tipo === "ok"
       ? (ehProf() ? "O Lumis já está abrindo no aparelho. Bom trabalho!" : "O Lumis já está abrindo no aparelho da criança. Agora é só brincar!")
       : "Cadastro concluído com carinho.";
@@ -1493,7 +1436,7 @@ svg.i.f{fill:currentColor;stroke:none}
       return;
     }
     if (!S.par){
-      estadoAparelho("aviso", "Escaneie o QR Code na tela do aparelho ou digite o código dele.");
+      estadoAparelho("aviso", "Escaneie o QR Code que aparece na tela do aparelho.");
       return;
     }
     estadoAparelho("carregando", "Conectando ao aparelho da criança...");
@@ -1503,7 +1446,7 @@ svg.i.f{fill:currentColor;stroke:none}
       estadoAparelho("ok", ehProf() ? "O aparelho foi liberado em modo profissional." : "A conta da criança já está logada no aparelho.");
       if (navigator.vibrate) try{ navigator.vibrate([80, 60, 80]); }catch(e){}
     }catch(e){
-      if (e.status === 410){ limparPar(); estadoAparelho("aviso", "O código do aparelho expirou. Digite o código atual da tela."); }
+      if (e.status === 410){ limparPar(); estadoAparelho("aviso", "O QR Code do aparelho expirou. Escaneie o QR Code atual da tela."); }
       else estadoAparelho("aviso", e.message);
     }
   }
@@ -1517,13 +1460,11 @@ svg.i.f{fill:currentColor;stroke:none}
   function faEnviar(msg){ try{ faFrame().contentWindow.postMessage(msg, location.origin); }catch(e){} }
   function faAbrirMenu(){
     $("faQuem").textContent = S.me ? (S.me.usuario.nome + " · " + S.me.usuario.email) : "";
-    $("faAparelhoTxt").textContent = S.linked ? "Reconectar aparelho do Lumis" : "Conectar aparelho do Lumis";
     $("sheetFonoConta").hidden = false;
   }
   $("faMais").addEventListener("click", faAbrirMenu);
   $("faLista").addEventListener("click", function(){ $("sheetFonoConta").hidden = true; faEnviar({ lumisView:"lista" }); });
   $("faNovo").addEventListener("click", function(){ $("sheetFonoConta").hidden = true; faEnviar({ lumisNovoPaciente:true }); });
-  $("faAparelho").addEventListener("click", function(){ $("sheetFonoConta").hidden = true; abrirCodigo(); });
   $("faSair").addEventListener("click", function(){ $("sheetFonoConta").hidden = true; sair(false); });
 
   /* ============================================================

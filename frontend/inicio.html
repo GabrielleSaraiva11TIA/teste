@@ -2423,16 +2423,6 @@ body{
 .waiting i{width:calc(var(--u)*.6);height:calc(var(--u)*.6);border-radius:50%;background:var(--blue-2);animation:pulse 1.6s ease-in-out infinite}
 .waiting.err{color:#c23b52}.waiting.err i{background:#d4455b;animation:none}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
-.code-wrap{display:inline-flex;align-items:center;gap:calc(var(--u)*.6);font-size:calc(var(--u)*.68);color:var(--ink-soft);font-weight:600}
-.code{
-  appearance:none;border:0;cursor:pointer;font:inherit;
-  display:inline-flex;align-items:center;gap:calc(var(--u)*.5);
-  height:calc(var(--u)*2);padding:0 calc(var(--u)*.9);border-radius:calc(var(--u)*.7);
-  background:var(--blue);color:#fff;font-weight:800;font-size:calc(var(--u)*.74);letter-spacing:.03em;
-  box-shadow:0 calc(var(--u)*.3) calc(var(--u)*.8) rgba(10,86,214,.3);
-}
-.code:active{transform:scale(.97)}
-.code svg{width:calc(var(--u)*.85);height:calc(var(--u)*.85);padding:calc(var(--u)*.12);border-radius:calc(var(--u)*.2);background:rgba(255,255,255,.2)}
 
 /* ---------- tela 2: carregando ---------- */
 .l-head{display:flex;align-items:flex-start;gap:calc(var(--u)*.7)}
@@ -2512,8 +2502,30 @@ body{
 #viewQR .hint-pink{font-size:calc(var(--u)*.9)}
 #viewQR .hint-pink svg{width:calc(var(--u)*1);height:calc(var(--u)*1)}
 #viewQR .waiting{font-size:calc(var(--u)*.92)}
-#viewQR .code-wrap{font-size:calc(var(--u)*.9)}
-#viewQR .code{font-size:calc(var(--u)*1.05)}
+
+/* ---------- tela de carregamento: tudo maior (o QR não muda) ---------- */
+#viewLoad .h-title{font-size:calc(var(--u)*1.5)}
+#viewLoad .h-sub{font-size:calc(var(--u)*1.0)}
+#viewLoad .l-head .chk{width:calc(var(--u)*1.5);height:calc(var(--u)*1.5)}
+#viewLoad .btn-soft{height:calc(var(--u)*2.6);font-size:calc(var(--u)*.95);padding:0 calc(var(--u)*1.1)}
+#viewLoad .phone{width:calc(var(--u)*10);height:calc(var(--u)*13.4);border-radius:calc(var(--u)*1.5);padding:calc(var(--u)*1.4) calc(var(--u)*1);gap:calc(var(--u)*1.2)}
+#viewLoad .prow i{width:calc(var(--u)*1.6);height:calc(var(--u)*1.6)}
+#viewLoad .prow u{height:calc(var(--u)*.75)}
+#viewLoad .phone-label{font-size:calc(var(--u)*.95)}
+#viewLoad .phone-label svg{width:calc(var(--u)*1);height:calc(var(--u)*1)}
+#viewLoad .flow i:nth-child(1){width:calc(var(--u)*.6);height:calc(var(--u)*.6)}
+#viewLoad .flow i:nth-child(2){width:calc(var(--u)*.85);height:calc(var(--u)*.85)}
+#viewLoad .flow i:nth-child(3){width:calc(var(--u)*1.15);height:calc(var(--u)*1.15)}
+#viewLoad .flow svg{width:calc(var(--u)*1.4);height:calc(var(--u)*1.4)}
+#viewLoad .ring{width:calc(var(--u)*13);height:calc(var(--u)*13)}
+#viewLoad .ring .mid svg{width:calc(var(--u)*2);height:calc(var(--u)*2)}
+#viewLoad .ring .mid b{font-size:calc(var(--u)*2.5)}
+#viewLoad .badge{font-size:calc(var(--u)*.95);padding:calc(var(--u)*.45) calc(var(--u)*1.2)}
+#viewLoad .badge i{width:calc(var(--u)*.7);height:calc(var(--u)*.7)}
+#viewLoad .stepper{padding:calc(var(--u)*.9) calc(var(--u)*1.4)}
+#viewLoad .st .bub{width:calc(var(--u)*2.4);height:calc(var(--u)*2.4)}
+#viewLoad .st b{font-size:calc(var(--u)*1.0)}
+#viewLoad .st span{font-size:calc(var(--u)*.82)}
 
 :focus-visible{outline:3px solid #7fb0ff;outline-offset:3px}
 
@@ -2587,12 +2599,6 @@ body{
 
     <div class="qr-foot">
       <div class="waiting" id="waiting"><i></i><span id="waitingTxt">Aguardando leitura pelo celular...</span></div>
-      <div class="code-wrap">Ou digite:
-        <button class="code" id="codeBtn" type="button" title="Copiar código">
-          <span id="codeTxt">LUMIS-····</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
-        </button>
-      </div>
     </div>
   </main>
 
@@ -2602,13 +2608,7 @@ body{
       <span class="chk"><svg><use href="#i-check"/></svg></span>
       <div style="flex:1">
         <h1 class="h-title" id="loadTitle">Estamos preparando tudo...</h1>
-        <p class="h-sub" id="loadSub">Aguardando o responsável concluir o cadastro no celular:</p>
-        <div class="code-wrap" style="margin-top:calc(var(--u)*.7)">Ou digite:
-          <button class="code" id="codeBtn2" type="button" title="Copiar código">
-            <span id="codeTxt2">LUMIS-····</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
-          </button>
-        </div>
+        <p class="h-sub" id="loadSub">Aguardando o responsável concluir o cadastro no celular.</p>
       </div>
       <button class="btn-soft" id="novoQrBtn" type="button">Gerar novo QR Code</button>
     </div>
@@ -2644,7 +2644,6 @@ body{
       <div class="st" id="st3"><span class="bub"><svg><use href="#i-star"/></svg></span><div><b>Brincar!</b><span id="st3t">Em breve</span></div></div>
     </div>
 
-    <div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4 8v8M20 8v8"/></svg>Lumis vai vibrar suavemente na pulseira assim que terminar</div>
   </main>
 </div>
 
@@ -2739,7 +2738,6 @@ body{
 
   function mostrarQR(){
     $("viewLoad").hidden = true; $("viewQR").hidden = false;
-    $("codeTxt").textContent = par.codigo; $("codeTxt2").textContent = par.codigo;
     renderQR(portalUrl(par.token));
     setWaiting("Aguardando leitura pelo celular...", false);
   }
@@ -2821,7 +2819,6 @@ body{
   function mostrarCarregando(){
     if (!$("viewLoad").hidden) return;
     $("viewQR").hidden = true; $("viewLoad").hidden = false;
-    if (par) $("codeTxt2").textContent = par.codigo;   // o código continua visível durante o cadastro
     if (!avisouConexao){ avisouConexao = true; buzz(60); }   // "vibração suave ao conectar"
   }
   function resetarProgresso(){ mostrado = 0; alvo = 0; avisouConexao = false; desenhar(); atualizarEtapas(0); }
@@ -2876,20 +2873,6 @@ body{
     if (concluido) return;
     clearTimeout(pollTimer); store(KEY_PAR, null);
     criarPareamento().then(poll).catch(function(){ setTimeout(iniciarPareamento, 3000); });
-  });
-  $("codeBtn2").addEventListener("click", function(){
-    var txt = $("codeTxt2").textContent;
-    function ok(){ var el = $("codeTxt2"); el.textContent = "Copiado!"; setTimeout(function(){ if (par) el.textContent = par.codigo; }, 1200); }
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function(){});
-    else ok();
-    buzz(30);
-  });
-  $("codeBtn").addEventListener("click", function(){
-    var txt = $("codeTxt").textContent;
-    function ok(){ var el = $("codeTxt"); el.textContent = "Copiado!"; setTimeout(function(){ if (par) el.textContent = par.codigo; }, 1200); }
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function(){});
-    else ok();
-    buzz(30);
   });
 
   /* ===== Conexão (ícone de wifi) ===== */
