@@ -752,11 +752,24 @@ btnPulso.addEventListener('click', ()=>{
       tArrow.style.top = (clamp(chosen.cy - chosen.top, 30, th - 30) - 12) + 'px';
     }
 
-    if (!reduce && tip.animate) {
+    if (!instant && !reduce && tip.animate) {
       tip.animate([{ opacity: 0, translate: '0 6px' }, { opacity: 1, translate: '0 0' }], { duration: 220, easing: 'ease-out' });
     }
     var nb = q('#ltNext'); if (nb) nb.focus({ preventScroll: true, focusVisible: false });
   }
+
+  // Reposiciona o destaque quando o layout muda (vídeo/fonte carregando, rotação, redimensionar)
+  var reRaf = 0;
+  function reposicionar() {
+    if (!active || cur >= STEPS.length) return;
+    cancelAnimationFrame(reRaf);
+    reRaf = requestAnimationFrame(function () { render(cur, true); });
+  }
+  window.addEventListener('resize', reposicionar);
+  window.addEventListener('load', reposicionar);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(reposicionar);
+  ['loadeddata', 'loadedmetadata', 'canplay'].forEach(function (ev) { video.addEventListener(ev, reposicionar); });
+  if (window.ResizeObserver) { try { new ResizeObserver(reposicionar).observe(q('.wrap') || document.body); } catch (e) {} }
 
   function showFinale() {
     cur = STEPS.length;
