@@ -66,7 +66,7 @@ svg{display:block}
 .mh h3{margin:0;font-size:14.5px;font-weight:600}
 .mh small{display:block;font-size:10.5px;color:var(--muted)}
 
-.stage{position:relative;border-radius:18px;border:1px solid var(--blue-line);background:#000;overflow:hidden;aspect-ratio:1/1.0;min-height:300px}
+.stage{position:relative;border-radius:18px;border:1px solid var(--blue-line);background:#000;overflow:hidden;aspect-ratio:1/1.0;min-height:300px;width:100%;max-width:360px;margin-inline:auto}
 .stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#000}
 
 .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -144,7 +144,7 @@ svg{display:block}
   .steps{gap:4px}.step span{font-size:8px}.step i{height:8px}.chip{padding:10px 16px;font-size:13px}.progress-h{font-size:13px}
   .quiz h3{font-size:18px}
   .opt .tt{font-size:14px}
-  .stage{min-height:280px}
+  .stage{min-height:260px;max-width:280px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
