@@ -288,6 +288,14 @@ html.lt-on, html.lt-on body { overflow: hidden; }
 .etapas{gap:4px}.etapa i{height:8px}.etapa{font-size:8px}.progresso-titulo{font-size:13px}
 }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style id="topo-fonte">
+/* topo padronizado: mesma fonte e mesmos espaços da atividade 003 */
+:root{--topo-font:'Lexend',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+.topo .pill,.topo .lt-redo,.progresso,.progresso *{font-family:var(--topo-font);font-style:normal;letter-spacing:0;text-transform:none}
+.topo .pill.estrelas svg{width:13px;height:13px;flex:none}
+.topo .pill.estrelas svg path{fill:#0d3b8e}
+</style>
 </head>
 <body>
 <div class="app" id="app">
@@ -295,7 +303,7 @@ html.lt-on, html.lt-on body { overflow: hidden; }
     <button class="pill" type="button" id="voltar">← Voltar para o mapa</button>
     <div class="pill estrelas" id="pillEstrelas">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#003D9B" d="m12 2 2.9 6.6 7.1.7-5.3 4.8 1.5 7-6.2-3.6-6.2 3.6 1.5-7L2 9.3l7.1-.7z"/></svg>
-      <span><b id="qtdEstrelas"></b> estrelas</span>
+      <span id="qtdEstrelas"></span>&nbsp; estrelas
     </div>
   </header>
 

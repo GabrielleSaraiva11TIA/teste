@@ -341,6 +341,14 @@ body{padding-top:10px;padding-left:12px;padding-right:12px}
 .segs{gap:4px}.sg i{height:8px}.sg span{font-size:8px}.steprow{font-size:13px}
 }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style id="topo-fonte">
+/* topo padronizado: mesma fonte e mesmos espaços da atividade 003 */
+:root{--topo-font:'Lexend',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+.topbar .pill,.topbar .lt-redo,.stepcard,.stepcard *{font-family:var(--topo-font);font-style:normal;letter-spacing:0;text-transform:none}
+.topbar .stars svg{width:13px;height:13px;flex:none;fill:#0d3b8e;stroke:none}
+.prog-link{text-decoration:none;color:#0d3b8e}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -348,7 +356,7 @@ body{padding-top:10px;padding-left:12px;padding-right:12px}
   <!-- barra superior -->
   <div class="topbar">
     <button class="pill back" type="button" onclick="location.href='../mapa.html'">← Voltar para o mapa</button>
-    <div class="pill stars"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.4" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg> <span id="starN">125</span> estrelas</div>
+    <div class="pill stars"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.4" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg><span id="starN">125</span>&nbsp; estrelas</div>
   </div>
 
   <!-- CABEÇALHO -->
