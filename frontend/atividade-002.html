@@ -84,7 +84,7 @@
     position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
     text-align:center;padding:20px;font-weight:700;color:var(--blue);
   }
-  .placeholder{z-index:5;background:rgba(255,255,255,.55);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+  .placeholder{z-index:5;background:rgba(255,255,255,.88)}
   .placeholder .mouth{
     font-size:64px;line-height:1;width:112px;height:112px;display:grid;place-items:center;border-radius:50%;
     background:var(--white);box-shadow:0 0 0 6px #FFD3E6,0 10px 24px rgba(176,36,107,.25);
@@ -210,7 +210,6 @@ html.lt-on .app { padding-bottom: 55vh; }
 .lt-spot::after {
   content: ""; position: absolute; inset: -4px; border-radius: inherit;
   border: 3px solid #fff;
-  animation: lt-pulse 1.7s ease-in-out infinite;
 }
 @keyframes lt-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.02); } }
 
@@ -265,7 +264,7 @@ html.lt-on .app { padding-bottom: 55vh; }
 }
 
 .lt-arrow { position: absolute; width: 24px; height: 24px; pointer-events: none; }
-.lt-arrow svg { width: 24px; height: 24px; display: block; animation: lt-nudge 1s ease-in-out infinite; filter: drop-shadow(0 2px 3px rgba(8,16,60,.35)); }
+.lt-arrow svg { width: 24px; height: 24px; display: block; animation: lt-nudge 1s ease-in-out infinite; }
 @keyframes lt-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 .lt-tip.pl-bottom .lt-arrow { top: -29px; transform: none; }
 .lt-tip.pl-top .lt-arrow { bottom: -29px; transform: rotate(180deg); }
@@ -373,7 +372,7 @@ body{padding-top:10px;padding-left:12px;padding-right:12px}
 
       <div class="stage">
         <!-- VÍDEO FIXO DA DEMONSTRAÇÃO (boca da moça) — embutido no arquivo -->
-        <video id="demo" playsinline muted preload="auto" aria-label="Demonstração do movimento da boca para o som Sss"></video>
+        <video id="demo" playsinline muted preload="auto" disablepictureinpicture disableremoteplayback aria-label="Demonstração do movimento da boca para o som Sss"></video>
 
         <div class="bubble" id="bubble"><b>Sss...</b> dentinhos juntos!</div>
       </div>
@@ -616,7 +615,7 @@ async function openCamera(){
   if (camStream) return true;
   try{
     camStream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:'user', width:{ideal:960}, height:{ideal:720} }, audio:false   // sem microfone
+      video:{ facingMode:'user', width:{ideal:640}, height:{ideal:480}, frameRate:{ideal:24, max:30} }, audio:false   // sem microfone
     });
     cam.srcObject = camStream;
     cam.classList.remove('hidden'); $('camPlaceholder').classList.add('hidden');
@@ -1291,12 +1290,15 @@ playDemo();
       }).catch(function(){});
   }
 
+  var ultimo = null, buscando = false;
   function carregar(){
-    var t = tok(); if (!t) return Promise.resolve();
+    var t = tok(); if (!t || buscando) return Promise.resolve();
+    buscando = true;
     return fetch(API + "/api/dispositivo/me", { headers:{ authorization:"Bearer " + t } })
       .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){ if (d){ info = d; pintar(); sincronizarMapa(); } })
-      .catch(function(){});
+      .then(function(d){ if (d){ var novo = JSON.stringify(d); if (novo !== ultimo){ ultimo = novo; info = d; pintar(); } sincronizarMapa(); } })
+      .catch(function(){})
+      .then(function(){ buscando = false; });
   }
 
   function linha(t, v){ return v ? "<dt>" + t + "</dt><dd>" + String(v).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }) + "</dd>" : ""; }
@@ -1326,7 +1328,7 @@ playDemo();
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", montar); else montar();
   carregar();
-  setInterval(carregar, 4000);
+  setInterval(function(){ if (!document.hidden) carregar(); }, 4000);   // a cada 4 s (requisito); sem sobrepor pedidos e sem redesenhar se nada mudou
   document.addEventListener("visibilitychange", function(){ if (!document.hidden) carregar(); });
 })();
 </script>
