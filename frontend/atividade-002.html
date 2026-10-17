@@ -306,6 +306,26 @@ html.lt-on .app { padding-bottom: 55vh; }
 .topbar { flex-wrap: wrap; }
 .lt-redo { font-family: inherit; }
 </style>
+<style id="topo-padrao">
+/* topo padronizado: mesmas medidas da atividade 003 */
+body{padding-top:14px;padding-left:18px;padding-right:18px}
+.app{gap:14px}
+.topbar{gap:10px;flex-wrap:wrap;padding-top:2px}
+.topbar .pill,.topbar .lt-redo{background:#fff;border:0;border-radius:999px;padding:13px 22px;font-size:15px;font-weight:500;color:#0d3b8e;display:inline-flex;align-items:center;gap:10px;box-shadow:0 6px 18px rgba(36,87,230,.07);line-height:19px}
+.progress{padding:18px 22px 14px;border:0;border-radius:28px;box-shadow:0 10px 30px rgba(36,87,230,.08);line-height:1.35}
+.progress-head{align-items:center;gap:10px;flex-wrap:wrap;font-size:15px;font-weight:500;color:#0d3b8e;margin-bottom:0}
+.steps{gap:10px;margin-top:14px}
+.step{font-size:12px;font-weight:400;color:#8a93b5}
+.step i{height:11px;background:#eef2fc;margin-bottom:8px}
+.step.done i{background:#2457e6}
+.step.now i{background:#2f66e8;box-shadow:0 6px 10px rgba(36,87,230,.35)}
+.step.now{color:#0d3b8e;font-weight:600}
+@media (max-width:560px){
+body{padding-top:10px;padding-left:12px;padding-right:12px}
+.topbar .pill,.topbar .lt-redo{padding:10px 16px;font-size:13px}
+.steps{gap:4px}.step i{height:8px}.step{font-size:8px}.progress-head{font-size:13px}
+}
+</style>
 </head>
 <body>
 <div class="app">

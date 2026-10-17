@@ -495,6 +495,28 @@ html.lt-on .page { padding-bottom: 55vh; }
 .lt-redo { font-family: inherit; }
 
 </style>
+<style id="topo-padrao">
+/* topo padronizado: mesmas medidas da atividade 003 */
+.page{padding-top:14px;padding-left:18px;padding-right:18px;gap:14px}
+.subbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:2px 0 0}
+.subbar .btn-back,.subbar .stars,.subbar .lt-redo{background:#fff;border:0;border-radius:999px;padding:13px 22px;font-size:15px;font-weight:500;color:#0d3b8e;display:inline-flex;align-items:center;gap:10px;box-shadow:0 6px 18px rgba(36,87,230,.07);line-height:19px}
+.subbar .stars b{font-weight:inherit}
+.progress{padding:18px 22px 14px;border:0;border-radius:28px;box-shadow:0 10px 30px rgba(36,87,230,.08);line-height:1.35}
+.progress__head{display:flex;justify-content:space-between;flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap;font-size:15px;font-weight:500;color:#0d3b8e}
+.progress__head small{font-size:13px}
+.progress__start{font-size:15px;font-weight:500;color:#0d3b8e}
+.progress__bars{gap:10px;margin:14px 0 0}
+.bar{height:11px;background:#eef2fc}
+.bar--done{background:#2457e6}
+.bar--current{background:#2f66e8;box-shadow:0 6px 10px rgba(36,87,230,.35)}
+.progress__labels{gap:10px;margin-top:8px;font-size:12px;color:#8a93b5}
+.progress__labels .on,.progress__labels .cur{color:#0d3b8e;font-weight:600;background:none;border-radius:0}
+@media (max-width:560px){
+.page{padding-top:10px;padding-left:12px;padding-right:12px}
+.subbar .btn-back,.subbar .stars,.subbar .lt-redo{padding:10px 16px;font-size:13px}
+.progress__bars{gap:4px}.bar{height:8px}.progress__labels{gap:4px;font-size:8px}.progress__head{font-size:13px}
+}
+</style>
 </head>
 <body>
 
