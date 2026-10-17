@@ -606,7 +606,7 @@ if(!PULSEIRA_ATIVA) $('vibra').hidden = true;
 
 const CAM = '<path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="4"/>';
 const VIB = '<rect x="8" y="3" width="8" height="18" rx="3"/><path d="M3 9v6M21 9v6M5.5 7v10M18.5 7v10"/>';
-const U = { f1:'Você conseguiu!', f2:'Este é o último exercício da jornada!', f3:'Olha o que apareceu…', bau:'Toque no baú para abrir!',
+const U = { pronta:'Muito bem! Quando quiser, toque em <b>Começar o desafio</b>.', f1:'Você conseguiu!', f2:'Este é o último exercício da jornada!', f3:'Olha o que apareceu…', bau:'Toque no baú para abrir!',
   sinta:'Sinta a vibração na pulseira.', vez:'Agora é a sua vez! Faça o som!', gravando:'Estou vendo e ouvindo você!',
   revisar:`Que lindo! Você ganhou <b>${ESTRELAS_BONUS_FINAL} estrelas</b>!`, tentar:'Vamos tentar mais uma vez?', semCam:'Não consegui abrir a câmera. Use o botão de teste para continuar.',
   final:`Muito bem! Você ganhou <b>${ESTRELAS_BONUS_FINAL} estrelas</b>! Vamos continuar.`, privado:'O vídeo fica só neste aparelho até alguém compartilhar.' };
@@ -694,7 +694,7 @@ function salvarProgresso(){
     localStorage.setItem('lumis_progresso', JSON.stringify(p));
   }catch(e){}
 }
-const acoes = { comecar, terminei:()=>gravador?.state==='recording'&&gravador.stop(), compartilhar, repetir:()=>{ fase=5; comecar(); }, pronto:()=>prontoRes?.(), concluir:fimJornada,
+const acoes = { comecar, terminei:()=>gravador?.state==='recording'&&gravador.stop(), compartilhar, repetir:()=>{ fase=5; comecar(); }, pronto:()=>prontoRes?.(), iniciar:()=>iniciarRes?.(), concluir:fimJornada,
   sair:()=>{ if(URL_HOME!=='#') location.href = URL_HOME; parent.postMessage({lumis:'ir-para-inicio'},'*'); } };
 
 /* ===== abertura no escuro ===== */
@@ -748,7 +748,11 @@ async function comecar(){
   analyserS = actx.createAnalyser(); analyserS.fftSize = 2048; analyserS.smoothingTimeConstant = .2; fonte.connect(analyserS); espectro = new Float32Array(analyserS.frequencyBinCount);
   bwFrames = 0; bwHi = 0; bwMid = 0; bandTop = 12000; hiStart = 4000;
   
-  await enquadrar(); $('tit').textContent = 'Sinta a vibração'; falar(U.sinta); $('ondas').classList.add('on'); vibrar([300,150,300,150,300], "sss"); await aguardar(2600); $('ondas').classList.remove('on');
+  await enquadrar();
+  /* depois do "Estou pronta!" aparece o botão para começar o desafio de verdade */
+  $('tit').textContent = 'Tudo pronto!'; falar(U.pronta); controles([['iniciar','Começar o desafio','btn-mic']]);
+  await new Promise(r=>{ iniciarRes = r; }); controles([]);
+  $('tit').textContent = 'Sinta a vibração'; falar(U.sinta); $('ondas').classList.add('on'); vibrar([300,150,300,150,300], "sss"); await aguardar(2600); $('ondas').classList.remove('on');
   await suaVez();
 }
 /* contagem 3-2-1 e depois grava a tentativa; se o "Sssss" não estiver certo, volta aqui e tenta de novo */
@@ -801,41 +805,16 @@ async function compartilhar(){
 }
 function celebrar(){ $('orbe').classList.add('festa'); setTimeout(()=>$('orbe').classList.remove('festa'),3000); vibrar([200,80,200,80,400], "comemorar"); chuvaDeEstrelas(); confete(); }
 function fimJornada(){ try{lumisReg('acerto')}catch(e){}; salvarProgresso(); parar(); midia?.getTracks().forEach(t=>t.stop()); fase = 9; controles([]); paginaFinal(); }
-/* enquadrar o rosto: oval-guia; se o navegador tem FaceDetector, o oval fica dourado quando o rosto está no lugar */
-let prontoRes, premiado = false;
+/* enquadrar o rosto: a câmera NÃO analisa nada. A criança encaixa o rosto no oval e toca em "Estou pronta!" */
+let prontoRes, iniciarRes, premiado = false;
 async function enquadrar(){
-  const g = $('guiaRosto'), v = $('vid'), q = $('quadro'), dc = $('dicas');
-  dc.innerHTML = ['l','r','u','d'].map(k=>`<svg class="seta ${k}" viewBox="0 0 24 24"><path d="${SETA[k]}"/></svg>`).join('')+'<div class="zoom mais">Chegue mais perto</div><div class="zoom menos">Afaste um pouco</div>';
-  g.classList.add('on'); g.classList.remove('ok'); $('tit').textContent = 'Enquadre o rosto'; falar('Coloque o rosto dentro do oval!'); status('');
-  controles([['pronto','Estou pronto','btn-mic']]);
-  const det = window.FaceDetector ? new FaceDetector({fastMode:true,maxDetectedFaces:1}) : null; let vivo = true, ok = 0;
-  const fim = new Promise(r=>{ prontoRes = ()=>{ vivo = false; r(); }; });
-  (async function olhar(){
-    while(vivo){
-      let m = null; try{ m = await medir(det,v,q); }catch(e){}
-      const sn = {l:0,r:0,u:0,d:0,mais:0,menos:0};
-      if(m){ sn.l = m.nx-.5>.1; sn.r = m.nx-.5<-.1; sn.u = m.ny-.48>.13; sn.d = m.ny-.48<-.13; sn.mais = m.w<.2; sn.menos = m.w>.45; }
-      for(const k in sn) dc.querySelector('.'+k)?.classList.toggle('on',!!sn[k]);
-      const bom = !!m && !Object.values(sn).some(Boolean); g.classList.toggle('ok',bom); ok = bom ? ok+1 : 0;
-      if(ok>=4 && vivo){ prontoRes(); break; }
-      await aguardar(250);
-    }
-  })();
-  await fim; vibrar(40, "toque"); g.classList.add('ok'); dc.querySelectorAll('.on').forEach(e=>e.classList.remove('on')); controles([]); status('');
-  await aguardar(500); g.classList.remove('on');   /* as marcações somem quando o rosto está no lugar */
-}
-/* posição do rosto (0–1 no quadro visível): FaceDetector quando existe; senão, estimativa por cor de pele (aproximada) */
-async function medir(det,v,q){
-  if(!v.videoWidth) return null;
-  const r = q.getBoundingClientRect(), sc = Math.max(r.width/v.videoWidth, r.height/v.videoHeight);
-  if(det){ const f = (await det.detect(v))[0]; if(!f) return null; const b = f.boundingBox;
-    return {nx:1-(((b.x+b.width/2)*sc-(v.videoWidth*sc-r.width)/2)/r.width), ny:((b.y+b.height/2)*sc-(v.videoHeight*sc-r.height)/2)/r.height, w:b.width*sc/r.width}; }
-  const cv = medir.cv || (medir.cv = document.createElement('canvas')); cv.width = 64; cv.height = 40; const c = cv.getContext('2d',{willReadFrequently:true});
-  const sw = r.width/sc, sh = r.height/sc; c.save(); c.translate(64,0); c.scale(-1,1); c.drawImage(v,(v.videoWidth-sw)/2,(v.videoHeight-sh)/2,sw,sh,0,0,64,40); c.restore();
-  const d = c.getImageData(0,0,64,40).data; let n = 0, ax = 0, ay = 0;
-  for(let i=0;i<2560;i++){ const R=d[i*4], G=d[i*4+1], B=d[i*4+2], Y=.299*R+.587*G+.114*B, Cb=128-.169*R-.331*G+.5*B, Cr=128+.5*R-.419*G-.081*B;
-    if(Y>45 && Cb>77 && Cb<127 && Cr>133 && Cr<173){ n++; ax += i%64; ay += (i/64)|0; } }
-  return n<40 ? null : {nx:ax/n/64, ny:ay/n/40, w:Math.sqrt(n/2560/1.63)};
+  const g = $('guiaRosto'), dc = $('dicas');
+  dc.innerHTML = '';
+  g.classList.add('on'); g.classList.remove('ok'); $('tit').textContent = 'Enquadre o rosto'; falar('Encaixe o rosto dentro do oval e toque em <b>Estou pronta!</b>'); status('');
+  controles([['pronto','Estou pronta!','btn-mic']]);
+  await new Promise(r=>{ prontoRes = r; });
+  vibrar(40, "toque"); controles([]); status('');
+  g.classList.remove('on','ok');   /* o oval some para a criança se ver melhor */
 }
 document.getElementById('pillEstrelas');
 function posicao(el,base){ const a = (base||$('app')).getBoundingClientRect(), r = el.getBoundingClientRect(); return {x:r.left-a.left+r.width/2, y:r.top-a.top+r.height/2}; }
@@ -1210,7 +1189,7 @@ intro();
       text: 'O Lumis conversa com você e diz o que fazer em cada momento.' },
     { sels: ['#quadro'], pref: ['left', 'right', 'bottom', 'top'], align: 'center', r: 24,
       title: 'O quadro da câmera',
-      text: 'Aqui você vai aparecer. Primeiro coloque o rosto dentro do oval, sinta a vibração e espere a contagem 3, 2, 1. Aí faça o som “Sss”. Depois, o vídeo fica salvo só neste aparelho, mas você pode compartilhar com alguém.' },
+      text: 'Aqui você vai aparecer. Primeiro encaixe o rosto dentro do oval e toque em “Estou pronta!”. Depois toque em “Começar o desafio”, sinta a vibração e espere a contagem 3, 2, 1. Aí faça o som “Sss”. Depois, o vídeo fica salvo só neste aparelho, mas você pode compartilhar com alguém.' },
     { sels: ['#controles [data-a="comecar"]'], pref: ['top', 'bottom'], align: 'center', r: 999,
       title: 'Começar o desafio',
       text: 'Quando estiver pronto, toque em “Começar o desafio”. Se o aparelho pedir para usar a câmera e o microfone, peça ajuda a um adulto.' }
