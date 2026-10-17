@@ -720,6 +720,29 @@ html.lt-on .page { padding-bottom: 55vh; }
     return enviar(API + "/api/pulseira/parar", {}).catch(() => {});
   }
 
+  (function () {
+  const alvo = document.scrollingElement || document.documentElement;
+  let ativo = false, yIni = 0, scrollIni = 0, moveu = false;
+
+  addEventListener('pointerdown', e => {
+    ativo = true; moveu = false;
+    yIni = e.clientY; scrollIni = alvo.scrollTop;
+  }, true);
+  addEventListener('pointermove', e => {
+    if (!ativo) return;
+    const dy = e.clientY - yIni;
+    if (Math.abs(dy) > 8) moveu = true;
+    if (moveu) alvo.scrollTop = scrollIni - dy;
+  }, true);
+  addEventListener('pointerup', () => { ativo = false; }, true);
+  addEventListener('pointercancel', () => { ativo = false; }, true);
+
+  // se foi arrasto, cancela o clique pra não apertar botão sem querer
+  addEventListener('click', e => {
+    if (moveu) { e.stopPropagation(); e.preventDefault(); moveu = false; }
+  }, true);
+})();
+
   let touches = 1;            // começa em 1, como na imagem
   let feeling = false;
   let feelTimer = null;
