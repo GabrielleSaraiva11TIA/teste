@@ -1014,19 +1014,16 @@ html.lt-on .page { padding-bottom: 55vh; }
 
   // ---------- pulseira junto com o vídeo ----------
   let sssTimers = [], sssAtivo = false;
+  // Vibração CONTÍNUA enquanto o vídeo toca (para quando acaba ou pausa)
+  function continuoPulseira(ligado){
+    return enviar(API + "/api/pulseira/continuo", { ligado: ligado }).catch(function(){});
+  }
   function sincronizarComVideo() {
-    pararSincronia();
-    const t = demoVideo.currentTime;
-    SEGMENTOS_SSS.forEach(([ini, fim]) => {
-      if (fim <= t) return;
-      const espera = Math.max(0, ini - t) * 1000;
-      const duracao = Math.round((fim - Math.max(t, ini)) * 1000);
-      sssTimers.push(setTimeout(() => { sssAtivo = true; haptic("sss", duracao); }, espera));
-    });
+    sssAtivo = true;
+    continuoPulseira(true);
   }
   function pararSincronia() {
-    sssTimers.forEach(clearTimeout); sssTimers = [];
-    if (sssAtivo) { sssAtivo = false; pararPulseira(); clearTimeout(hapticTimer); stopHapticUi(); }
+    if (sssAtivo) { sssAtivo = false; continuoPulseira(false); clearTimeout(hapticTimer); stopHapticUi(); }
   }
   demoVideo.addEventListener("playing", sincronizarComVideo);
   demoVideo.addEventListener("pause", pararSincronia);

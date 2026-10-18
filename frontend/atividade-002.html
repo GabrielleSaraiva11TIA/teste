@@ -582,23 +582,22 @@ function vibrate(){
 
 /* ---------- Pulseira junto com o vídeo ---------- */
 // Quando o vídeo começa a tocar, a pulseira faz o "Sss" no mesmo trecho em que a boca faz o som.
-let sssTimers = [], sssAtivo = false;
+// Vibração CONTÍNUA enquanto o vídeo toca (para quando acaba ou pausa)
+function continuoPulseira(ligado){
+  return enviar(API + "/api/pulseira/continuo", { ligado: ligado }).catch(function(){});
+}
+let sssAtivo = false;
 function sincronizarComVideo(){
-  pararSincronia();
-  const t = demo.currentTime;
-  SEGMENTOS_SSS.forEach(([ini, fim]) => {
-    if (fim <= t) return;
-    const espera = Math.max(0, ini - t) * 1000;
-    sssTimers.push(setTimeout(() => { sssAtivo = true; vibrarPulseira("sss"); }, espera));
-  });
+  sssAtivo = true;
+  continuoPulseira(true);
 }
 function pararSincronia(){
-  sssTimers.forEach(clearTimeout); sssTimers = [];
-  if (sssAtivo){ sssAtivo = false; pararPulseira(); }
+  if (sssAtivo){ sssAtivo = false; continuoPulseira(false); }
 }
 demo.addEventListener('playing', sincronizarComVideo);
 demo.addEventListener('pause', pararSincronia);
 demo.addEventListener('seeking', pararSincronia);
+demo.addEventListener('ended', pararSincronia);
 
 /* ---------- Vídeo da demonstração ---------- */
 function loadDemo(src){

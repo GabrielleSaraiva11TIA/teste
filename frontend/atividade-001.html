@@ -785,17 +785,11 @@ html.lt-on .page { padding-bottom: 55vh; }
   // =====================================================
   //  1) SENTIR NA PULSEIRA
   // =====================================================
-  function startFeeling() {
-    if (feeling) return;
+  function startFeeling(kindForce) {
+    if (feeling) stopFeeling();
 
-    // precisa escolher uma das 3 opções antes de sentir
-    if (!selectedCard) {
-      stateText.textContent = "Toque numa opção primeiro 👇";
-      showBubble("Escolha uma opção!");
-      cardsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      return;
-    }
-    const kind = selectedCard.dataset.sound;
+    // "Sentir na pulseira" sempre vibra o VENTO; cada cartão passa o seu próprio som
+    const kind = kindForce || "vento";
     feeling = true;
 
     // visual do botão
@@ -858,7 +852,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     vibrarLocal(0);
   }
 
-  btnFeel.addEventListener("click", () => (feeling ? stopFeeling() : startFeeling()));
+  btnFeel.addEventListener("click", () => (feeling ? stopFeeling() : startFeeling("vento")));
 
   // =====================================================
   //  2) CARTÕES — tocar para ouvir / tocar no nome para escolher
@@ -941,6 +935,10 @@ html.lt-on .page { padding-bottom: 55vh; }
 
     // toque curtinho de confirmação no celular
     if ("vibrate" in navigator) navigator.vibrate(30);
+
+    // vibra DIRETO o som deste cartão (tambor/vento/sino) — sem precisar
+    // apertar "Sentir na pulseira" depois
+    startFeeling(kind);
   }
 
   // clique nos cartões: ícone / "Toque para ouvir" -> ouvir | nome -> escolher

@@ -553,7 +553,7 @@ const SOM = 'Sss';                    // som-alvo da criança
 const GRAVACAO_MS = 10000;   // duração máxima do vídeo do desafio
 const CONTAGEM = 3;           // contagem regressiva antes de gravar
 const MEDALHA = `Explorador do ${SOM}`;
-const SENSIBILIDADE = 1.0, RMS_MINIMO = 0.02;
+const SENSIBILIDADE = 1.0, RMS_MINIMO = 0.012;
 const ACERTO_MIN_MS = 1000;           // quanto tempo de "Sssss" certo (somado) a criança precisa fazer para acertar
 /* Detecção do "Sssss" (a mesma da atividade 6), baseada no que a literatura de acústica usa para separar o /s/:
    pico do espectro agudo, inclinação (agudos x faixa da voz), chiado (não apito) e agudos acima do barulho de fundo */
@@ -619,7 +619,7 @@ function vibrarPulseira(padrao, celular) {
 function pararPulseira() { return enviar(API + "/api/pulseira/parar", {}).catch(function(){}); }
 function vibrarLocal(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
 /* ao-vivo: envia intensidade da voz para a pulseira em tempo real */
-var aoVivoAtivo = false;
+var aoVivoAtivo = false, contAoVivo = 0;
 function enviarAoVivo(intensidade) {
   if (!aoVivoAtivo) return;
   enviar(API + "/api/pulseira/ao-vivo", {ligado: true, intensidade: Math.min(1, intensidade)}).catch(function(){});
@@ -823,7 +823,7 @@ function gravar(){
     if(certo) acertoMs += dtS; else if(acima < 6 && ambienteDb !== null) ambienteDb += (m.hiDb - ambienteDb) * 0.03;
     if(acertoMs >= ACERTO_MIN_MS && !okSom){ okSom = true; if(gravador.state==='recording') gravador.stop(); }
     const nv = Math.min(1, Math.sqrt(sm/tmp.length)*14); $('quadro').style.setProperty('--nivel',nv.toFixed(2)); $('orbe').style.setProperty('--nivel',nv.toFixed(2));
-    contAoVivo++; if(contAoVivo % 7 === 0) enviarAoVivo(nv);
+    contAoVivo++; if(contAoVivo % 3 === 0) enviarAoVivo(nv);
     rafG = requestAnimationFrame(laco); })();
 }
 function parar(){ ouvindo = false; pararAoVivo(); pararPulseira(); cancelAnimationFrame(rafG); $('rec').classList.remove('on'); $('orbe').classList.remove('ouvindo'); $('quadro').style.removeProperty('--nivel'); $('orbe').style.removeProperty('--nivel'); }

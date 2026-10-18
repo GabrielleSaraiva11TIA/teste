@@ -173,8 +173,19 @@
   function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
   function clearAll() { timers.forEach(clearTimeout); timers = []; }
 
+  // Conexão com a pulseira (Python no Raspberry, localhost:5001)
+  var API = "http://localhost:5001";
+  function vibrarPulseira(padrao) {
+    return fetch(API + "/api/pulseira/vibrar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ padrao: padrao })
+    }).catch(function () {});
+  }
+
   function vibrar() {
-    try { if (navigator.vibrate) navigator.vibrate([200, 80, 200]); } catch (e) {}
+    vibrarPulseira("comemorar");   // vibração de parabéns na pulseira de verdade
+    try { if (navigator.vibrate) navigator.vibrate([200, 80, 200]); } catch (e) {}  // reserva do celular
   }
 
   function showEnd() {
@@ -182,8 +193,9 @@
     skip.classList.add('off');
     feel.classList.add('show');
     again.classList.add('show');
-    // Depois de assistir novamente, a pulseira vibra
-    if (vibrarAoFim) { vibrarAoFim = false; vibrar(); }
+    // Quando aparecem "Ir para o mapa" / "Assistir novamente", a pulseira vibra (comemorar)
+    vibrarAoFim = false;
+    vibrar();
   }
 
   function playVideo() {

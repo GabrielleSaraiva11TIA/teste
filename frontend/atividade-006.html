@@ -399,7 +399,7 @@ const URL_VOLTAR = '../mapa.html', URL_PROXIMA = 'atividade-007.html';
 const ALVO = { rotulo:'Sss', texto:'Sssss…', boca:'sorriso', hzMin:3200, hzMax:8000,
                dica:'Ponha a mão na frente da boca e sinta o ventinho fresco!' };
 const SENSIBILIDADE = 1.0;    // maior = percebe sons mais fracos
-const RMS_MINIMO = 0.02;      // volume mínimo antes da sensibilidade
+const RMS_MINIMO = 0.012;     // volume mínimo antes da sensibilidade (mais sensível = vibra mais cedo)
 const FALAR_MS = 2000;        // a barra: quanto tempo a criança precisa fazer som (ela só anda enquanto há som no microfone)
 const ESPERA_MAX_MS = 8000;   // se ninguém fizer som por esse tempo -> "Tente de novo"
 const ACERTO_MIN_MS = 1000;   // dentro desse tempo falado, quanto precisa ser "Sssss" certo para acertar
@@ -634,7 +634,7 @@ function laco(agora){
   const p = Math.min(1, falouMs/FALAR_MS), nivel = Math.min(1, rms*14);
   barra(p); $('orbe').style.setProperty('--nivel', nivel.toFixed(2));
   if(PULSEIRA_ATIVA){      // vibra enquanto a criança faz o som; para quando ela para
-    if(voz){ aoVivoAtivo = true; contAoVivo++; if(contAoVivo % 7 === 0) enviarAoVivo(nivel); }
+    if(voz){ aoVivoAtivo = true; contAoVivo++; if(contAoVivo % 3 === 0) enviarAoVivo(nivel); }
     else { if(aoVivoAtivo) pararAoVivo(); contAoVivo = 0; }
   }
   status(falouMs > 0 ? T.continue : T.esperando);
