@@ -703,7 +703,6 @@ function goObserve(){
   $('btnNext').hidden = false;
   setFeedback('🐱','Vamos olhar a boquinha com atenção.','Cada movimento tem o seu tempo. Sem pressa!', false);
   closeCamera();
-  playDemo();
 }
 
 async function goMirror(){
@@ -765,7 +764,6 @@ $('btnNext').addEventListener('click', ()=>{
   else { registrarConclusao(); closeCamera(); CONFIG.onContinue(); }
 });
 $('btnReplay').addEventListener('click', playDemo);
-demo.addEventListener('click', playDemo);    // tocar no vídeo também faz ele rodar
 $('btnAgain').addEventListener('click', goObserve);
 $('btnObserveMore').addEventListener('click', goObserve);
 $('btnFeel').addEventListener('click', ()=>{ vibrate(); toast('Sente o "Sss..." na pulseira?'); });
@@ -775,8 +773,7 @@ window.addEventListener('pagehide', closeCamera);
 
 /* ---------- Início ---------- */
 if (CONFIG.videoSrc) loadDemo(CONFIG.videoSrc);
-/* o vídeo só começa a rodar depois que o tutorial fecha (ver finish() no script do tutorial) */
-window.LT_ESPERA_VIDEO = true;
+/* o vídeo só roda quando a criança toca em "Ver a boca se mexendo" */
 </script>
 <!-- ============================================================
      TUTORIAL GUIADO — elementos (ficam escondidos até o tutorial começar)
@@ -1018,14 +1015,6 @@ window.LT_ESPERA_VIDEO = true;
     root.classList.remove('lt-on');
     redo.hidden = false;
     window.scrollTo(0, 0);
-    liberarVideo();
-  }
-
-  // Começa o vídeo da demonstração quando o tutorial termina (só na primeira vez, na tela de observar)
-  function liberarVideo() {
-    if (!window.LT_ESPERA_VIDEO) return;
-    window.LT_ESPERA_VIDEO = false;
-    try { if (phase === 'observe') playDemo(); } catch (e) {}
   }
 
   tip.addEventListener('click', function (e) {
@@ -1057,7 +1046,7 @@ window.LT_ESPERA_VIDEO = true;
     try { return localStorage.getItem(CHAVE_VISTO) === '1'; } catch (e) { return false; }
   }
   function boot() {
-    if (SO_NA_PRIMEIRA_VEZ && jaViu()) { redo.hidden = false; liberarVideo(); return; }
+    if (SO_NA_PRIMEIRA_VEZ && jaViu()) { redo.hidden = false; return; }
     start('principal');
   }
   // Primeira vez que os botões do espelho aparecem (câmera liberada): mostra os passos da tela do espelho
