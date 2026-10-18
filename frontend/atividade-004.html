@@ -198,6 +198,10 @@ button:disabled { cursor: not-allowed; }
 .obs-item__icon--1 { background: #e6e0ff; }
 .obs-item__icon--2 { background: #d7e8ff; }
 .obs-item__icon--3 { background: #ffdff0; }
+.demo-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.demo-actions .btn-soft { border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
+.demo-actions .btn-soft:hover { transform: translateY(-1px); }
+.demo-actions .btn-soft.on { background: #c4d2ff; box-shadow: 0 0 0 4px rgba(37,99,235,.22); }
 .observe__actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 .observe__actions > * { flex: 1 1 auto; }
 
@@ -607,6 +611,11 @@ html.lt-on .page { padding-bottom: 55vh; }
           </div>
 
           <span class="demo__sound">🔊 Som do Ventinho: Frequência Suave Contínua</span>
+        </div>
+
+        <div class="demo-actions" id="demoActions">
+          <button class="btn-soft" id="btnSentirPulso" type="button">Sentir toque no pulso (Pulseira)</button>
+          <button class="btn-soft" id="btnVerBoca" type="button">Ver a boca se mexendo</button>
         </div>
 
         <div class="tactile" id="tactile">
@@ -1020,6 +1029,13 @@ html.lt-on .page { padding-bottom: 55vh; }
   demoVideo.addEventListener("ended", pararSincronia);
   btnSsss.addEventListener("click", playDemo);
   btnReplay.addEventListener("click", playDemo);
+  // botões sob o vídeo: ver a boca se mexendo / sentir o toque na pulseira (sem o vídeo)
+  $("btnVerBoca").addEventListener("click", playDemo);
+  $("btnSentirPulso").addEventListener("click", () => {
+    haptic("sss", DURACAO_SEM_VIDEO_MS);
+    const b = $("btnSentirPulso"); b.classList.add("on");
+    setTimeout(() => b.classList.remove("on"), DURACAO_SEM_VIDEO_MS);
+  });
 
   // =====================================================
   //  ETAPA 2 — CÂMERA + MICROFONE
@@ -1930,6 +1946,9 @@ html.lt-on .page { padding-bottom: 55vh; }
     { sels: ['#demo'], pref: ['right', 'bottom', 'top', 'left'], align: 'center', r: 20,
       title: 'Olhe a boca',
       text: 'Aqui aparece o vídeo da mulher mostrando como fazer o som Sss. Toque no vídeo para começar ou parar.' },
+    { sels: ['#demoActions'], pref: ['right', 'top', 'bottom', 'left'], align: 'center', r: 22,
+      title: 'Ver a boca e sentir o toque',
+      text: 'Toque em “Ver a boca se mexendo” para o vídeo rodar. Toque em “Sentir toque no pulso (Pulseira)” para sentir o Sss vibrando no pulso.' },
     { sels: ['#tactile'], pref: ['right', 'top', 'bottom', 'left'], align: 'center', r: 18,
       title: 'Pista na pulseira',
       text: 'Quando a boca faz o Sss, a pulseira vibra e estas barrinhas se mexem. Assim você vê e sente o som.' },

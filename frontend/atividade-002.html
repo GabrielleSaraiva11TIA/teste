@@ -389,8 +389,8 @@ body{padding-top:10px;padding-left:12px;padding-right:12px}
       </div>
 
       <div class="actions">
-        <button class="btn" id="btnReplay">↻ Repetir movimento</button>
-        <button class="btn" id="btnFeel">Sentir na pulseira</button>
+        <button class="btn" id="btnReplay">Ver a boca se mexendo</button>
+        <button class="btn" id="btnFeel">Sentir toque no pulso (Pulseira)</button>
       </div>
     </article>
 
@@ -606,7 +606,7 @@ function loadDemo(src){
 function playDemo(){
   waveOn(true); $('demoStatus').textContent = 'Demonstração Ativa'; $('demoDot').className = 'dot';
   demo.currentTime = 0;
-  demo.play().catch(()=>{ toast('Toque no vídeo para começar ▶'); });
+  demo.play().catch(()=>{});
   // a pulseira acompanha o vídeo pelo evento "playing" (ver sincronizarComVideo)
 }
 demo.addEventListener('ended', ()=>{
@@ -775,7 +775,8 @@ window.addEventListener('pagehide', closeCamera);
 
 /* ---------- Início ---------- */
 if (CONFIG.videoSrc) loadDemo(CONFIG.videoSrc);
-playDemo();
+/* o vídeo só começa a rodar depois que o tutorial fecha (ver finish() no script do tutorial) */
+window.LT_ESPERA_VIDEO = true;
 </script>
 <!-- ============================================================
      TUTORIAL GUIADO — elementos (ficam escondidos até o tutorial começar)
@@ -836,7 +837,7 @@ playDemo();
       text: 'O vídeo mostra a boca fazendo o som Sss. Observe com atenção. As barrinhas se mexem junto com o vídeo e mostram o som de um jeito que dá para ver.' },
     { sels: ['#panelDemo .actions'], pref: ['right', 'bottom', 'top', 'left'], align: 'center', r: 22,
       title: 'Ver de novo e sentir',
-      text: 'Toque em “Repetir movimento” para ver o vídeo outra vez. Toque em “Sentir na pulseira” para sentir o Sss vibrando no pulso.' },
+      text: 'Toque em “Ver a boca se mexendo” para ver o vídeo outra vez. Toque em “Sentir toque no pulso (Pulseira)” para sentir o Sss vibrando no pulso.' },
     { sels: ['#panelMirror'], pref: ['left', 'bottom', 'top', 'right'], align: 'center', r: 24,
       title: 'Seu espelho mágico',
       text: 'Aqui você vai se ver ao vivo. No Passo 2, encaixe o rosto no círculo e toque em “Estou pronta!”. Depois, toque em “Ir para a tentativa” e faça o movimento. A câmera funciona só como espelho: nada é gravado.' },
@@ -1017,6 +1018,14 @@ playDemo();
     root.classList.remove('lt-on');
     redo.hidden = false;
     window.scrollTo(0, 0);
+    liberarVideo();
+  }
+
+  // Começa o vídeo da demonstração quando o tutorial termina (só na primeira vez, na tela de observar)
+  function liberarVideo() {
+    if (!window.LT_ESPERA_VIDEO) return;
+    window.LT_ESPERA_VIDEO = false;
+    try { if (phase === 'observe') playDemo(); } catch (e) {}
   }
 
   tip.addEventListener('click', function (e) {
@@ -1048,7 +1057,7 @@ playDemo();
     try { return localStorage.getItem(CHAVE_VISTO) === '1'; } catch (e) { return false; }
   }
   function boot() {
-    if (SO_NA_PRIMEIRA_VEZ && jaViu()) { redo.hidden = false; return; }
+    if (SO_NA_PRIMEIRA_VEZ && jaViu()) { redo.hidden = false; liberarVideo(); return; }
     start('principal');
   }
   // Primeira vez que os botões do espelho aparecem (câmera liberada): mostra os passos da tela do espelho

@@ -73,12 +73,13 @@ svg{display:block}
 .stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#000}
 
 .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.btn{border-radius:999px;padding:10px 16px;font-size:12px;font-weight:500;display:inline-flex;gap:8px;align-items:center;transition:transform .15s,box-shadow .2s,background .2s}
+/* botões no mesmo desenho da atividade 002 */
+.btn{background:#EEF3FF;color:#003D9B;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;display:inline-flex;gap:6px;align-items:center;transition:transform .15s,background .15s,box-shadow .2s}
+.btn:hover{transform:translateY(-1px);background:#DCE6FF}
 .btn:active{transform:scale(.97)}
-.btn.sky{background:var(--sky);color:var(--sky-ink)}
-.btn.sky.on{background:#8ccbff;box-shadow:0 0 0 4px rgba(74,168,255,.25)}
-.btn.soft{background:var(--blue-soft);color:var(--blue);border:1px solid var(--blue-line)}
-.btn.soft:hover{background:#d0defd}
+.btn.sky,.btn.soft{background:#EEF3FF;color:#003D9B;border:0}
+.btn.sky:hover,.btn.soft:hover{background:#DCE6FF}
+.btn.sky.on{background:#C4D2FF;box-shadow:0 0 0 4px rgba(37,99,235,.22)}
 .btn[hidden]{display:none}
 .pulse-bar{display:flex;align-items:center;gap:10px;background:#cfe8ff;border:1.5px solid #6db6ff;border-radius:12px;padding:9px 16px;font-size:12.5px;font-weight:500;color:var(--sky-ink);overflow:hidden;max-height:0;opacity:0;padding-top:0;padding-bottom:0;border-width:0;transition:max-height .35s,opacity .3s,padding .3s}
 .pulse-bar.on{max-height:60px;opacity:1;padding-top:9px;padding-bottom:9px;border-width:1.5px}

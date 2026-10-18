@@ -618,5 +618,22 @@
   document.addEventListener("visibilitychange", function(){ if (!document.hidden) carregar(); });
 })();
 </script>
+<script>
+/* Arrastar o dedo/mouse para rolar o mapa para os lados (telas sem rolagem por toque) */
+(function () {
+  const alvo = document.querySelector(".scroller") || document.scrollingElement || document.documentElement;
+  let ativo = false, xIni = 0, yIni = 0, sxIni = 0, syIni = 0, moveu = false;
+  function fim() { ativo = false; document.documentElement.style.userSelect = ''; setTimeout(() => { moveu = false; }, 0); }
+  addEventListener('pointerdown', e => { ativo = true; moveu = false; xIni = e.clientX; yIni = e.clientY; sxIni = alvo.scrollLeft; syIni = alvo.scrollTop; }, true);
+  addEventListener('pointermove', e => {
+    if (!ativo) return;
+    const dx = e.clientX - xIni, dy = e.clientY - yIni;
+    if (!moveu && Math.hypot(dx, dy) > 8) { moveu = true; document.documentElement.style.userSelect = 'none'; }
+    if (moveu) { alvo.scrollLeft = sxIni - dx; alvo.scrollTop = syIni - dy; }
+  }, true);
+  addEventListener('pointerup', fim, true); addEventListener('pointercancel', fim, true);
+  addEventListener('click', e => { if (moveu) { e.stopPropagation(); e.preventDefault(); } }, true);
+})();
+</script>
 </body>
 </html>
