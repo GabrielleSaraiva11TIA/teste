@@ -4,10 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lumis • Atividade 5 — Desafio de Percepção</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
+  <!-- fontes do projeto, guardadas em assets/fonts (não dependem da internet) -->
+  <link rel="preload" href="assets/fonts/Baloo2.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/Quicksand.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/Lexend.woff2" as="font" type="font/woff2" crossorigin>
   <style>
+  @font-face{font-family:'Baloo 2';src:url(assets/fonts/Baloo2.woff2) format('woff2');font-weight:400 800;font-style:normal;font-display:swap}
+  @font-face{font-family:'Quicksand';src:url(assets/fonts/Quicksand.woff2) format('woff2');font-weight:300 700;font-style:normal;font-display:swap}
+  @font-face{font-family:'Lexend';src:url(assets/fonts/Lexend.woff2) format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+  </style>
+<style>
 /* ================== VARIÁVEIS ================== */
 :root {
   --blue-900: #0a2a8a;
@@ -433,7 +439,6 @@ html.lt-on .page { padding-bottom: 55vh; }
 .progress__bars{gap:4px}.bar{height:8px}.progress__labels{gap:4px;font-size:8px}.progress__head{font-size:13px}
 }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style id="topo-fonte">
 /* topo padronizado: mesma fonte e mesmos espaços da atividade 003 */
 :root{--topo-font:'Lexend',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
@@ -1144,9 +1149,11 @@ html.lt-on .page { padding-bottom: 55vh; }
     if (SO_NA_PRIMEIRA_VEZ && jaViu()) { redo.hidden = false; return; }
     start();
   }
-  if (document.fonts && document.fonts.ready) {
-    Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 1200); })]).then(boot);
-  } else { boot(); }
+  // O tutorial abre na hora (não espera as fontes). Quando uma fonte chega, o quadrado de destaque é reposicionado.
+  boot();
+  if (document.fonts && document.fonts.addEventListener) {
+    document.fonts.addEventListener('loadingdone', function () { window.dispatchEvent(new Event('resize')); });
+  }
 })();
 
 </script>

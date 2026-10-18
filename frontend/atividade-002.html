@@ -4,8 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lumis • Etapa 2 • Espelho do Lumis</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<!-- fontes do projeto, guardadas em assets/fonts (não dependem da internet) -->
+  <link rel="preload" href="assets/fonts/Quicksand.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/Lexend.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+  @font-face{font-family:'Quicksand';src:url(assets/fonts/Quicksand.woff2) format('woff2');font-weight:300 700;font-style:normal;font-display:swap}
+  @font-face{font-family:'Lexend';src:url(assets/fonts/Lexend.woff2) format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+  </style>
 <style>
   :root{
     --blue:#003D9B;
@@ -325,7 +330,6 @@ body{padding-top:10px;padding-left:12px;padding-right:12px}
 .steps{gap:4px}.step i{height:8px}.step{font-size:8px}.progress-head{font-size:13px}
 }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style id="topo-fonte">
 /* topo padronizado: mesma fonte e mesmos espaços da atividade 003 */
 :root{--topo-font:'Lexend',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
@@ -1057,9 +1061,11 @@ playDemo();
       }
     }).observe(acoesEsp, { attributes: true, attributeFilter: ['hidden'] });
   }
-  if (document.fonts && document.fonts.ready) {
-    Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 1200); })]).then(boot);
-  } else { boot(); }
+  // O tutorial abre na hora (não espera as fontes). Quando uma fonte chega, o quadrado de destaque é reposicionado.
+  boot();
+  if (document.fonts && document.fonts.addEventListener) {
+    document.fonts.addEventListener('loadingdone', function () { window.dispatchEvent(new Event('resize')); });
+  }
 })();
 </script>
 <!-- Sair do aparelho: volta para o QR Code -->

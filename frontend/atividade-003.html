@@ -4,8 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lumis · Missão da língua</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- fontes do projeto, guardadas em assets/fonts (não dependem da internet) -->
+  <link rel="preload" href="assets/fonts/Lexend.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+  @font-face{font-family:'Lexend';src:url(assets/fonts/Lexend.woff2) format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+  </style>
 <style>
 :root{
   --bg:#f1f4ff; --card:#ffffff; --ink:#1b2447; --muted:#5b6385;
@@ -841,9 +844,11 @@ btnPulso.addEventListener('click', ()=>{
     if (SO_NA_PRIMEIRA_VEZ && jaViu()) { redo.hidden = false; return; }
     start();
   }
-  if (document.fonts && document.fonts.ready) {
-    Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 1200); })]).then(boot);
-  } else { boot(); }
+  // O tutorial abre na hora (não espera as fontes). Quando uma fonte chega, o quadrado de destaque é reposicionado.
+  boot();
+  if (document.fonts && document.fonts.addEventListener) {
+    document.fonts.addEventListener('loadingdone', function () { window.dispatchEvent(new Event('resize')); });
+  }
 })();
 </script>
 <!-- Sair do aparelho: volta para o QR Code -->
