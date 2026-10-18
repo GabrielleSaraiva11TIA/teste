@@ -149,6 +149,8 @@
   .orbe.festa .g-head{animation:cabecaFesta .45s ease-in-out infinite alternate}
   .orbe.festa .g-tail{animation:raboFesta .2s ease-in-out infinite alternate}
   .orbe.festa .brilhinho{animation:cintila .5s ease-in-out infinite}
+  /* enquanto a criança faz o som, os enfeites (estrelas, foguete, chama) ficam parados: o processador fica livre para ouvir */
+  .cena.quieta .est,.cena.quieta .foguete,.cena.quieta .chama{animation-play-state:paused}
   @keyframes pulo{0%{transform:scale(1,1)}15%{transform:scale(1.06,.92)}45%{transform:translateY(-34px) scale(.96,1.07)}75%{transform:scale(1.05,.94)}100%{transform:scale(1,1)}}
   @keyframes cabecaFesta{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
   @keyframes raboFesta{from{transform:rotate(-12deg)}to{transform:rotate(14deg)}}
@@ -177,7 +179,6 @@ html.lt-on, html.lt-on body { overflow: hidden; }
 .lt-spot::after {
   content: ""; position: absolute; inset: -4px; border-radius: inherit;
   border: 3px solid #fff;
-  animation: lt-pulse 1.7s ease-in-out infinite;
 }
 @keyframes lt-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.02); } }
 
@@ -232,7 +233,7 @@ html.lt-on, html.lt-on body { overflow: hidden; }
 }
 
 .lt-arrow { position: absolute; width: 24px; height: 24px; pointer-events: none; }
-.lt-arrow svg { width: 24px; height: 24px; display: block; animation: lt-nudge 1s ease-in-out infinite; filter: drop-shadow(0 2px 3px rgba(8,16,60,.35)); }
+.lt-arrow svg { width: 24px; height: 24px; display: block; animation: lt-nudge 1s ease-in-out infinite; }
 @keyframes lt-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 .lt-tip.pl-bottom .lt-arrow { top: -29px; transform: none; }
 .lt-tip.pl-top .lt-arrow { bottom: -29px; transform: rotate(180deg); }
@@ -298,6 +299,37 @@ html.lt-on, html.lt-on body { overflow: hidden; }
 .topo .pill,.topo .lt-redo,.progresso,.progresso *{font-family:var(--topo-font);font-style:normal;letter-spacing:0;text-transform:none}
 .topo .pill.estrelas svg{width:13px;height:13px;flex:none}
 .topo .pill.estrelas svg path{fill:#0d3b8e}
+</style>
+<style id="lt-compacto">
+/* Tutorial menor nas telas baixas (touch de 800x480 e 1024x600): o cartão ocupava quase metade da tela */
+@media (max-height: 620px) {
+  .lt-tip { width: min(268px, calc(100vw - 20px)); padding: 10px 12px; border-radius: 16px; font-size: 12px; line-height: 1.35; box-shadow: 0 10px 26px rgba(8, 16, 60, 0.35); }
+  .lt-top { margin-bottom: 6px; gap: 8px; }
+  .lt-count { font-size: 10.5px; padding: 3px 8px; }
+  .lt-dots { gap: 4px; }
+  .lt-dots i { width: 5px; height: 5px; }
+  .lt-dots i.on { width: 14px; }
+  .lt-title { font-size: 14px; margin: 0 0 4px; line-height: 1.2; }
+  .lt-text { font-size: 12px; line-height: 1.38; }
+  .lt-legend { margin-top: 6px; gap: 5px; }
+  .lt-legend span { font-size: 10.5px; padding: 3px 8px; gap: 4px; }
+  .lt-legend b { width: 8px; height: 8px; }
+  .lt-nav { margin-top: 8px; gap: 8px; }
+  .lt-btn { font-size: 12.5px; padding: 0 16px; min-height: 36px; }
+  .lt-btn.ghost { padding-inline: 10px; }
+  .lt-extra { margin-top: 6px; padding-top: 4px; }
+  .lt-link { font-size: 11px; padding: 0 8px; min-height: 32px; }
+  .lt-link svg { width: 12px; height: 12px; }
+  .lt-arrow, .lt-arrow svg { width: 20px; height: 20px; }
+  .lt-finale { width: min(300px, calc(100vw - 24px)); padding: 16px 18px 12px; border-radius: 20px; }
+  .lt-badge { width: 44px; height: 44px; margin: 0 auto 8px; }
+  .lt-badge svg { width: 24px; height: 24px; }
+  .lt-finale h3 { font-size: 17px; margin: 0 0 5px; }
+  .lt-finale p { font-size: 12.5px; line-height: 1.4; margin: 0 0 10px; }
+  .lt-go { font-size: 15px; padding: 10px 18px; }
+  .lt-fin-links { margin-top: 6px; }
+  .lt-fin-link { font-size: 11px; }
+}
 </style>
 </head>
 <body>
@@ -595,7 +627,7 @@ async function iniciar(){
   }catch(err){ status('Microfone indisponível'); falar(T.semMic); return; }
   ouvindo = true; decorrido = 0; acertoMs = 0; falouMs = 0; prepMs = 0; menorS = null; ambienteDb = null; tAnt = performance.now(); barra(0);
   $('btnMic').classList.add('ouvindo'); micTxt(T.botaoOuvindo);
-  $('orbe').classList.add('ouvindo'); $('bau').classList.add('tremendo');
+  $('orbe').classList.add('ouvindo'); $('bau').classList.add('tremendo'); $('cena').classList.add('quieta');
   $('btnSimular').disabled = true; status(T.esperando); falar(T.ouvindo);
   contAoVivo = 0;
   raf = requestAnimationFrame(laco);
@@ -644,7 +676,7 @@ function limparEscuta(){
   cancelAnimationFrame(raf); ouvindo = false;
   if(aoVivoAtivo) pararAoVivo();
   $('btnMic').classList.remove('ouvindo'); $('orbe').classList.remove('ouvindo'); $('orbe').style.removeProperty('--nivel');
-  $('bau').classList.remove('tremendo');
+  $('bau').classList.remove('tremendo'); $('cena').classList.remove('quieta');
 }
 /* a criança tocou no microfone de novo para cancelar */
 function parar(){
@@ -1111,12 +1143,17 @@ document.addEventListener('visibilitychange', ()=>{ if(document.hidden && ouvind
       }).catch(function(){});
   }
 
+  // consulta a cada 4 s (requisito do projeto), mas sem empilhar pedidos se a rede estiver lenta
+  // e sem redesenhar a tela quando nada mudou
+  var ultimo = null, buscando = false;
   function carregar(){
-    var t = tok(); if (!t) return Promise.resolve();
+    var t = tok(); if (!t || buscando) return Promise.resolve();
+    buscando = true;
     return fetch(API + "/api/dispositivo/me", { headers:{ authorization:"Bearer " + t } })
       .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){ if (d){ info = d; pintar(); sincronizarMapa(); } })
-      .catch(function(){});
+      .then(function(d){ if (d){ var novo = JSON.stringify(d); if (novo !== ultimo){ ultimo = novo; info = d; pintar(); } sincronizarMapa(); } })
+      .catch(function(){})
+      .then(function(){ buscando = false; });
   }
 
   function linha(t, v){ return v ? "<dt>" + t + "</dt><dd>" + String(v).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }) + "</dd>" : ""; }
@@ -1148,6 +1185,18 @@ document.addEventListener('visibilitychange', ()=>{ if(document.hidden && ouvind
   carregar();
   setInterval(carregar, 4000);
   document.addEventListener("visibilitychange", function(){ if (!document.hidden) carregar(); });
+})();
+</script>
+<!-- ===== BOTÃO TEMPORÁRIO DE TESTE: pula para a atividade 7. Para tirar: troque true por false (ou apague este bloco). ===== -->
+<script>
+(function(){
+  var MOSTRAR_BOTAO_TESTE = true;
+  if (!MOSTRAR_BOTAO_TESTE) return;
+  var b = document.createElement('button');
+  b.type = 'button'; b.id = 'btnTesteProxima'; b.textContent = 'Ir para a atividade 7 (teste) ›';
+  b.style.cssText = 'position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:2147483000;min-height:40px;padding:0 14px;white-space:nowrap;border:2px dashed #b3382e;border-radius:999px;background:#fff;color:#b3382e;font:700 13px system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 4px 14px rgba(20,60,160,.2);cursor:pointer';
+  b.addEventListener('click', function(){ location.href = 'atividade-007.html'; });
+  document.body.appendChild(b);
 })();
 </script>
 </body>
