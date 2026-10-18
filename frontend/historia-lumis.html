@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>História do Lumis</title>
+<link rel="preload" href="assets/fonts/Nunito.woff2" as="font" type="font/woff2" crossorigin>
+<style>@font-face{font-family:"Nunito";src:url(assets/fonts/Nunito.woff2) format("woff2");font-weight:200 1000;font-style:normal;font-display:swap}</style>
+<!-- Fredoka carrega em segundo plano (não trava a tela); enquanto não chega, usa a fonte reserva -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&display=swap"></noscript>
+<style>
+:root{--bg:#050b1a;--blue:#003D9B;--ink:#fff;--soft:#C4D2FF;--font-display:"Fredoka","Trebuchet MS",sans-serif;--font-body:"Nunito","Segoe UI",sans-serif;color-scheme:dark}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);overflow:hidden}
+.stage{position:fixed;inset:0;background:#000}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.intro{position:absolute;inset:0;z-index:2;background:var(--blue);display:grid;place-items:center;padding:24px;text-align:center;transition:opacity 900ms ease}
+.intro.gone{opacity:0;pointer-events:none}
+.intro h1{margin:0;font-family:var(--font-display);font-weight:600;font-size:clamp(34px,7vw,84px);line-height:1.1;text-wrap:balance;opacity:0;transition:opacity 1100ms ease}
+.intro h1.show{opacity:1}
+.skip{position:absolute;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:5;font:800 16px/1 var(--font-body);color:var(--ink);background:#00225f;border:2px solid rgba(196,210,255,.45);border-radius:999px;padding:12px 22px;cursor:pointer;transition:opacity 400ms ease,background 200ms}
+.skip:hover{background:var(--blue)}
+.skip.off{opacity:0;pointer-events:none}
+.actions{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 8%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:16px;justify-content:center;padding:0 16px;pointer-events:none}
+.discover{transform:translateY(8px);font:600 clamp(18px,2.8vw,28px)/1 var(--font-display);color:var(--blue);background:#fff;border:0;border-radius:999px;padding:.7em 1.5em;cursor:pointer;opacity:0;pointer-events:none;transition:opacity 800ms ease,transform 800ms ease;box-shadow:0 8px 24px rgba(0,0,0,.35);white-space:nowrap;text-decoration:none}
+.discover.show{opacity:1;transform:translateY(0);pointer-events:auto;animation:pulse 2s ease-in-out 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(196,210,255,.7),0 8px 24px rgba(0,0,0,.35)}50%{box-shadow:0 0 0 16px rgba(196,210,255,0),0 8px 24px rgba(0,0,0,.35)}}
+.again{font:600 clamp(15px,2vw,20px)/1.2 var(--font-display);color:var(--ink);background:none;border:0;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px;text-shadow:0 1px 8px rgba(0,0,0,.6);padding:.3em .6em;cursor:pointer;opacity:0;pointer-events:none;transition:opacity 800ms ease;white-space:nowrap}
+.again.show{opacity:1;pointer-events:auto}
+.again:hover{text-decoration-thickness:2px}
+button:focus-visible,a:focus-visible{outline:3px solid var(--soft);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.intro,.intro h1,.discover,.skip{transition-duration:1ms}.discover.show{animation:none}}
+</style>
+</head>
+<body>
+<main class="stage">
+  <video id="v" playsinline preload="auto" src="assets/video-historia.mp4"></video>
+  <div class="intro" id="intro"><h1 id="t1">História do Lumis</h1></div>
+  <div class="actions"><a class="discover" id="discover" href="descobrindo-pulseira.html">Descubra a pulseira</a><button class="again" id="again" type="button">Quer assistir de novo?</button></div>
+  <button class="skip" id="skip" type="button">Pular &rsaquo;</button>
+</main>
+<script>
+(function(){
+  var v=document.getElementById('v'),intro=document.getElementById('intro'),t1=document.getElementById('t1'),
+      skip=document.getElementById('skip'),discover=document.getElementById('discover'),again=document.getElementById('again');
+  var timers=[],finished=false;
+  function later(fn,ms){timers.push(setTimeout(fn,ms))}
+  function showEnd(){finished=true;skip.classList.add('off');discover.classList.add('show');again.classList.add('show')}
+  function playVideo(){
+    intro.classList.add('gone');
+    var p=v.play();
+    if(p&&p.catch)p.catch(function(){
+      v.muted=true;v.play().catch(function(){});
+      // o navegador bloqueou o som: ativa no primeiro toque
+      var unmute=function(){v.muted=false;document.removeEventListener('pointerdown',unmute)};
+      document.addEventListener('pointerdown',unmute);
+    });
+  }
+  later(function(){t1.classList.add('show')},300);
+  later(function(){t1.classList.remove('show')},3400);
+  later(playVideo,4400);
+  v.addEventListener('ended',showEnd);
+  again.addEventListener('click',function(){
+    finished=false;
+    discover.classList.remove('show');again.classList.remove('show');skip.classList.remove('off');
+    // recarrega o vídeo do zero e repete a abertura com o título
+    v.pause();
+    v.load();
+    timers.forEach(clearTimeout);timers=[];
+    t1.classList.remove('show');
+    intro.classList.remove('gone');
+    later(function(){t1.classList.add('show')},300);
+    later(function(){t1.classList.remove('show')},3400);
+    later(playVideo,4400);
+  });
+  skip.addEventListener('click',function(){
+    if(finished)return;
+    timers.forEach(clearTimeout);timers=[];
+    t1.classList.remove('show');intro.classList.add('gone');
+    function goLast(){v.pause();v.currentTime=Math.max(0,(v.duration||0)-0.05);showEnd()}
+    if(v.readyState>=1)goLast();else v.addEventListener('loadedmetadata',goLast,{once:true});
+  });
+})();
+</script>
+</body>
+</html>
