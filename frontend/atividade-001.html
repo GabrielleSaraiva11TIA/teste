@@ -163,6 +163,8 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 .stage.is-feeling .wind-bubble,
 .stage.is-bubble .wind-bubble { opacity: 1; transform: translateX(0) scale(1); }
 .stage.is-feeling .bubble-dot { opacity: 1; }
+.stage.sss-bubble .wind-bubble .ico { display: none; }
+.state-chip__emoji { display: none !important; }
 
 @keyframes glow-pulse { 50% { transform: scale(1.12); } }
 @keyframes breeze { from { transform: translateX(-2px) rotate(-1.5deg); } to { transform: translateX(2px) rotate(1.5deg); } }
@@ -523,6 +525,46 @@ html.lt-on .page { padding-bottom: 55vh; }
 .lt-tip, .lt-tip *, .lt-finale, .lt-finale * { font-family: 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-style: normal; letter-spacing: 0; text-transform: none; }
 .lt-tip, .lt-finale { font-synthesis: none; }
 </style>
+<script id="lumis-estrelas">
+/* Estrelas da criança: começam em 0 e cada atividade soma uma vez só (ganhar). Fica guardado neste aparelho, por criança. */
+window.lumisEstrelas = (function(){
+  var PTS = { a1:2, a2:2, a3:3, a4:5, a5:3, a6:5, a7:3, a8:2 }, memoria = {};
+  function chave(){ var id = null; try{ id = localStorage.getItem("lumis_crianca_ativa"); }catch(e){} return "lumis_estrelas_" + (id || "0"); }
+  function ilhaConcluida(){
+    try{ var p = JSON.parse(localStorage.getItem("lumis_progresso") || "{}"); return !!(p.ilhas && p.ilhas.indexOf(1) > -1); }catch(e){ return false; }
+  }
+  function ler(){
+    var o = null, k;
+    try{ o = JSON.parse(localStorage.getItem(chave()) || "null"); }catch(e){}
+    if (!o || typeof o.g !== "object" || !o.g) o = memoria[chave()] || { g:{} };
+    if (ilhaConcluida()){ for (k in PTS) o.g[k] = PTS[k]; }   // ilha concluída: conta como se tivesse feito tudo
+    return o;
+  }
+  function limpar(){   // ao sair da conta do aparelho: perde as estrelas
+    var i, k, apagar = [];
+    memoria = {};
+    try{
+      for (i = 0; i < localStorage.length; i++){ k = localStorage.key(i); if (k && k.indexOf("lumis_estrelas_") === 0) apagar.push(k); }
+      for (i = 0; i < apagar.length; i++) localStorage.removeItem(apagar[i]);
+    }catch(e){}
+  }
+  function gravar(o){ memoria[chave()] = o; try{ localStorage.setItem(chave(), JSON.stringify(o)); }catch(e){} }
+  function total(){ var o = ler(), t = 0, k; for (k in o.g) t += Number(o.g[k]) || 0; return t; }
+  function mostrar(){
+    var ids = ["starCount", "stars", "starN", "qtdEstrelas"], i, el;
+    for (i = 0; i < ids.length; i++){ el = document.getElementById(ids[i]); if (el) el.textContent = String(total()); }
+  }
+  function ganhar(n, opcoes){
+    var k = "a" + n, o = ler();
+    if (o.g[k] || !PTS[k]) return 0;          // já ganhou as estrelas desta atividade
+    o.g[k] = PTS[k]; gravar(o);
+    if (!opcoes || opcoes.mostrar !== false) mostrar();
+    return PTS[k];
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mostrar); else mostrar();
+  return { total: total, ganhar: ganhar, mostrar: mostrar, limpar: limpar, meta: 25 };
+})();
+</script>
 </head>
 <body>
 
@@ -535,7 +577,7 @@ html.lt-on .page { padding-bottom: 55vh; }
 
       
 
-      <div class="stars"><svg width="13" height="13" viewBox="0 0 24 24" fill="#0d3b8e"><path d="M12 2.500l2.900 6 6.600.9-4.800 4.600 1.200 6.500L12 17.300l-5.900 3.200 1.200-6.500L2.500 9.400l6.600-.9z"/></svg><b id="starCount">124</b>&nbsp; estrelas</div>
+      <div class="stars"><svg width="13" height="13" viewBox="0 0 24 24" fill="#0d3b8e"><path d="M12 2.500l2.900 6 6.600.9-4.800 4.600 1.200 6.500L12 17.300l-5.900 3.200 1.200-6.500L2.500 9.400l6.600-.9z"/></svg><b id="starCount">0</b>&nbsp; estrelas</div>
     </div>
 
     <!-- ============ PROGRESSO ============ -->
@@ -590,7 +632,6 @@ html.lt-on .page { padding-bottom: 55vh; }
           <button class="btn-feel" id="btnFeel" type="button" aria-pressed="false">
             <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v12h6V6H9ZM3 9h2v6H3V9Zm16 0h2v6h-2V9Z"/></svg>
             <span id="btnFeelText">Sentir na pulseira</span>
-            <svg class="ico ico--wind" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>
           </button>
 
           <div class="state-chip" id="stateChip">
@@ -605,7 +646,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     <!-- ============ TOQUE NO VENTO ============ -->
     <section class="touch">
       <div class="touch__head">
-        <h2>☝ Toque na opção que representa a vibração:</h2>
+        <h2>Toque na opção que representa a vibração:</h2>
         <span class="counter" id="touchCounter">👆 1 toque</span>
       </div>
 
@@ -620,7 +661,7 @@ html.lt-on .page { padding-bottom: 55vh; }
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 8c5 2 9 8 14 8M19 8c-5 2-9 8-14 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
           </button>
           <button class="sound-card__name" type="button" data-action="choose">Tambor</button>
-          <button class="sound-card__cta" type="button" data-action="play">☝ Toque para sentir</button>
+          <button class="sound-card__cta" type="button" data-action="play">Toque para sentir</button>
         </div>
 
         <div class="sound-card" data-sound="vento" data-label="Vento!">
@@ -628,7 +669,7 @@ html.lt-on .page { padding-bottom: 55vh; }
             <svg viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
           <button class="sound-card__name" type="button" data-action="choose">Vento</button>
-          <button class="sound-card__cta" type="button" data-action="play">☝ Toque para sentir</button>
+          <button class="sound-card__cta" type="button" data-action="play">Toque para sentir</button>
         </div>
 
         <div class="sound-card" data-sound="sino" data-label="Sino!">
@@ -636,7 +677,7 @@ html.lt-on .page { padding-bottom: 55vh; }
             <svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6Zm-2 15a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
           <button class="sound-card__name" type="button" data-action="choose">Sino</button>
-          <button class="sound-card__cta" type="button" data-action="play">☝ Toque para sentir</button>
+          <button class="sound-card__cta" type="button" data-action="play">Toque para sentir</button>
         </div>
       </div>
 
@@ -648,7 +689,7 @@ html.lt-on .page { padding-bottom: 55vh; }
         <div class="result__body">
           <span class="result__tag">🔖 Você descobriu o som do ventinho!</span>
           <h3>Encontrou com perfeição! ⭐</h3>
-          <p>A pulseira vibrou com um carinho quentinho. Você ganhou +1 estrela para a sua coleção!</p>
+          <p>Você ganhou +2 estrelas para a sua coleção!</p>
         </div>
         <!-- coloque em data-next o endereço da próxima atividade, ex.: data-next="atividade-002.html" -->
         <button class="result__btn" id="btnNext" type="button" data-next="atividade-002.html">Avançar para o próximo passo →</button>
@@ -807,7 +848,9 @@ html.lt-on .page { padding-bottom: 55vh; }
     bandTag.firstChild.textContent = "Vibrando ";
 
     // palco: brilho azul + balão com o nome da opção
-    bubbleText.textContent = FEEL_BUBBLE[kind] || "Vibrando!";
+    // sem opção escolhida (botão "Sentir na pulseira") o balão mostra só "Sssss", sem entregar a resposta
+    if (kindForce) { bubbleText.textContent = FEEL_BUBBLE[kind] || "Vibrando!"; stage.classList.remove("sss-bubble"); }
+    else { bubbleText.textContent = "Sssss"; stage.classList.add("sss-bubble"); }
     stage.classList.add("is-feeling");
 
     // vibração na pulseira: padrão da opção escolhida (tambor / vento / sino)
@@ -823,8 +866,7 @@ html.lt-on .page { padding-bottom: 55vh; }
 
     // recompensa na primeira vez
     if (!firstFeelRewarded) {
-      firstFeelRewarded = true;
-      starCountEl.textContent = String(Number(starCountEl.textContent) + 1);
+      firstFeelRewarded = true;   // as estrelas agora só vêm do acerto
     }
 
     feelTimer = setTimeout(stopFeeling, VIBRATION_MS);
@@ -852,7 +894,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     vibrarLocal(0);
   }
 
-  btnFeel.addEventListener("click", () => (feeling ? stopFeeling() : startFeeling("vento")));
+  btnFeel.addEventListener("click", () => (feeling ? stopFeeling() : startFeeling()));
 
   // =====================================================
   //  2) CARTÕES — tocar para ouvir / tocar no nome para escolher
@@ -902,6 +944,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   // balão de fala do mascote
   function showBubble(text) {
     bubbleText.textContent = text;
+    stage.classList.remove("sss-bubble");
     stage.classList.add("is-bubble");
     clearTimeout(bubbleTimer);
     bubbleTimer = setTimeout(() => stage.classList.remove("is-bubble"), 1600);
@@ -923,7 +966,7 @@ html.lt-on .page { padding-bottom: 55vh; }
       const on = c === card;
       c.classList.toggle("is-selected", on);
       const cta = c.querySelector(".sound-card__cta");
-      if (cta && !c.classList.contains("is-correct")) cta.textContent = on ? "✓ Selecionado" : "☝ Toque para sentir";
+      if (cta && !c.classList.contains("is-correct")) cta.textContent = on ? "✓ Selecionado" : "Toque para sentir";
     });
     selectedCard = card;
 
@@ -994,8 +1037,8 @@ html.lt-on .page { padding-bottom: 55vh; }
     card.classList.add("is-correct");
     card.querySelector(".sound-card__cta").innerHTML = WIND_ICON + " Isso mesmo!";
 
-    // +1 estrela
-    starCountEl.textContent = String(Number(starCountEl.textContent) + 1);
+    // +2 estrelas (só na 1ª vez)
+    lumisEstrelas.ganhar(1);
 
     resultSuccess.hidden = false;
     showBubble("Isso mesmo! ⭐");
@@ -1455,6 +1498,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
   var $ = function(i){ return document.getElementById(i); };
   function sairAparelho(){
+    try{ lumisEstrelas.limpar(); }catch(e){}
     try{ localStorage.removeItem("lumis_device_token"); localStorage.removeItem("lumis_fila_tent"); localStorage.removeItem("lumis_crianca_ativa"); }catch(e){}
     location.replace(location.pathname.indexOf("/frontend/") > -1 ? "inicio.html?reset=1" : "frontend/inicio.html?reset=1");
   }

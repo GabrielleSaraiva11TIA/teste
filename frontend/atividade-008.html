@@ -454,6 +454,46 @@ html.lt-on, html.lt-on body { overflow: hidden; }
 .lt-tip, .lt-tip *, .lt-finale, .lt-finale * { font-family: 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-style: normal; letter-spacing: 0; text-transform: none; }
 .lt-tip, .lt-finale { font-synthesis: none; }
 </style>
+<script id="lumis-estrelas">
+/* Estrelas da criança: começam em 0 e cada atividade soma uma vez só (ganhar). Fica guardado neste aparelho, por criança. */
+window.lumisEstrelas = (function(){
+  var PTS = { a1:2, a2:2, a3:3, a4:5, a5:3, a6:5, a7:3, a8:2 }, memoria = {};
+  function chave(){ var id = null; try{ id = localStorage.getItem("lumis_crianca_ativa"); }catch(e){} return "lumis_estrelas_" + (id || "0"); }
+  function ilhaConcluida(){
+    try{ var p = JSON.parse(localStorage.getItem("lumis_progresso") || "{}"); return !!(p.ilhas && p.ilhas.indexOf(1) > -1); }catch(e){ return false; }
+  }
+  function ler(){
+    var o = null, k;
+    try{ o = JSON.parse(localStorage.getItem(chave()) || "null"); }catch(e){}
+    if (!o || typeof o.g !== "object" || !o.g) o = memoria[chave()] || { g:{} };
+    if (ilhaConcluida()){ for (k in PTS) o.g[k] = PTS[k]; }   // ilha concluída: conta como se tivesse feito tudo
+    return o;
+  }
+  function limpar(){   // ao sair da conta do aparelho: perde as estrelas
+    var i, k, apagar = [];
+    memoria = {};
+    try{
+      for (i = 0; i < localStorage.length; i++){ k = localStorage.key(i); if (k && k.indexOf("lumis_estrelas_") === 0) apagar.push(k); }
+      for (i = 0; i < apagar.length; i++) localStorage.removeItem(apagar[i]);
+    }catch(e){}
+  }
+  function gravar(o){ memoria[chave()] = o; try{ localStorage.setItem(chave(), JSON.stringify(o)); }catch(e){} }
+  function total(){ var o = ler(), t = 0, k; for (k in o.g) t += Number(o.g[k]) || 0; return t; }
+  function mostrar(){
+    var ids = ["starCount", "stars", "starN", "qtdEstrelas"], i, el;
+    for (i = 0; i < ids.length; i++){ el = document.getElementById(ids[i]); if (el) el.textContent = String(total()); }
+  }
+  function ganhar(n, opcoes){
+    var k = "a" + n, o = ler();
+    if (o.g[k] || !PTS[k]) return 0;          // já ganhou as estrelas desta atividade
+    o.g[k] = PTS[k]; gravar(o);
+    if (!opcoes || opcoes.mostrar !== false) mostrar();
+    return PTS[k];
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mostrar); else mostrar();
+  return { total: total, ganhar: ganhar, mostrar: mostrar, limpar: limpar, meta: 25 };
+})();
+</script>
 </head>
 <body>
 <div class="app" id="app">
@@ -543,8 +583,8 @@ html.lt-on, html.lt-on body { overflow: hidden; }
 const ETAPA_ATUAL = 8;
 const ETAPAS = ['Som','Espelho','Eco','Ritmo','Amigos','Brincar','Desafio','Tesouro'];
 const TITULO_ETAPA = 'Tesouro do Lumis';
-const ESTRELAS_INICIAIS = 125;
-const ESTRELAS_BONUS_FINAL = 3;
+const ESTRELAS_INICIAIS = lumisEstrelas.total();
+const ESTRELAS_BONUS_FINAL = 2;
 const PULSEIRA_ATIVA = true;
 const URL_VOLTAR = '../mapa.html', URL_PROXIMA = '#';
 const URL_HOME = '../mapa.html';  // depois da jornada completa volta para o mapa
@@ -857,7 +897,7 @@ async function enquadrar(){
 document.getElementById('pillEstrelas');
 function posicao(el,base){ const a = (base||$('app')).getBoundingClientRect(), r = el.getBoundingClientRect(); return {x:r.left-a.left+r.width/2, y:r.top-a.top+r.height/2}; }
 function chuvaDeEstrelas(){
-  const de = posicao($('quadro')), alvo = posicao($('pillEstrelas').querySelector('svg')), n = ESTRELAS_BONUS_FINAL;
+  const de = posicao($('quadro')), alvo = posicao($('pillEstrelas').querySelector('svg')), n = lumisEstrelas.ganhar(8, { mostrar:false });
   for(let k=0;k<n;k++){
     const f = document.createElement('div'); f.className = 'voa';
     f.innerHTML = `<svg viewBox="0 0 24 24" width="36" height="36"><path d="${STAR_D}" fill="#FBBF24" stroke="#F59E0B" stroke-width="1" stroke-linejoin="round"/></svg>`;
@@ -927,6 +967,7 @@ intro();
   var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
   var $ = function(i){ return document.getElementById(i); };
   function sairAparelho(){
+    try{ lumisEstrelas.limpar(); }catch(e){}
     try{ localStorage.removeItem("lumis_device_token"); localStorage.removeItem("lumis_fila_tent"); localStorage.removeItem("lumis_crianca_ativa"); }catch(e){}
     location.replace(location.pathname.indexOf("/frontend/") > -1 ? "inicio.html?reset=1" : "frontend/inicio.html?reset=1");
   }

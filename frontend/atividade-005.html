@@ -453,6 +453,46 @@ html.lt-on .page { padding-bottom: 55vh; }
 .lt-tip, .lt-tip *, .lt-finale, .lt-finale * { font-family: 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-style: normal; letter-spacing: 0; text-transform: none; }
 .lt-tip, .lt-finale { font-synthesis: none; }
 </style>
+<script id="lumis-estrelas">
+/* Estrelas da criança: começam em 0 e cada atividade soma uma vez só (ganhar). Fica guardado neste aparelho, por criança. */
+window.lumisEstrelas = (function(){
+  var PTS = { a1:2, a2:2, a3:3, a4:5, a5:3, a6:5, a7:3, a8:2 }, memoria = {};
+  function chave(){ var id = null; try{ id = localStorage.getItem("lumis_crianca_ativa"); }catch(e){} return "lumis_estrelas_" + (id || "0"); }
+  function ilhaConcluida(){
+    try{ var p = JSON.parse(localStorage.getItem("lumis_progresso") || "{}"); return !!(p.ilhas && p.ilhas.indexOf(1) > -1); }catch(e){ return false; }
+  }
+  function ler(){
+    var o = null, k;
+    try{ o = JSON.parse(localStorage.getItem(chave()) || "null"); }catch(e){}
+    if (!o || typeof o.g !== "object" || !o.g) o = memoria[chave()] || { g:{} };
+    if (ilhaConcluida()){ for (k in PTS) o.g[k] = PTS[k]; }   // ilha concluída: conta como se tivesse feito tudo
+    return o;
+  }
+  function limpar(){   // ao sair da conta do aparelho: perde as estrelas
+    var i, k, apagar = [];
+    memoria = {};
+    try{
+      for (i = 0; i < localStorage.length; i++){ k = localStorage.key(i); if (k && k.indexOf("lumis_estrelas_") === 0) apagar.push(k); }
+      for (i = 0; i < apagar.length; i++) localStorage.removeItem(apagar[i]);
+    }catch(e){}
+  }
+  function gravar(o){ memoria[chave()] = o; try{ localStorage.setItem(chave(), JSON.stringify(o)); }catch(e){} }
+  function total(){ var o = ler(), t = 0, k; for (k in o.g) t += Number(o.g[k]) || 0; return t; }
+  function mostrar(){
+    var ids = ["starCount", "stars", "starN", "qtdEstrelas"], i, el;
+    for (i = 0; i < ids.length; i++){ el = document.getElementById(ids[i]); if (el) el.textContent = String(total()); }
+  }
+  function ganhar(n, opcoes){
+    var k = "a" + n, o = ler();
+    if (o.g[k] || !PTS[k]) return 0;          // já ganhou as estrelas desta atividade
+    o.g[k] = PTS[k]; gravar(o);
+    if (!opcoes || opcoes.mostrar !== false) mostrar();
+    return PTS[k];
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mostrar); else mostrar();
+  return { total: total, ganhar: ganhar, mostrar: mostrar, limpar: limpar, meta: 25 };
+})();
+</script>
 </head>
 <body>  
 
@@ -462,7 +502,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     <div class="subbar">
       <button class="btn-back" type="button" onclick="location.href='../mapa.html'">← Voltar para o mapa</button>
 
-      <div class="stars"><svg width="13" height="13" viewBox="0 0 24 24" fill="#0d3b8e"><path d="M12 2.500l2.900 6 6.600.9-4.800 4.600 1.200 6.500L12 17.300l-5.900 3.200 1.200-6.500L2.500 9.400l6.600-.9z"/></svg><b id="starCount">125</b>&nbsp; estrelas</div>
+      <div class="stars"><svg width="13" height="13" viewBox="0 0 24 24" fill="#0d3b8e"><path d="M12 2.500l2.900 6 6.600.9-4.800 4.600 1.200 6.500L12 17.300l-5.900 3.200 1.200-6.500L2.500 9.400l6.600-.9z"/></svg><b id="starCount">0</b>&nbsp; estrelas</div>
     </div>
 
     <!-- ============ PROGRESSO ============ -->
@@ -607,7 +647,7 @@ html.lt-on .page { padding-bottom: 55vh; }
       <div>
         <span class="result__tag">🔖 Você sentiu a diferença!</span>
         <h3>Encontrou com perfeição! ⭐</h3>
-        <p>O ventinho é fininho, suave e contínuo, igual ao Sssss! Você ganhou +1 estrela para a sua coleção!</p>
+        <p>O ventinho é fininho, suave e contínuo, igual ao Sssss! Você ganhou +3 estrelas para a sua coleção!</p>
       </div>
       <!-- coloque em data-next o endereço da próxima atividade, ex.: data-next="atividade-006.html" -->
       <button class="result__btn" id="btnNext" type="button" data-next="atividade-006.html">Avançar para o próximo passo →</button>
@@ -648,7 +688,7 @@ html.lt-on .page { padding-bottom: 55vh; }
 
   // ---------- Configuração ----------
   const CORRECT = "a";                       // carta certa (data-id): A = ventinho "Sssss"
-  const REWARD_STARS = 1;
+  const REWARD_STARS = 3;
   const PATTERNS = {                         // vibração do CELULAR (só se o Python estiver desligado)
     a: [180, 90, 180, 90, 180, 90, 180],     // suave e contínua (~ ~ ~)
     b: [130],                                // curta e forte ( • )
@@ -771,7 +811,7 @@ html.lt-on .page { padding-bottom: 55vh; }
     optionsEl.classList.add("is-locked");
     card.classList.add("is-correct");
     card.querySelector(".opt__choose").classList.add("is-chosen");
-    starCountEl.textContent = String(Number(starCountEl.textContent) + REWARD_STARS);
+    lumisEstrelas.ganhar(5);
     resultSuccess.hidden = false;
     vibrarPulseira("comemorar", [100, 50, 100, 50, 220]);
     playSound("sucesso");
@@ -1191,6 +1231,7 @@ html.lt-on .page { padding-bottom: 55vh; }
   var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
   var $ = function(i){ return document.getElementById(i); };
   function sairAparelho(){
+    try{ lumisEstrelas.limpar(); }catch(e){}
     try{ localStorage.removeItem("lumis_device_token"); localStorage.removeItem("lumis_fila_tent"); localStorage.removeItem("lumis_crianca_ativa"); }catch(e){}
     location.replace(location.pathname.indexOf("/frontend/") > -1 ? "inicio.html?reset=1" : "frontend/inicio.html?reset=1");
   }

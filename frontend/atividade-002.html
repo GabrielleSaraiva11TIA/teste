@@ -342,6 +342,46 @@ body{padding-top:10px;padding-left:12px;padding-right:12px}
 .lt-tip, .lt-tip *, .lt-finale, .lt-finale * { font-family: 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-style: normal; letter-spacing: 0; text-transform: none; }
 .lt-tip, .lt-finale { font-synthesis: none; }
 </style>
+<script id="lumis-estrelas">
+/* Estrelas da criança: começam em 0 e cada atividade soma uma vez só (ganhar). Fica guardado neste aparelho, por criança. */
+window.lumisEstrelas = (function(){
+  var PTS = { a1:2, a2:2, a3:3, a4:5, a5:3, a6:5, a7:3, a8:2 }, memoria = {};
+  function chave(){ var id = null; try{ id = localStorage.getItem("lumis_crianca_ativa"); }catch(e){} return "lumis_estrelas_" + (id || "0"); }
+  function ilhaConcluida(){
+    try{ var p = JSON.parse(localStorage.getItem("lumis_progresso") || "{}"); return !!(p.ilhas && p.ilhas.indexOf(1) > -1); }catch(e){ return false; }
+  }
+  function ler(){
+    var o = null, k;
+    try{ o = JSON.parse(localStorage.getItem(chave()) || "null"); }catch(e){}
+    if (!o || typeof o.g !== "object" || !o.g) o = memoria[chave()] || { g:{} };
+    if (ilhaConcluida()){ for (k in PTS) o.g[k] = PTS[k]; }   // ilha concluída: conta como se tivesse feito tudo
+    return o;
+  }
+  function limpar(){   // ao sair da conta do aparelho: perde as estrelas
+    var i, k, apagar = [];
+    memoria = {};
+    try{
+      for (i = 0; i < localStorage.length; i++){ k = localStorage.key(i); if (k && k.indexOf("lumis_estrelas_") === 0) apagar.push(k); }
+      for (i = 0; i < apagar.length; i++) localStorage.removeItem(apagar[i]);
+    }catch(e){}
+  }
+  function gravar(o){ memoria[chave()] = o; try{ localStorage.setItem(chave(), JSON.stringify(o)); }catch(e){} }
+  function total(){ var o = ler(), t = 0, k; for (k in o.g) t += Number(o.g[k]) || 0; return t; }
+  function mostrar(){
+    var ids = ["starCount", "stars", "starN", "qtdEstrelas"], i, el;
+    for (i = 0; i < ids.length; i++){ el = document.getElementById(ids[i]); if (el) el.textContent = String(total()); }
+  }
+  function ganhar(n, opcoes){
+    var k = "a" + n, o = ler();
+    if (o.g[k] || !PTS[k]) return 0;          // já ganhou as estrelas desta atividade
+    o.g[k] = PTS[k]; gravar(o);
+    if (!opcoes || opcoes.mostrar !== false) mostrar();
+    return PTS[k];
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mostrar); else mostrar();
+  return { total: total, ganhar: ganhar, mostrar: mostrar, limpar: limpar, meta: 25 };
+})();
+</script>
 </head>
 <body>
 <div class="app">
@@ -349,7 +389,7 @@ body{padding-top:10px;padding-left:12px;padding-right:12px}
   <!-- Topo -->
   <header class="topbar">
     <button class="pill" id="btnBack">← Voltar para o mapa</button>
-    <div class="pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="#0d3b8e"><path d="M12 2.500l2.900 6 6.600.9-4.800 4.600 1.200 6.500L12 17.300l-5.900 3.200 1.200-6.500L2.500 9.400l6.600-.9z"/></svg><span id="stars">125</span>&nbsp; estrelas</div>
+    <div class="pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="#0d3b8e"><path d="M12 2.500l2.900 6 6.600.9-4.800 4.600 1.200 6.500L12 17.300l-5.900 3.200 1.200-6.500L2.500 9.400l6.600-.9z"/></svg><span id="stars">0</span>&nbsp; estrelas</div>
   </header>
 
   <!-- Progresso -->
@@ -562,7 +602,7 @@ $('steps').innerHTML = CONFIG.steps.map((name,i)=>{
   const n = i+1, cls = n < CONFIG.currentStep ? 'done' : n === CONFIG.currentStep ? 'now' : '';
   return `<div class="step ${cls}"><i></i><span>${n}. ${name}</span></div>`;
 }).join('');
-$('stars').textContent = CONFIG.stars;
+lumisEstrelas.mostrar();
 
 /* ---------- Utilidades ---------- */
 function toast(msg){
@@ -759,7 +799,7 @@ function somSucesso(){
 }
 // Não há acerto automático: o progresso só é registrado quando a criança toca em "Terminei!"
 function registrarConclusao(){
-  if(!window.__regA2){ window.__regA2=1; try{lumisReg('acerto')}catch(e){} }
+  if(!window.__regA2){ window.__regA2=1; try{lumisReg('acerto')}catch(e){} lumisEstrelas.ganhar(2); }
 }
 
 /* ---------- Eventos ---------- */
@@ -1099,6 +1139,7 @@ if (CONFIG.videoSrc) loadDemo(CONFIG.videoSrc);
   var API = window.LUMIS_API || (((h === "localhost" || h === "127.0.0.1") && p && p !== "3000") ? "http://localhost:3000" : "");
   var $ = function(i){ return document.getElementById(i); };
   function sairAparelho(){
+    try{ lumisEstrelas.limpar(); }catch(e){}
     try{ localStorage.removeItem("lumis_device_token"); localStorage.removeItem("lumis_fila_tent"); localStorage.removeItem("lumis_crianca_ativa"); }catch(e){}
     location.replace(location.pathname.indexOf("/frontend/") > -1 ? "inicio.html?reset=1" : "frontend/inicio.html?reset=1");
   }
