@@ -323,7 +323,6 @@ html.lt-on, html.lt-on body { overflow: hidden; }
 .lt-spot::after {
   content: ""; position: absolute; inset: -4px; border-radius: inherit;
   border: 3px solid #fff;
-  animation: lt-pulse 1.7s ease-in-out infinite;
 }
 @keyframes lt-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.02); } }
 
@@ -378,7 +377,7 @@ html.lt-on, html.lt-on body { overflow: hidden; }
 }
 
 .lt-arrow { position: absolute; width: 24px; height: 24px; pointer-events: none; }
-.lt-arrow svg { width: 24px; height: 24px; display: block; animation: lt-nudge 1s ease-in-out infinite; filter: drop-shadow(0 2px 3px rgba(8,16,60,.35)); }
+.lt-arrow svg { width: 24px; height: 24px; display: block; animation: lt-nudge 1s ease-in-out infinite; }
 @keyframes lt-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 .lt-tip.pl-bottom .lt-arrow { top: -29px; transform: none; }
 .lt-tip.pl-top .lt-arrow { bottom: -29px; transform: rotate(180deg); }
@@ -444,6 +443,37 @@ html.lt-on, html.lt-on body { overflow: hidden; }
 .topo .pill,.topo .lt-redo,.progresso,.progresso *{font-family:var(--topo-font);font-style:normal;letter-spacing:0;text-transform:none}
 .topo .pill.estrelas svg{width:13px;height:13px;flex:none}
 .topo .pill.estrelas svg path{fill:#0d3b8e}
+</style>
+<style id="lt-compacto">
+/* Tutorial menor nas telas baixas (touch de 800x480 e 1024x600): o cartão ocupava quase metade da tela */
+@media (max-height: 620px) {
+  .lt-tip { width: min(268px, calc(100vw - 20px)); padding: 10px 12px; border-radius: 16px; font-size: 12px; line-height: 1.35; box-shadow: 0 10px 26px rgba(8, 16, 60, 0.35); }
+  .lt-top { margin-bottom: 6px; gap: 8px; }
+  .lt-count { font-size: 10.5px; padding: 3px 8px; }
+  .lt-dots { gap: 4px; }
+  .lt-dots i { width: 5px; height: 5px; }
+  .lt-dots i.on { width: 14px; }
+  .lt-title { font-size: 14px; margin: 0 0 4px; line-height: 1.2; }
+  .lt-text { font-size: 12px; line-height: 1.38; }
+  .lt-legend { margin-top: 6px; gap: 5px; }
+  .lt-legend span { font-size: 10.5px; padding: 3px 8px; gap: 4px; }
+  .lt-legend b { width: 8px; height: 8px; }
+  .lt-nav { margin-top: 8px; gap: 8px; }
+  .lt-btn { font-size: 12.5px; padding: 0 16px; min-height: 36px; }
+  .lt-btn.ghost { padding-inline: 10px; }
+  .lt-extra { margin-top: 6px; padding-top: 4px; }
+  .lt-link { font-size: 11px; padding: 0 8px; min-height: 32px; }
+  .lt-link svg { width: 12px; height: 12px; }
+  .lt-arrow, .lt-arrow svg { width: 20px; height: 20px; }
+  .lt-finale { width: min(300px, calc(100vw - 24px)); padding: 16px 18px 12px; border-radius: 20px; }
+  .lt-badge { width: 44px; height: 44px; margin: 0 auto 8px; }
+  .lt-badge svg { width: 24px; height: 24px; }
+  .lt-finale h3 { font-size: 17px; margin: 0 0 5px; }
+  .lt-finale p { font-size: 12.5px; line-height: 1.4; margin: 0 0 10px; }
+  .lt-go { font-size: 15px; padding: 10px 18px; }
+  .lt-fin-links { margin-top: 6px; }
+  .lt-fin-link { font-size: 11px; }
+}
 </style>
 </head>
 <body>
@@ -1037,12 +1067,16 @@ intro();
       }).catch(function(){});
   }
 
+  // consulta a cada 4 s, mas sem empilhar pedidos se a rede estiver lenta e sem redesenhar quando nada mudou
+  var ultimo = null, buscando = false;
   function carregar(){
-    var t = tok(); if (!t) return Promise.resolve();
+    var t = tok(); if (!t || buscando) return Promise.resolve();
+    buscando = true;
     return fetch(API + "/api/dispositivo/me", { headers:{ authorization:"Bearer " + t } })
       .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){ if (d){ info = d; pintar(); sincronizarMapa(); } })
-      .catch(function(){});
+      .then(function(d){ if (d){ var novo = JSON.stringify(d); if (novo !== ultimo){ ultimo = novo; info = d; pintar(); } sincronizarMapa(); } })
+      .catch(function(){})
+      .then(function(){ buscando = false; });
   }
 
   function linha(t, v){ return v ? "<dt>" + t + "</dt><dd>" + String(v).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }) + "</dd>" : ""; }
