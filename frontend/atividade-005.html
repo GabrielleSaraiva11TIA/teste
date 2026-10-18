@@ -1347,5 +1347,40 @@ html.lt-on .page { padding-bottom: 55vh; }
   document.addEventListener("visibilitychange", function(){ if (!document.hidden) carregar(); });
 })();
 </script>
+<script>
+/* arrastar o dedo para rolar a página (touch do Raspberry) */
+(function () {
+  const alvo = document.scrollingElement || document.documentElement;
+  let ativo = false, yIni = 0, scrollIni = 0, moveu = false;
+
+  function fim() {
+    ativo = false;
+    document.documentElement.style.userSelect = '';
+    setTimeout(() => { moveu = false; }, 0);
+  }
+
+  addEventListener('pointerdown', e => {
+    ativo = true; moveu = false;
+    yIni = e.clientY; scrollIni = alvo.scrollTop;
+  }, true);
+  addEventListener('pointermove', e => {
+    if (!ativo) return;
+    const dy = e.clientY - yIni;
+    if (!moveu && Math.abs(dy) > 8) {
+      moveu = true;
+      document.documentElement.style.userSelect = 'none';
+      const sel = getSelection && getSelection(); if (sel) sel.removeAllRanges();
+    }
+    if (moveu) alvo.scrollTop = scrollIni - dy;
+  }, true);
+  addEventListener('pointerup', fim, true);
+  addEventListener('pointercancel', fim, true);
+
+  // se foi arrasto, cancela o clique pra não apertar botão sem querer
+  addEventListener('click', e => {
+    if (moveu) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+})();
+</script>
 </body>
 </html>
