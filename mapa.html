@@ -221,11 +221,12 @@
 
   /* ---------- Aviso inferior direito ---------- */
   .notice {
-    --cq: max(9px, min(1vw, 1.8337dvh));
+    --sw: max(900px, min(100vw, 183.37dvh));
+    --cq: calc(var(--sw) / 100);
     position: fixed;
     z-index: 5;
-    right: calc(var(--cq) * 2.8);
-    bottom: calc(var(--cq) * 3.6);
+    right: calc(max(0px, (100vw - var(--sw)) / 2) + var(--cq) * 2.8);
+    bottom: calc(max(0px, (100dvh - var(--sw) / 1.8337) / 2) + var(--cq) * 3.6);
     display: flex;
     align-items: center;
     gap: calc(var(--cq) * 1.3);
