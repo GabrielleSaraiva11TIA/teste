@@ -294,6 +294,18 @@ button:disabled { cursor: not-allowed; }
 .btn-record:disabled { opacity: .55; filter: saturate(.7) brightness(1.25); box-shadow: none; cursor: progress; }
 .btn-record__wave { font-size: 1.2rem; }
 
+/* botões "Estou pronta!" / "Tentar falar" ficam em cima da câmera (topo), sem precisar rolar a tela */
+.camera .btn-record {
+  position: absolute; z-index: 4; top: 10px; left: 0; right: 0; width: max-content; max-width: calc(100% - 20px); margin: 0 auto;
+  padding: 9px 22px; font-size: .95rem; white-space: nowrap; gap: 8px;
+  box-shadow: 0 4px 0 #062e8f, 0 8px 14px rgba(10, 69, 196, .35);
+}
+.camera .btn-record .ico { width: 18px; height: 18px; }
+.camera .btn-record:active:not(:disabled) { box-shadow: 0 1px 0 #062e8f; }
+/* telinha baixa (ex.: 800x480): câmera mais baixa para caber inteira na tela, junto com o botão */
+@media (max-height: 560px) {
+  .camera { max-height: 54vh; }
+}
 .rec-status { min-height: 22px; margin-top: 10px; }
 .rec-bar { height: 6px; border-radius: 99px; background: #dbe6fb; overflow: hidden; width: min(420px, 100%); margin: 0 auto 4px; }
 .rec-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--blue-700), var(--blue-500)); transition: width .1s linear; }
@@ -614,9 +626,9 @@ window.lumisEstrelas = (function(){
 
     <!-- ============ ABAS DA ATIVIDADE ============ -->
     <nav class="steps" role="tablist" aria-label="Etapas da atividade">
-      <button class="steps__tab is-active" id="tab1" role="tab" type="button" aria-selected="true"  aria-controls="panel1">1. Primeiro o Lumis 👀</button>
-      <button class="steps__tab"           id="tab2" role="tab" type="button" aria-selected="false" aria-controls="panel2">2. Agora Você! (Espelho) 🐾</button>
-      <button class="steps__tab"           id="tab3" role="tab" type="button" aria-selected="false" aria-controls="panel3" disabled>3. Feedback Carinhoso ✨</button>
+      <button class="steps__tab is-active" id="tab1" role="tab" type="button" aria-selected="true"  aria-controls="panel1">1. Primeiro o Lumis</button>
+      <button class="steps__tab"           id="tab2" role="tab" type="button" aria-selected="false" aria-controls="panel2">2. Agora Você! (Espelho)</button>
+      <button class="steps__tab"           id="tab3" role="tab" type="button" aria-selected="false" aria-controls="panel3" disabled>3. Feedback Carinhoso</button>
     </nav>
 
     <!-- =====================================================
@@ -625,11 +637,11 @@ window.lumisEstrelas = (function(){
     <section class="layout" id="panel1" role="tabpanel" aria-labelledby="tab1">
 
       <div class="card-soft lesson">
-        <p class="lesson__who">🐾 Lumis ensina com carinho:</p>
+        <p class="lesson__who">Lumis ensina com carinho:</p>
 
         <div class="coach-bubble">
           <p>"Primeiro eu! Olhe bem como meus lábios abrem e o ventinho sai suave pelos dentes:
-            <button class="ssss-link" id="btnSsss" type="button">Sssss...</button> 🍃 🫧 "</p>
+            <button class="ssss-link" id="btnSsss" type="button">Sssss...</button> "</p>
         </div>
 
         <!-- ESPAÇO DO VÍDEO (boca fazendo "Sssss")
@@ -676,7 +688,7 @@ window.lumisEstrelas = (function(){
       </div>
 
       <aside class="card-soft observe">
-        <h2>👁 O que observar no Lumis:</h2>
+        <h2>O que observar no Lumis:</h2>
 
         <ul class="obs-list">
           <li class="obs-item">
@@ -694,8 +706,8 @@ window.lumisEstrelas = (function(){
         </ul>
 
         <div class="observe__actions">
-          <button class="btn-soft" id="btnReplay" type="button">↻ Ouvir / Sentir de novo 📳</button>
-          <button class="btn-primary" id="btnMyTurn" type="button">Agora é a minha vez! ✏️ ➔</button>
+          <button class="btn-soft" id="btnReplay" type="button">↻ Ouvir / Sentir de novo</button>
+          <button class="btn-primary" id="btnMyTurn" type="button">Agora é a minha vez! ➔</button>
         </div>
       </aside>
     </section>
@@ -738,20 +750,22 @@ window.lumisEstrelas = (function(){
               <div class="meter__bar"><i id="meterFill"></i></div>
             </div>
           </div>
+
+          <!-- botões em cima da câmera: a criança não precisa rolar a tela -->
+          <button class="btn-record" id="btnReady" type="button">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="6.5" cy="9.5" rx="2" ry="2.6"/><ellipse cx="12" cy="6.5" rx="2" ry="2.8"/><ellipse cx="17.5" cy="9.5" rx="2" ry="2.6"/><path d="M12 11c-3 0-5.5 3.2-5.5 5.4 0 1.6 1.2 2.6 2.7 2.6 1 0 1.8-.5 2.8-.5s1.8.5 2.8.5c1.5 0 2.7-1 2.7-2.6C17.5 14.2 15 11 12 11Z"/></svg>
+            <span>Estou pronta!</span>
+          </button>
+
+          <button class="btn-record" id="btnRecord" hidden type="button">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="6.5" cy="9.5" rx="2" ry="2.6"/><ellipse cx="12" cy="6.5" rx="2" ry="2.8"/><ellipse cx="17.5" cy="9.5" rx="2" ry="2.6"/><path d="M12 11c-3 0-5.5 3.2-5.5 5.4 0 1.6 1.2 2.6 2.7 2.6 1 0 1.8-.5 2.8-.5s1.8.5 2.8.5c1.5 0 2.7-1 2.7-2.6C17.5 14.2 15 11 12 11Z"/></svg>
+            <span>Tentar falar o Sssss!</span>
+            <span class="btn-record__wave" id="recWave" hidden>〰</span>
+          </button>
         </div>
 
         <p class="mirror__hint mirror__hint--aviso" id="avisoEnquadro">📍 Encaixe a boca dentro do quadrado tracejado. Quando estiver no lugar, toque em <b>“Estou pronta!”</b>. 🍃</p>
 
-        <button class="btn-record" id="btnReady" type="button">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="6.5" cy="9.5" rx="2" ry="2.6"/><ellipse cx="12" cy="6.5" rx="2" ry="2.8"/><ellipse cx="17.5" cy="9.5" rx="2" ry="2.6"/><path d="M12 11c-3 0-5.5 3.2-5.5 5.4 0 1.6 1.2 2.6 2.7 2.6 1 0 1.8-.5 2.8-.5s1.8.5 2.8.5c1.5 0 2.7-1 2.7-2.6C17.5 14.2 15 11 12 11Z"/></svg>
-          <span>Estou pronta!</span>
-        </button>
-
-        <button class="btn-record" id="btnRecord" hidden type="button">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="6.5" cy="9.5" rx="2" ry="2.6"/><ellipse cx="12" cy="6.5" rx="2" ry="2.8"/><ellipse cx="17.5" cy="9.5" rx="2" ry="2.6"/><path d="M12 11c-3 0-5.5 3.2-5.5 5.4 0 1.6 1.2 2.6 2.7 2.6 1 0 1.8-.5 2.8-.5s1.8.5 2.8.5c1.5 0 2.7-1 2.7-2.6C17.5 14.2 15 11 12 11Z"/></svg>
-          <span>Tentar falar o Sssss!</span>
-          <span class="btn-record__wave" id="recWave" hidden>〰</span>
-        </button>
 
         <div class="rec-status" aria-live="polite">
           <div class="rec-bar" id="recBar" hidden><i id="recFill"></i></div>
