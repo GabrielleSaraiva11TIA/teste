@@ -820,7 +820,7 @@ window.lumisEstrelas = (function(){
   };
   const FEEL_NAMES = { tambor: "Tambor", vento: "Vento", sino: "Sino" };
   const FEEL_BUBBLE = { tambor: "Tambor! 🥁", vento: "Vento! 🍃", sino: "Sino! 🔔" };
-  const FEEL_CHIP = { tambor: "Vibrando pulseira: Tum... tum...", vento: "Vibrando pulseira: Sssss...", sino: "Vibrando pulseira: Ding... ding..." };
+  const FEEL_CHIP = { tambor: "Vibrando pulseira: Tum... tum...", vento: "Vibrando pulseira: Fuuuu...", sino: "Vibrando pulseira: Ding... ding..." };
 
   // =====================================================
   //  1) SENTIR NA PULSEIRA
@@ -837,9 +837,10 @@ window.lumisEstrelas = (function(){
     btnFeel.setAttribute("aria-pressed", "true");
     btnFeelText.textContent = "Sentindo...";
 
-    // chip de estado -> "Vibrando pulseira: Sssss... 📳"
+    // chip de estado -> "Vibrando pulseira: ..."
     stateChip.classList.add("is-vibrating");
-    stateText.textContent = FEEL_CHIP[kind] || "Vibrando pulseira...";
+    // sem opção escolhida ("Sentir na pulseira") continua o Sssss; escolhendo o Vento, mostra Fuuuu
+    stateText.textContent = kindForce ? (FEEL_CHIP[kind] || "Vibrando pulseira...") : "Vibrando pulseira: Sssss...";
     stateEmoji.hidden = false;
 
     // faixa superior "Pulseira Ativa"
