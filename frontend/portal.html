@@ -753,7 +753,6 @@ svg.i.f{fill:currentColor;stroke:none}
       <div class="gh">
         <span class="av"><svg class="i f"><use href="#i-paw"/></svg></span>
         <div class="who"><small id="ghConn"><i></i><span id="ghConnTxt">Lumis conectado</span></small><b>Visão Geral</b></div>
-        <button class="ib" type="button" aria-label="Notificações" data-soon><svg class="i"><use href="#i-bell"/></svg></button>
         <button class="ib me" type="button" aria-label="Menu do Responsável" id="geralMenu"><svg class="i"><use href="#i-user"/></svg></button>
       </div>
       <h1 class="h1" id="gTitulo">Como está a jornada?</h1>
@@ -1459,7 +1458,7 @@ svg.i.f{fill:currentColor;stroke:none}
   var DICAS = {
     sons: "Experimente soprar bolhas de sabão ou imitar o ventinho juntos antes da próxima sessão. Isso reforça a respiração e a percepção do som de forma lúdica!",
     orofacial: "Brinquem de caretas na frente do espelho: bico, sorriso e língua para fora. Isso treina os músculos da boca de um jeito divertido!",
-    palavras: "Repitam juntos palavras curtas com o som /s/, como sol, sapo e suco, de forma cantada e bem devagar."
+    palavras: "Repitam juntos a letra S e as sílabas sa, se, si, so e su, de forma cantada e bem devagar."
   };
   var SK_ICON = { sons:["#i-wave","var(--blue)","linear-gradient(90deg,#38b6f5,#0b6fa0)"], orofacial:["#i-smile","var(--blue)","linear-gradient(90deg,#a9c4f7,#0a52c9)"], palavras:["#i-chat","var(--pink)","linear-gradient(90deg,#f6a9c9,#a1245f)"] };
   function pl(n, um, varios){ return n + " " + (n === 1 ? um : varios); }
@@ -1488,10 +1487,10 @@ svg.i.f{fill:currentColor;stroke:none}
     $("gN2s").textContent = "de " + pl(t.tentativas, "tentativa", "tentativas");
     $("gN3").textContent = d.atividadesFeitas;
     var menor = null;
-    $("gSkills").innerHTML = d.habilidades.map(function(h){
+    $("gSkills").innerHTML = d.habilidades.filter(function(h){ return h.id !== "orofacial"; }).map(function(h){
       var ic = SK_ICON[h.id] || SK_ICON.sons, tem = h.taxa != null;
       if (tem && (!menor || h.taxa < menor.taxa)) menor = h;
-      return '<div class="sk"><div class="row"><svg class="i" style="color:' + ic[1] + '"><use href="' + ic[0] + '"/></svg>' + esc(h.nome) +
+      return '<div class="sk"><div class="row"><svg class="i" style="color:' + ic[1] + '"><use href="' + ic[0] + '"/></svg>' + esc(h.id === "palavras" ? "Letras & Sílabas" : h.nome) +
         '<span class="pc" style="color:' + ic[1] + '">' + (tem ? h.taxa + "%" : "—") + '</span></div><p>' +
         (tem ? esc(pl(h.acertos, "acerto", "acertos") + " em " + pl(h.tentativas, "tentativa", "tentativas")) : "Ainda sem tentativas") +
         '</p><div class="bar-t"><i style="--p:' + (tem ? h.taxa : 0) + '%;background:' + ic[2] + '"></i></div></div>';

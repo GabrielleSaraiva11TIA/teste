@@ -97,7 +97,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .wind{background:#fff;border:1.5px dashed #b9c9ea;border-radius:16px;padding:6px 12px;font-size:14px;font-weight:900;letter-spacing:2px;color:#7f93bd;position:relative}
 .wind::before{content:"";position:absolute;left:-7px;top:50%;width:11px;height:11px;margin-top:-6px;background:#fff;border-left:1.5px dashed #b9c9ea;border-bottom:1.5px dashed #b9c9ea;transform:rotate(45deg)}
 .cap{margin-top:12px;font-size:11.5px;font-weight:900;letter-spacing:.5px;color:#4a5878}
-.btns{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.btns{display:grid;grid-template-columns:1fr;gap:9px;margin-top:12px}
 .btn{display:flex;align-items:center;justify-content:center;gap:7px;border-radius:14px;padding:11px 8px;font-size:13px;font-weight:900;border:2px solid var(--blue-m);background:#fff;color:#27427f;transition:transform .12s,box-shadow .15s,background .15s}
 .btn svg{width:16px;height:16px;flex:none}
 .btn.f{background:var(--blue-s)}
@@ -419,7 +419,6 @@ window.lumisEstrelas = (function(){
   <section class="intro">
     <div class="avatar"><img src="data:image/webp;base64,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" alt="Lumis, o gatinho detetive"></div>
     <div class="bubble">
-      <span class="tagline">🔎 Lumis Detetive Investiga</span><br>
       “Preciso de um detetive! 🔎 Olhe bem o que eu fiz primeiro e compare com a minha segunda tentativa…
       <strong>Fiz igual?</strong>
     </div>
@@ -429,12 +428,12 @@ window.lumisEstrelas = (function(){
   <section class="case">
     <div class="chips">
       <span class="caso">CASO Nº 07</span>
-      <span class="obj"><i></i> Objetivo: Comparar dois movimentos</span>
+      <span class="obj">Objetivo: Comparar dois movimentos</span>
     </div>
     <h2>O MISTÉRIO DO VENTINHO "SSSSS"</h2>
     <div class="hints">
-      <div class="hint v"><span class="hi">👀</span><span><b>Pista Visual:</b> Olhe a posição dos lábios e dentes na lupa mágica.</span></div>
-      <div class="hint t"><span class="hi">🤲</span><span><b>Pista Tátil:</b> A pulseira dá um toque suave para comparar os dois estímulos.</span></div>
+      <div class="hint v"><span><b>Pista Visual:</b> Olhe a posição dos lábios e dentes na lupa mágica.</span></div>
+      <div class="hint t"><span><b>Pista Tátil:</b> A pulseira dá um toque suave para comparar os dois estímulos.</span></div>
     </div>
   </section>
 
@@ -461,8 +460,7 @@ window.lumisEstrelas = (function(){
         <p class="cap">DENTES CERRADOS + SORRISO</p>
       </div>
       <div class="btns">
-        <button class="btn" type="button" id="btnRever"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Rever Pista</button>
-        <button class="btn f" type="button" id="btnSentirA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M4 8v8M20 8v8"/></svg>Sentir Pulseira</button>
+        <button class="btn f" type="button" id="btnSentirA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M4 8v8M20 8v8"/></svg>Sentir na pulseira</button>
       </div>
     </article>
 
@@ -489,8 +487,7 @@ window.lumisEstrelas = (function(){
         <p class="cap">COMO ESTÃO OS DENTES?</p>
       </div>
       <div class="btns">
-        <button class="btn" type="button" id="btnTocar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>Tocar Movimento</button>
-        <button class="btn f" type="button" id="btnSentirB"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M4 8v8M20 8v8"/></svg>Sentir Pulseira</button>
+        <button class="btn f" type="button" id="btnSentirB"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M4 8v8M20 8v8"/></svg>Sentir na pulseira</button>
       </div>
     </article>
   </section>
@@ -512,7 +509,7 @@ window.lumisEstrelas = (function(){
           <h3>Detetive Incrível! Você descobriu tudo! 🔎 🎉</h3>
           <p>Você percebeu que os dentinhos da segunda pista estavam diferentes! Só a Pista Original está certa!</p>
         </div>
-        <button class="next" type="button" id="btnNext" data-next="atividade-008.html">Próxima Etapa: O Grande Tesouro <span>→</span></button>
+        <button class="next" type="button" id="btnNext" data-next="atividade-008.html">Próxima Etapa: Tesouro do Lumis <span>→</span></button>
       </div>
     </div>
 
@@ -574,14 +571,8 @@ window.lumisEstrelas = (function(){
   }
 
   // Pista Original
-  document.getElementById('btnRever').addEventListener('click', function(){
-    mexer('faceA');
-    showToast("Pulseira vibrou: padrão do modelo 'Sssss...' reproduzido!", 3200);
-    vibrarPulseira("sss");
-  });
   document.getElementById('btnSentirA').addEventListener('click', function(){ mexer('faceA'); vibrarPulseira("sss"); });
   // Pista para Comparar (sem mensagens; só o dentinho se mexe)
-  document.getElementById('btnTocar').addEventListener('click', function(){ mexer('faceB'); vibrarPulseira("p"); });
   document.getElementById('btnSentirB').addEventListener('click', function(){ mexer('faceB'); vibrarPulseira("p"); });
 
   // comemoração: confete + som + vibração + estrelas (igual às outras atividades)
@@ -636,7 +627,6 @@ window.lumisEstrelas = (function(){
     return function(){
       try{lumisReg('erro')}catch(e){}
       reset(); btn.classList.add('sel'); again.classList.add('show'); mexerAmbos();
-      showToast("Pulseira vibrou suavemente, novo toque de composição pronto.", 4000);
       vibrarPulseira("toque");
       again.scrollIntoView({behavior:'smooth', block:'nearest'});
     };
@@ -715,10 +705,10 @@ window.lumisEstrelas = (function(){
       text: 'A pista visual é olhar os lábios e os dentes na lupa. A pista tátil é sentir a pulseira vibrar para comparar.' },
     { sels: ['.clue.a'], pref: ['bottom', 'top', 'left', 'right'], align: 'center', r: 26,
       title: '1. Modelo do Lumis',
-      text: 'Esta é a pista original. Toque em “Rever Pista” ou em “Sentir Pulseira” para ver a carinha se mexer e sentir a vibração no pulso.' },
+      text: 'Esta é a pista original. Toque em “Sentir na pulseira” para ver a carinha se mexer e sentir a vibração no pulso.' },
     { sels: ['.clue.b'], pref: ['bottom', 'top', 'right', 'left'], align: 'center', r: 26,
       title: '2. Tentativa misteriosa',
-      text: 'Esta é a tentativa para comparar. Toque em “Tocar Movimento” ou em “Sentir Pulseira” e compare com a primeira.' },
+      text: 'Esta é a tentativa para comparar. Toque em “Sentir na pulseira” e compare com a primeira.' },
     { sels: ['.ask', '.opts'], pref: ['top', 'bottom'], align: 'center', r: 22,
       title: 'Sua conclusão de detetive',
       text: 'Depois de comparar, toque na conclusão que você escolher. Se precisar, o Lumis ajuda você a investigar mais uma vez.' }

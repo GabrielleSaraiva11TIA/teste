@@ -531,7 +531,6 @@ window.lumisEstrelas = (function(){
       </div>
 
       <div>
-        <span class="q__tag">🐱 Lumis Pergunta:</span>
         <h1>Qual deles combina com o som do ventinho <em>"Sssss"</em>?</h1>
         <p>Olhe bem como a boquinha se movimenta e toque no botão da pulseira para sentir a cosquinha do ventinho!</p>
       </div>
@@ -553,9 +552,9 @@ window.lumisEstrelas = (function(){
     <section class="options" id="options" aria-label="Escolha a carta que combina com o som">
 
       <!-- OPÇÃO A: ventinho (certa) -->
-      <article class="opt opt--a card-soft" data-id="a" data-name="Opção A • o Som do Ventinho">
+      <article class="opt opt--a card-soft" data-id="a" data-name="Opção A">
         <div class="opt__head">
-          <span class="opt__title">🌬️ Opção A • O Som do Ventinho</span>
+          <span class="opt__title">Opção A</span>
           <span class="opt__n">Carta 1</span>
         </div>
 
@@ -593,16 +592,16 @@ window.lumisEstrelas = (function(){
         <p class="opt__desc"><b>Lábios em sorriso:</b> O ar sai fininho e suave, como uma brisa fresca passando pelos dentes.</p>
 
         <button class="opt__feel" type="button" data-action="feel">
-          <span aria-hidden="true">📳</span> <b>Sentir na pulseira:</b> Vibração suave e contínua (~ ~ ~)
+          <b>Sentir na pulseira:</b> Vibração suave e contínua (~ ~ ~)
         </button>
 
-        <button class="opt__choose" type="button" data-action="choose">Escolher Opção A <span aria-hidden="true">👆</span></button>
+        <button class="opt__choose" type="button" data-action="choose">Escolher Opção A</button>
       </article>
 
       <!-- OPÇÃO B: estalo (errada) -->
-      <article class="opt opt--b card-soft" data-id="b" data-name="Opção B • o Som do Estalo">
+      <article class="opt opt--b card-soft" data-id="b" data-name="Opção B">
         <div class="opt__head">
-          <span class="opt__title">⚡ Opção B • O Som do Estalo</span>
+          <span class="opt__title">Opção B</span>
           <span class="opt__n">Carta 2</span>
         </div>
 
@@ -634,10 +633,10 @@ window.lumisEstrelas = (function(){
         <p class="opt__desc"><b>Lábios selados:</b> O ar fica preso dentro da boca e depois sai com um estalo rápido ("P!").</p>
 
         <button class="opt__feel" type="button" data-action="feel">
-          <span aria-hidden="true">📳</span> <b>Sentir na pulseira:</b> Vibração curta e forte ( • )
+          <b>Sentir na pulseira:</b> Vibração curta e forte ( • )
         </button>
 
-        <button class="opt__choose" type="button" data-action="choose">Escolher Opção B <span aria-hidden="true">👆</span></button>
+        <button class="opt__choose" type="button" data-action="choose">Escolher Opção B</button>
       </article>
     </section>
 
@@ -668,7 +667,7 @@ window.lumisEstrelas = (function(){
   <!-- ============ PERGUNTA: QUER ESCOLHER ESSA CARTA? ============ -->
   <div class="confirm" id="confirm" hidden>
     <div class="confirm__box" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-      <div class="confirm__icon" id="confirmIcon" aria-hidden="true">🤔</div>
+      <div class="confirm__icon" id="confirmIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="42" height="42" aria-hidden="true"><path d="m12 2 2.9 6.6 7.1.7-5.3 4.8 1.5 7-6.2-3.6-6.2 3.6 1.5-7L2 9.3l7.1-.7z" fill="#FBBF24" stroke="#F59E0B" stroke-width="1" stroke-linejoin="round"/></svg></div>
       <h3 id="confirmTitle">Quer escolher a <b id="confirmName">Opção A</b> como a resposta certa? 🤔</h3>
       <div class="confirm__actions">
         <button class="confirm__yes" id="confirmYes" type="button">Sim, é essa!</button>
@@ -784,7 +783,7 @@ window.lumisEstrelas = (function(){
     pending = card;
     lastFocus = document.activeElement;
     confirmName.textContent = card.dataset.name;
-    confirmIcon.textContent = card.dataset.id === "a" ? "🌬️" : "⚡";
+    // o mesmo símbolo de estrela (já está no HTML) para a Opção A e para a B
     confirmEl.hidden = false;
     confirmYes.focus();
   }
